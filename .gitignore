@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Envs
+.venv/
+venv/
+env/
+.env
+.env.local
+
+# Notebooks
+.ipynb_checkpoints/
+
+# ML artifacts
+*.ckpt
+*.pt
+*.pth
+*.safetensors
+*.bin
+*.onnx
+wandb/
+runs/
+outputs/
+checkpoints/
+logs/
+lightning_logs/
+
+# Data (override with !)
+data/
+datasets/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+*.swp
