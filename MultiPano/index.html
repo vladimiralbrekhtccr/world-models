@@ -106,6 +106,34 @@ strong { color: var(--text); }
 .crumbs a:hover { color: var(--accent); border-bottom-color: var(--accent-bg); }
 .crumbs .sep { color: #ccc; }
 .crumbs .gh-link { margin-left: auto; }
+.crumbs .crumb-cta {
+  background: var(--accent); color: #fff !important; border: none !important;
+  font-weight: 700; padding: 4px 10px; border-radius: 4px;
+  margin-left: 8px; font-family: var(--font-ui); font-size: 12px;
+  text-transform: uppercase; letter-spacing: 0.6px;
+}
+.crumbs .crumb-cta:hover { background: #6925d6; }
+
+/* Big CTA panel for opening the inputs gallery from §8 */
+.cta-card {
+  display: flex; gap: 18px; align-items: center;
+  background: linear-gradient(135deg, var(--accent-bg), #fff);
+  border: 1px solid var(--accent); border-radius: 10px;
+  padding: 18px 22px; margin: 22px 0;
+}
+.cta-card .cta-icon { font-size: 28px; flex-shrink: 0; }
+.cta-card .cta-body { flex: 1; }
+.cta-card .cta-body h4 {
+  margin: 0 0 4px; font-family: var(--font-ui); font-size: 15px; color: var(--accent);
+}
+.cta-card .cta-body p { margin: 0; color: var(--text-2); font-size: 14px; }
+.cta-card .cta-btn {
+  background: var(--accent); color: #fff !important; border: none !important;
+  font-family: var(--font-ui); font-size: 13px; font-weight: 700;
+  padding: 10px 16px; border-radius: 6px; cursor: pointer;
+  white-space: nowrap; text-decoration: none;
+}
+.cta-card .cta-btn:hover { background: #6925d6; }
 
 /* Concept figure */
 figure.concept {
@@ -335,8 +363,7 @@ mark.ann.resolved { background: #e5e7eb; color: var(--text-3); text-decoration: 
     <a href="https://github.com/vladimiralbrekhtccr/world-models#readme">← world-models</a>
     <span class="sep">/</span>
     <span>MultiPano</span>
-    <span class="sep">·</span>
-    <a href="inputs.html"><strong>inputs gallery →</strong></a>
+    <a href="inputs.html" class="crumb-cta">📁 Open inputs gallery →</a>
     <span class="gh-link"><a href="https://github.com/vladimiralbrekhtccr/world-models/tree/main/MultiPano" target="_blank">view on GitHub ↗</a></span>
   </div>
 
@@ -458,7 +485,17 @@ mark.ann.resolved { background: #e5e7eb; color: var(--text-3); text-decoration: 
   <p>This experiment is closest in spirit to CAT3D but with a <em>human-authored map</em> in the loop instead of a model-generated multi-view set.</p>
 
   <h2><span class="sn">8</span> Where files live — <code>input/&lt;scene&gt;/</code></h2>
-  <p>For each scene you model, create a sub-folder under <code>MultiPano/input/</code> and drop reference images there. Naming convention:</p>
+
+  <div class="cta-card">
+    <div class="cta-icon">📁</div>
+    <div class="cta-body">
+      <h4>Manage scene inputs in the gallery</h4>
+      <p>Create a scene, drag-and-drop anime stills, preview thumbnails, click to view full-size — all in the browser. Uploads write straight to <code>MultiPano/input/&lt;scene&gt;/</code> on disk via <code>serve.py</code>.</p>
+    </div>
+    <a href="inputs.html" class="cta-btn">Open inputs gallery →</a>
+  </div>
+
+  <p>For each scene you model, the gallery creates a sub-folder under <code>MultiPano/input/</code>. The on-disk naming convention used by downstream automation:</p>
 <pre class="codeblock">MultiPano/input/&lt;scene_name&gt;/
 ├── 01_establishing.png    ← 4–8 anime stills of the same location;
 ├── 02_mid.png             ← prefix with NN_ so ChatGPT reads them
