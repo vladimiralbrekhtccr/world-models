@@ -260,7 +260,15 @@ a:hover { text-decoration: underline; }
       scenes = data.scenes || [];
     } catch (e) {
       scenes = [];
-      flashStatus('Server unreachable — run `python serve.py` to enable uploads', 'err', 5000);
+      let msg;
+      if (location.protocol === 'file:') {
+        msg = 'You opened this via file:// — uploads need the server. Visit http://localhost:8765/inputs.html instead (start serve.py + port-forward).';
+      } else {
+        msg = 'Server unreachable at ' + location.origin + ' — start serve.py on the cluster and check your port-forward. (' + e.message + ')';
+      }
+      flashStatus(msg, 'err', 10000);
+      // Also paint the empty state with the same hint, since flash toasts auto-dismiss
+      mainContent.innerHTML = '<div class="empty-state" style="text-align:left; line-height:1.7;"><strong>' + escapeHtml(msg) + '</strong></div>';
     }
     if (activeScene && !scenes.find(s => s.name === activeScene)) {
       activeScene = null;
