@@ -22,7 +22,7 @@ uv pip install \
 # Project deps
 uv pip install \
   "numpy<2" pillow tqdm imageio[ffmpeg] plyfile opencv-python-headless \
-  transformers huggingface_hub safetensors accelerate \
+  "transformers<5" huggingface_hub safetensors accelerate \
   diffusers timm \
   gsplat
 
