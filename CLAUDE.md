@@ -30,7 +30,11 @@ conversation, not the filesystem.
 ## Style and behaviour notes
 - Terse responses; no trailing summaries.
 - Propose first, wait for thumbs-up, then implement.
-- Do not push to any GitHub repo without explicit approval.
+- **Pushing to the user's own repos is pre-authorized** — including
+  `vladimiralbrekhtccr/world-models` and `vladimiralbrekhtccr/360-panorama-viewer`.
+  Just push additive, sensible changes without asking each time. Still
+  confirm before destructive ops (force-push, history rewrites, deleting
+  branches, removing existing files).
 
 ## Broader context
 - Panorama viewer (already deployed):
