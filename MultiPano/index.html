@@ -96,6 +96,65 @@ code, .mono { font-family: var(--font-mono); font-size: 0.92em; background: var(
               padding: 1px 5px; border-radius: 3px; color: var(--text-2); }
 strong { color: var(--text); }
 
+/* Breadcrumb at top of paper */
+.crumbs {
+  font-family: var(--font-ui); font-size: 12.5px; color: var(--text-3);
+  margin-bottom: 18px; display: flex; align-items: center; gap: 8px;
+  letter-spacing: 0.3px;
+}
+.crumbs a { color: var(--text-3); border-bottom: 1px solid transparent; }
+.crumbs a:hover { color: var(--accent); border-bottom-color: var(--accent-bg); }
+.crumbs .sep { color: #ccc; }
+.crumbs .gh-link { margin-left: auto; }
+
+/* Concept figure */
+figure.concept {
+  margin: 22px 0 32px; padding: 0;
+  border: 1px solid var(--border); border-radius: 8px; overflow: hidden;
+  background: #fdfdfd;
+}
+figure.concept img { display: block; width: 100%; height: auto; }
+figure.concept figcaption {
+  font-family: var(--font-ui); font-size: 12.5px; color: var(--text-3);
+  padding: 10px 14px; border-top: 1px solid var(--border);
+  background: #fafafa; line-height: 1.5;
+}
+
+/* Interactive pipeline flow */
+.pipeline-flow {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr auto 1fr;
+  gap: 12px; align-items: stretch;
+  margin: 22px 0 28px;
+}
+.pf-stage {
+  background: #fafbfe; border: 1px solid var(--border); border-radius: 8px;
+  padding: 16px 14px;
+  display: flex; flex-direction: column; gap: 8px;
+  transition: border-color 0.15s, transform 0.15s;
+}
+.pf-stage:hover { border-color: var(--accent); transform: translateY(-1px); }
+.pf-num {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--accent); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-ui); font-weight: 700; font-size: 14px;
+  flex-shrink: 0;
+}
+.pf-label {
+  font-family: var(--font-ui); font-weight: 700; font-size: 11px;
+  text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent);
+}
+.pf-desc { font-size: 13.5px; line-height: 1.55; color: var(--text-2); margin: 0; }
+.pf-arrow {
+  display: flex; align-items: center; justify-content: center;
+  color: var(--accent); font-size: 22px; font-weight: 700;
+}
+@media (max-width: 700px) {
+  .pipeline-flow { grid-template-columns: 1fr; }
+  .pf-arrow { transform: rotate(90deg); height: 24px; }
+}
+
 .title-block { margin-bottom: 28px; }
 .draft-tag { display: inline-block; background: var(--accent-bg); color: var(--accent);
   font-family: var(--font-ui); font-size: 11px; font-weight: 700; text-transform: uppercase;
@@ -272,6 +331,13 @@ mark.ann.resolved { background: #e5e7eb; color: var(--text-3); text-decoration: 
 
 <div class="paper annotatable" id="paper">
 
+  <div class="crumbs">
+    <a href="https://github.com/vladimiralbrekhtccr/world-models#readme">← world-models</a>
+    <span class="sep">/</span>
+    <span>MultiPano</span>
+    <span class="gh-link"><a href="https://github.com/vladimiralbrekhtccr/world-models/tree/main/MultiPano" target="_blank">view on GitHub ↗</a></span>
+  </div>
+
   <div class="title-block">
     <div class="draft-tag">World-models · MultiPano · v0 draft</div>
     <h1>MultiPano — map-anchored multi-panorama → real-geometry 3DGS</h1>
@@ -284,6 +350,11 @@ mark.ann.resolved { background: #e5e7eb; color: var(--text-3); text-decoration: 
     <p>Generate a top-down <strong>map</strong> of a fictional scene, then ask an image model to produce several <strong>360° panoramas</strong> from different positions on that map (each conditioned on the previous panoramas for identity), then run <strong>multi-view 3D Gaussian Splatting</strong> using the map-derived camera poses. With real parallax between panoramas the occlusion holes from iteration 1 disappear — provided the generator stays scene-consistent across views.</p>
   </div>
 
+  <figure class="concept">
+    <img src="concept.png" alt="Pipeline overview: top-down map with 3 camera pins → 3 equirectangular panoramas → 3D Gaussian splat reconstruction with a fly-through camera path">
+    <figcaption>The three stages at a glance. <strong>1.</strong> A top-down map fixes the scene layout and N camera positions. <strong>2.</strong> One 360° panorama is generated per position, each conditioned on the map and on panorama 1 so identity stays locked. <strong>3.</strong> Multi-view 3DGS reconstructs a flythrough-able 3D scene using the map-derived poses.</figcaption>
+  </figure>
+
   <h2><span class="sn">1</span> The problem with iteration 1</h2>
   <p>Single panorama → monocular depth → one Gaussian per pixel. Everything lives on a thin spherical shell around the original camera. Move the viewer sideways and you see (a) "depth skirts" stretched from silhouette edges, and (b) <strong>black voids</strong> behind every foreground object — because no pixel ever saw what was behind it.</p>
   <div class="note-box note-red"><p><strong>This is geometry's fault, not the network's.</strong> One image cannot encode parallax. No amount of better depth modelling fixes occlusion from a single viewpoint.</p></div>
@@ -292,13 +363,25 @@ mark.ann.resolved { background: #e5e7eb; color: var(--text-3); text-decoration: 
   <p>Generate <strong>several panoramas from different positions in the same imagined scene</strong>, then reconstruct properly with multi-view 3DGS. With ≥ 2 panoramas separated by a real baseline, parallax is no longer hallucinated — it's <em>measurable</em>. The occluded regions of panorama A are visible in panorama B.</p>
 
   <h2><span class="sn">3</span> Pipeline (left → right)</h2>
-<pre class="codeblock">   1. MAP                  2. PANORAMAS                     3. 3DGS SCENE
-   ─────                   ───────────                      ────────────
-top-down layout        N panoramas, one per           multi-view 3DGS
-of the scene,    ──►   marked map position,    ──►    optimization with
-N marked camera        each conditioned on map        map-given poses;
-positions              + previous panoramas           diffusion regularizer
-                       for consistency                fills residual gaps</pre>
+  <div class="pipeline-flow">
+    <div class="pf-stage">
+      <div class="pf-num">1</div>
+      <div class="pf-label">Map</div>
+      <p class="pf-desc">Top-down layout of the scene. N camera-pin positions are placed programmatically on a clean version of the map and saved to <code>poses.json</code>.</p>
+    </div>
+    <div class="pf-arrow">→</div>
+    <div class="pf-stage">
+      <div class="pf-num">2</div>
+      <div class="pf-label">Panoramas</div>
+      <p class="pf-desc">One 360° equirectangular panorama per pin. Each generation receives the map + style refs + panorama 1 as image conditioning, so the church stays the same church.</p>
+    </div>
+    <div class="pf-arrow">→</div>
+    <div class="pf-stage">
+      <div class="pf-num">3</div>
+      <div class="pf-label">3DGS scene</div>
+      <p class="pf-desc">Multi-view 3DGS with poses handed in directly (no COLMAP). Photometric loss against the N panoramas + a 2D-diffusion SDS regularizer to reconcile residual cross-view drift.</p>
+    </div>
+  </div>
 
   <h3>Stage 1 — the map (first)</h3>
   <p>A simple top-down illustration of the scene the user wants. Doesn't need to be photorealistic — it's a <em>layout document</em>. It encodes:</p>
@@ -372,7 +455,24 @@ positions              + previous panoramas           diffusion regularizer
   </ul>
   <p>This experiment is closest in spirit to CAT3D but with a <em>human-authored map</em> in the loop instead of a model-generated multi-view set.</p>
 
-  <h2><span class="sn">8</span> Reusable ChatGPT prompts</h2>
+  <h2><span class="sn">8</span> Where files live — <code>input/&lt;scene&gt;/</code></h2>
+  <p>For each scene you model, create a sub-folder under <code>MultiPano/input/</code> and drop reference images there. Naming convention:</p>
+<pre class="codeblock">MultiPano/input/&lt;scene_name&gt;/
+├── 01_establishing.png    ← 4–8 anime stills of the same location;
+├── 02_mid.png             ← prefix with NN_ so ChatGPT reads them
+├── 03_closeup.png             in the right order
+├── 04_alt_angle.png
+├── sketch.png             ← optional rough hand layout
+├── style.png              ← optional dedicated style anchor
+│
+├── map.png                ← Step 1 output
+├── poses.json             ← camera pin coordinates
+├── pano_1.png             ← Step 2 output, position 1
+├── pano_2.png             ← Step 2 output, position 2
+└── pano_k.png             ← ...</pre>
+  <p>Image files are gitignored (large + binary); the folder structure itself is tracked so the convention stays documented. <code>place_pins.py</code> and <code>generate_panoramas.py</code> (planned) both read from these folders, so the same layout doubles as a manifest for automation later.</p>
+
+  <h2><span class="sn">9</span> Reusable ChatGPT prompts</h2>
   <p>Target model: <strong><code>gpt-image-2</code></strong> (OpenAI, released April 2026). Key capabilities the prompts below rely on:</p>
   <ul>
     <li>Accepts <strong>up to 16 reference images</strong> per call.</li>
@@ -463,7 +563,7 @@ positions              + previous panoramas           diffusion regularizer
 <strong>Keep everything else the same</strong> — same composition, same projection, same camera position, same lighting, same palette, same characters, same buildings, same trees. Re-attach the same inputs as before (Image 1: map with the circle, Image 2: style anchor, Image 3: panorama 1). Do not introduce any other changes.</div>
   </div>
 
-  <h2><span class="sn">9</span> TODOs / future work</h2>
+  <h2><span class="sn">10</span> TODOs / future work</h2>
   <ul>
     <li><strong><code>sketch.html</code></strong> — in-browser sketcher. A single HTML file with a canvas: drag to draw blobs / lines, label each blob (chapel / tree / path / wall) from a small palette, then click <em>Download PNG</em> to save the sketch as input for Step 1.</li>
     <li><strong><code>place_pins.py</code></strong> — click-to-place pin coordinates. Open the generated map, click N positions, save them as <code>poses.json</code> (<code>{px, py, yaw_deg}</code> per pin). Converts to metric via a declared <code>scale_m_per_px</code>.</li>
@@ -484,6 +584,7 @@ positions              + previous panoramas           diffusion regularizer
   </div>
   <div class="sidebar-footer">
     <div class="status" id="ann-status">…</div>
+    <button id="btn-copy" title="Copy all comments as JSON to clipboard (paste back to Claude)">📋 Copy all</button>
     <button id="btn-export">Export</button>
     <label class="file-btn" for="ann-import" style="cursor:pointer;">Import</label>
     <input type="file" id="ann-import" accept="application/json" style="display:none">
@@ -521,6 +622,7 @@ positions              + previous panoramas           diffusion regularizer
   const popRes   = document.getElementById('popover-resolve');
   const popCancel= document.getElementById('popover-cancel');
   const statusEl = document.getElementById('ann-status');
+  const btnCopy  = document.getElementById('btn-copy');
   const btnExport= document.getElementById('btn-export');
   const btnClear = document.getElementById('btn-clear');
   const btnTogRes= document.getElementById('btn-toggle-resolved');
@@ -807,6 +909,27 @@ positions              + previous panoramas           diffusion regularizer
   });
 
   // ── 5. Toolbar ─────────────────────────────────────────────────────
+  btnCopy.addEventListener('click', async () => {
+    if (!annotations.length) {
+      btnCopy.textContent = 'Nothing to copy';
+      setTimeout(() => btnCopy.textContent = '📋 Copy all', 1200);
+      return;
+    }
+    const payload = JSON.stringify({annotations}, null, 2);
+    try {
+      await navigator.clipboard.writeText(payload);
+      btnCopy.textContent = '✓ Copied ' + annotations.length;
+      setTimeout(() => btnCopy.textContent = '📋 Copy all', 1500);
+    } catch (e) {
+      // Fallback: select the text in a temporary textarea
+      const ta = document.createElement('textarea');
+      ta.value = payload; document.body.appendChild(ta);
+      ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+      btnCopy.textContent = '✓ Copied (fallback)';
+      setTimeout(() => btnCopy.textContent = '📋 Copy all', 1500);
+    }
+  });
+
   btnExport.addEventListener('click', () => {
     const blob = new Blob([JSON.stringify({annotations}, null, 2)], {type:'application/json'});
     const a = document.createElement('a');

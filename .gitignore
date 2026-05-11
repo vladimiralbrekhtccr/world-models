@@ -58,3 +58,9 @@ _temp/
 
 # live annotation state (per-user / per-session)
 MultiPano/annotations.json
+
+# per-scene image inputs in MultiPano/ (large binaries; folder tracked via README)
+MultiPano/input/**/*.png
+MultiPano/input/**/*.jpg
+MultiPano/input/**/*.jpeg
+MultiPano/input/**/*.webp
