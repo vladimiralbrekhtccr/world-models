@@ -33,6 +33,13 @@ checkpoints/
 logs/
 lightning_logs/
 
+# 3DGS / panorama experiment outputs
+**/out/
+**/third_party/
+*.ply
+*.splat
+*.mp4
+
 # Data (override with !)
 data/
 datasets/
