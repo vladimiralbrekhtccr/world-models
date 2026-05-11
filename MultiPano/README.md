@@ -128,62 +128,145 @@ map* in the loop instead of a model-generated multi-view set.
 
 ## Reusable ChatGPT prompts
 
-Fill in the `[BRACKETED]` slots. For each generation, attach the relevant
-inputs as image inputs (the model needs to *see* the references, not just
-read them).
+Target model: **gpt-image-2** (OpenAI, released April 2026). Key
+capabilities the prompts below rely on:
+
+- Accepts **up to 16 reference images** per call — we can attach many
+  stills + the map + previous panoramas all at once.
+- **Native thinking mode** — reasons over composition, object counts,
+  lighting, and constraints *before* rendering. Long, structured
+  prompts with explicit constraints work well; no need to be terse.
+- **Strong cross-image consistency** — character, material, and scene
+  identity transfer across edits. This is what makes panorama-N stay
+  consistent with panorama-1.
+- **Better spatial reasoning** — "to the left of", "behind",
+  "overlapping" are honoured more reliably than in 1.5.
+- **1K / 2K / 4K resolution.** Maps at 2048², panoramas at 4096×2048.
+
+Prompt structure used below — keep this order, it parses cleanly:
+**Goal → Inputs (labelled) → What to draw → Constraints → Intended use.**
 
 ### Step 1 — Generate the map
 
-Inputs to attach: 2–4 anime stills for style + your rough layout sketch
-(can be a hand drawing or even a text-described block diagram).
+**Inputs to attach** (label them by index in the prompt — gpt-image-2
+will reference each image by its slot):
 
-> Generate a **top-down 2D map illustration** of [SCENE — e.g. "a small
-> forest clearing with a stone chapel near the centre, a winding stone
-> path entering from the south, three tall pine trees on the west side,
-> and a low moss-covered wall along the north edge"].
+| Slot       | Image                                                                 | Required? |
+|------------|-----------------------------------------------------------------------|-----------|
+| Image 1–N  | 4–8 stills of the **same scene** from the anime episode (mix wide establishing shots, mid-shots, close-ups) | ✅ |
+| Image N+1  | Rough hand-drawn sketch of the layout (blobs labelled "chapel", "tree", "path") | optional  |
+| Image N+2  | One additional style still you want to match closely (palette / linework) | optional  |
+
+**Prompt:**
+
+> **Goal.** Generate a top-down 2D illustrated map of one fictional
+> outdoor scene. This map will be used as a layout reference for
+> subsequent AI image generation.
 >
-> Style reference: match the attached anime stills (illustrative
-> watercolor / ink, soft palette, Witch Hat Atelier–like).
-> Layout reference: the attached rough sketch defines relative positions
-> — preserve them.
+> **Inputs.**
+> - **Images 1–N** are stills of the same physical location from
+>   different angles, moments, and characters. Treat them as multiple
+>   views of one place — infer where each feature (building, tree,
+>   path, wall, water, prop) sits relative to the others.
+> - **Image N+1** (if attached) is a rough hand sketch of the layout.
+>   When present, its proportions and relative positions **override**
+>   anything you'd infer from the stills.
+> - **Image N+2** (if attached) is a dedicated style anchor — copy its
+>   linework, palette, and texture closely.
 >
-> Strict requirements:
-> - **Strict orthographic top-down view** (looking straight down, zero
->   perspective skew — every object drawn as if seen from directly above).
-> - **Aspect ratio 1:1 (square), 2048 × 2048 px.**
-> - **No camera pins, no numbered markers, no grid lines, no scale bars,
->   no text annotations.** Pure illustrated map only — we'll add pins
->   programmatically afterwards.
-> - Show the relative positions of every object clearly. Spatial layout
->   matters more than artistic flourish.
+> **What to draw.**
+> 1. A **top-down floor-plan-style map** of the scene. Every
+>    significant feature visible in any input still must appear
+>    somewhere on the map.
+> 2. **Style** matches the input stills — illustrative watercolor / ink,
+>    soft palette, Witch Hat Atelier–like.
+> 3. **Composition** — **strict orthographic top-down view**, looking
+>    straight down. **Zero perspective skew.** Every object drawn as
+>    if seen from directly above; no 3/4, no isometric, no axonometric
+>    tilt.
+> 4. **Aspect ratio 1:1 (square), 2048 × 2048 px.**
+>
+> **Do NOT include.**
+> - No camera pins, numbered markers, dots, or icons.
+> - No grid lines, scale bars, compass roses, or coordinate labels.
+> - No text, captions, watermarks, or annotations.
+> - No characters or living figures — environment only.
+> - No 3/4 / isometric / tilted view. Strict top-down only.
+>
+> **Intended use.** Layout reference for a multi-view 3D pipeline.
+> Pins are added programmatically afterwards. Treat the map as a
+> precise spatial document, not a vibe sketch.
 
 ### Step 2 — Generate each panorama
 
-Inputs to attach: the same anime stills (style), the generated map (with
-the pin position you're currently shooting from circled or otherwise
-indicated), and *for panorama 2+*, panorama 1 (so the model preserves
-identity of the same scene).
+**Inputs to attach:**
 
-> Make a **full 360° equirectangular panorama photo** of [SCENE +
-> VIEWPOINT — e.g. "the same forest clearing as in the attached map,
-> shot from position **2** marked on the map (south-west of the chapel,
-> on the stone path). The chapel should appear in the northern half of
-> the panorama; the pine trees are on my right; the moss-covered wall
-> is in the far distance behind me."].
+| Slot     | Image                                                                                | Required?     |
+|----------|--------------------------------------------------------------------------------------|---------------|
+| Image 1  | The generated map, with the **target camera position circled** (or attach the map with a red dot painted at the camera position) | ✅ |
+| Image 2  | One or two style stills (the same anime frames as the map's style reference)         | ✅ |
+| Image 3  | **Panorama 1** of this scene — for panoramas with k ≥ 2 only                         | ✅ if k ≥ 2  |
+
+**Prompt:**
+
+> **360 equirectangular panorama** of one fictional outdoor scene,
+> viewed from a specific position marked on the attached map.
 >
-> Style reference: match the attached anime stills.
-> Scene identity reference: match the chapel, trees, lighting, and
-> palette of the attached panorama 1 — same world, different vantage
-> point. Do not invent new buildings or rearrange large features.
+> **Inputs.**
+> - **Image 1** is the top-down map of the scene. A red mark / circle
+>   shows the **camera position** for this panorama. Specifically: the
+>   camera stands at [VIEWPOINT — e.g. "the south-west point near the
+>   stone path, ~5 m from the chapel"].
+> - **Image 2** is the style anchor. Match its illustrative
+>   watercolor / ink style, palette, and linework.
+> - **Image 3** (if attached) is panorama 1 of this same scene. **The
+>   chapel, trees, walls, sky, time of day, lighting direction, palette,
+>   and weather must be identical to Image 3.** Only the vantage point
+>   changes. Do not invent new buildings. Do not rearrange large
+>   features. Do not add or remove characters.
 >
-> Strict requirements:
-> - **Aspect ratio exactly 2:1** (e.g. 2048 × 1024).
-> - **Equirectangular projection**: sky stretches across the entire top,
->   ground across the entire bottom, vertical objects bow into gentle
->   vertical arcs. The image must **wrap seamlessly left-to-right**
->   (leftmost column continues into rightmost column).
-> - Convention: the **centre column of the image faces map-north** for
->   every panorama (locks yaw so we don't have to think about it).
+> **What to draw.**
+> 1. A **full 360° view** from the marked camera position.
+> 2. **Equirectangular projection** (cylindrical equidistant): the sky
+>    stretches across the entire top row of the image, the ground
+>    across the entire bottom row, vertical objects bow into gentle
+>    vertical arcs near the top and bottom.
+> 3. **Seamless horizontal wrap** — the leftmost column of pixels must
+>    continue into the rightmost column with no visible seam, as if
+>    the image were wrapped around a sphere.
+> 4. **Yaw convention.** The **centre column of the image faces
+>    map-north** (top of the map). The left half of the image is what
+>    is west of the camera; the right half is what is east; the seam
+>    at the left/right edge is what is directly south.
+> 5. **Aspect ratio exactly 2:1. Resolution 4096 × 2048 px.**
+>
+> **Do NOT include.**
+> - No HUD, watermark, logo, or text.
+> - No characters not present in Image 3 (preserve cast).
+> - No new buildings, paths, or large features not visible on Image 1.
+> - No time-of-day, lighting, or weather change from Image 3.
+> - No fisheye / wide-angle distortion *other than* what equirectangular
+>   projection naturally requires.
+>
+> **Intended use.** This panorama will be combined with others from
+> different positions on the same map into a multi-view 3D
+> reconstruction. **Geometric and identity consistency with Image 3
+> matters more than artistic novelty.** When in doubt, copy from Image 3
+> rather than invent.
+
+### Step 2b — Iterating on a panorama
+
+If panorama-k disagrees with panorama-1 on something specific (the
+chapel roof colour drifted, an extra tree appeared, etc.):
+
+> **Change only:** [one specific edit, e.g. "the chapel roof should be
+> dark slate grey, matching Image 3"].
+>
+> **Keep everything else the same** — same composition, same
+> projection, same camera position, same lighting, same palette, same
+> characters, same buildings, same trees. Re-attach the same inputs as
+> before (Image 1: map with the circle, Image 2: style anchor, Image 3:
+> panorama 1). Do not introduce any other changes.
 
 ### Step 3 — Pipeline explainer image (the diagram)
 
@@ -217,3 +300,25 @@ Used once, for slides / docs. Not part of the runtime pipeline.
 > Style: warm, technical, clean — minimal text (only stage titles and
 > small 1/2/3 numerals), soft shadows, restrained colour palette. No
 > screenshots, no UI chrome, no extra explanatory text on the image.
+
+---
+
+## TODOs / future work
+
+- **`sketch.html` — in-browser sketcher.** A single HTML file with a
+  canvas: drag to draw blobs / lines, label each blob (chapel / tree /
+  path / wall) from a small palette, then click *Download PNG* to save
+  the sketch as input for Step 1. Mobile-friendly so you can sketch on
+  a phone or tablet. Single-file, no build step, drop into `MultiPano/`
+  alongside this README.
+- **`place_pins.py` — click-to-place pin coordinates.** Open the
+  generated map, click N positions, save them as `poses.json`
+  (`{px, py, yaw_deg}` per pin). Converts to metric via a declared
+  `scale_m_per_px`.
+- **`generate_panoramas.py`** — `openai` SDK call that, given the map +
+  `poses.json` + Step 2 prompt template, loops over pins and produces
+  `pano_1.png`, `pano_2.png`, …  Re-uses panorama 1 as a reference for
+  panoramas k ≥ 2 automatically.
+- **`recon_3dgs.py`** — multi-view 3DGS optimization with `poses.json`
+  as ground-truth poses, equirectangular camera model, optional SDS
+  loss. Outputs `scene.ply`.
