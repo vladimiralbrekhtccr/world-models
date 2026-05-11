@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MultiPano — map-anchored multi-panorama → 3DGS</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Literata:ital,wght@0,400;0,500;0,700;1,400&family=DM+Sans:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --text: #111; --text-2: #3a3a3a; --text-3: #777;
+  --accent: #7c3aed; --accent-bg: #faf5ff;
+  --bg: #fff; --border: #e0e0e0; --code-bg: #f4f4f8;
+  --green:  #15803d; --green-bg:  #f0fdf4;
+  --red:    #b91c1c; --red-bg:    #fef2f2;
+  --orange: #c2410c; --orange-bg: #fffbeb;
+  --blue:   #1d4ed8; --blue-bg:   #eff6ff;
+  --yellow-mark: #fff3a0;
+  --font-body: 'Literata', Georgia, serif;
+  --font-ui:   'DM Sans', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font-family: var(--font-body); font-size: 16.5px; line-height: 1.78;
+}
+.layout { display: grid; grid-template-columns: 1fr 320px; gap: 0; }
+.paper  { max-width: 880px; margin: 0 auto; padding: 56px 40px 120px; }
+.sidebar {
+  border-left: 1px solid var(--border); background: #fbfbfd;
+  padding: 28px 22px; position: sticky; top: 0; height: 100vh; overflow-y: auto;
+  font-family: var(--font-ui); font-size: 13.5px;
+}
+p { text-align: justify; }
+p, ul, ol { margin: 0 0 14px; }
+ul, ol { padding-left: 22px; }
+li { margin-bottom: 6px; }
+
+h1 { font-family: var(--font-body); font-size: 28px; font-weight: 700;
+     line-height: 1.35; margin: 0 0 6px; }
+h2 { font-family: var(--font-ui); font-size: 21px; font-weight: 700;
+     margin: 40px 0 16px; padding-bottom: 6px; border-bottom: 1px solid #eee; }
+h3 { font-family: var(--font-ui); font-size: 17px; font-weight: 700; margin: 24px 0 10px; }
+h4 { font-family: var(--font-ui); font-size: 15.5px; font-weight: 700; margin: 16px 0 8px; }
+.sn { color: var(--accent); margin-right: 4px; }
+a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-bg); }
+a:hover { border-bottom-color: var(--accent); }
+code, .mono { font-family: var(--font-mono); font-size: 0.92em; background: var(--code-bg);
+              padding: 1px 5px; border-radius: 3px; color: var(--text-2); }
+strong { color: var(--text); }
+
+.title-block { margin-bottom: 28px; }
+.draft-tag { display: inline-block; background: var(--accent-bg); color: var(--accent);
+  font-family: var(--font-ui); font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1.5px; padding: 4px 10px; border: 1px solid var(--accent);
+  border-radius: 3px; margin-bottom: 14px; }
+.tagline { font-style: italic; color: var(--text-2); font-size: 17px;
+  margin: 6px 0 14px; text-align: left; }
+.meta-line { font-family: var(--font-ui); font-size: 13px; color: var(--text-3);
+  margin: 0; text-align: left; }
+.meta-line span { margin: 0 8px; }
+
+.abstract { background: #fafbfe; border-left: 3px solid var(--accent);
+  padding: 16px 22px; margin: 28px 0 40px; border-radius: 0 6px 6px 0; }
+.abstract-label { font-family: var(--font-ui); font-size: 12px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); margin-bottom: 6px; }
+.abstract p { margin: 0; text-align: left; font-size: 15.5px; color: var(--text-2); }
+
+.note-box { border-radius: 6px; padding: 16px 20px; font-size: 15px;
+  line-height: 1.7; margin: 18px 0; border-style: solid; border-width: 1px; }
+.note-box p { text-align: left; margin: 0; }
+.note-box p + p { margin-top: 10px; }
+.note-green  { background: var(--green-bg);  border-color: #86efac; }
+.note-green strong  { color: var(--green); }
+.note-red    { background: var(--red-bg);    border-color: #fca5a5; }
+.note-red strong    { color: var(--red); }
+.note-orange { background: var(--orange-bg); border-color: #fde68a; }
+.note-orange strong { color: var(--orange); }
+.note-blue   { background: var(--blue-bg);   border-color: #93c5fd; }
+.note-blue strong   { color: var(--blue); }
+.note-purple { background: var(--accent-bg); border-color: #c4b5fd; }
+.note-purple strong { color: var(--accent); }
+
+pre.eq, pre.codeblock {
+  background: var(--code-bg); border: 1px solid var(--border); border-radius: 5px;
+  padding: 16px 20px; font-family: var(--font-mono); font-size: 13px; line-height: 1.65;
+  overflow-x: auto; white-space: pre; color: var(--text-2); margin: 14px 0 18px;
+}
+
+.prompt-card {
+  border: 1px solid var(--border); border-radius: 6px; background: #fafbfe;
+  margin: 14px 0 20px; overflow: hidden;
+}
+.prompt-card .pc-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 16px; background: #f3f3f8; border-bottom: 1px solid var(--border);
+  font-family: var(--font-ui); font-size: 12px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1.2px; color: var(--accent);
+}
+.prompt-card .pc-body {
+  padding: 14px 18px; font-family: var(--font-mono); font-size: 13.5px;
+  line-height: 1.65; color: var(--text-2); white-space: pre-wrap;
+}
+.pc-copy {
+  font-family: var(--font-ui); font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1px; color: var(--accent); background: transparent;
+  border: 1px solid var(--accent); padding: 4px 10px; border-radius: 3px; cursor: pointer;
+}
+.pc-copy:hover { background: var(--accent-bg); }
+.pc-copy.ok   { background: var(--green-bg); border-color: var(--green); color: var(--green); }
+
+table.io-table {
+  width: 100%; border-collapse: collapse; margin: 12px 0 18px; font-size: 14.5px;
+  font-family: var(--font-ui);
+}
+table.io-table th, table.io-table td {
+  text-align: left; padding: 9px 12px; border-bottom: 1px solid #eee; vertical-align: top;
+}
+table.io-table th {
+  font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px;
+  color: var(--text-3); border-bottom: 2px solid var(--border);
+}
+table.io-table td:first-child { font-family: var(--font-mono); font-size: 13px;
+  color: var(--accent); white-space: nowrap; width: 110px; }
+table.io-table td:nth-child(3) { color: var(--text-3); width: 110px; text-align: right; }
+
+blockquote { border-left: 3px solid var(--accent); padding: 4px 0 4px 18px;
+  margin: 22px 0; font-style: italic; font-size: 16px; color: var(--text-2); }
+
+/* ── Annotation system ──────────────────────────────────────────── */
+.annotatable { position: relative; }
+mark.ann {
+  background: var(--yellow-mark); padding: 1px 2px; border-radius: 2px;
+  cursor: pointer; transition: background 0.15s;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.04);
+}
+mark.ann:hover { background: #ffec55; }
+mark.ann.resolved { background: #e5e7eb; color: var(--text-3); text-decoration: line-through; }
+
+.ann-toolbar {
+  position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+  display: flex; gap: 8px; padding: 8px 12px;
+  background: rgba(255,255,255,0.96); border: 1px solid var(--border);
+  border-radius: 8px; box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  z-index: 50; font-family: var(--font-ui); font-size: 12.5px;
+  backdrop-filter: blur(6px);
+}
+.ann-toolbar button, .ann-toolbar label {
+  font-family: var(--font-ui); font-size: 12px; font-weight: 600;
+  background: transparent; border: 1px solid var(--border); border-radius: 4px;
+  padding: 4px 10px; cursor: pointer; color: var(--text-2);
+}
+.ann-toolbar button:hover { background: var(--accent-bg); color: var(--accent); border-color: var(--accent); }
+.ann-toolbar .status {
+  font-family: var(--font-mono); font-size: 11px; color: var(--text-3);
+  display: inline-flex; align-items: center; padding: 0 6px;
+}
+.ann-toolbar .status.ok { color: var(--green); }
+.ann-toolbar .status.err { color: var(--red); }
+
+.ann-popover {
+  position: absolute; z-index: 60;
+  background: #fff; border: 1px solid var(--border); border-radius: 6px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.12);
+  padding: 10px; width: 320px; font-family: var(--font-ui); font-size: 13.5px;
+}
+.ann-popover textarea {
+  width: 100%; min-height: 70px; resize: vertical; padding: 8px;
+  border: 1px solid var(--border); border-radius: 4px; font-family: var(--font-ui);
+  font-size: 13.5px; line-height: 1.5; box-sizing: border-box;
+}
+.ann-popover textarea:focus { outline: none; border-color: var(--accent); }
+.ann-popover .ann-actions { display: flex; justify-content: flex-end; gap: 6px; margin-top: 8px; }
+.ann-popover button {
+  font-family: var(--font-ui); font-size: 12px; font-weight: 600;
+  padding: 4px 10px; border-radius: 4px; cursor: pointer; border: 1px solid var(--border);
+  background: #fff; color: var(--text-2);
+}
+.ann-popover button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+.ann-popover button.danger  { color: var(--red); border-color: #fca5a5; }
+.ann-popover button.success { color: var(--green); border-color: #86efac; }
+.ann-popover .ann-quote {
+  font-family: var(--font-mono); font-size: 11.5px; color: var(--text-3);
+  background: var(--code-bg); border-left: 2px solid var(--accent);
+  padding: 6px 8px; margin-bottom: 8px; max-height: 60px; overflow-y: auto;
+}
+
+.add-pill {
+  position: absolute; z-index: 55;
+  background: var(--accent); color: #fff;
+  font-family: var(--font-ui); font-size: 12px; font-weight: 700;
+  border: none; padding: 4px 10px; border-radius: 14px; cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+.add-pill:hover { background: #6925d6; }
+
+.sidebar h3 { font-size: 12px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 1.5px; color: var(--text-3); margin: 18px 0 10px; padding: 0; border: none; }
+.sidebar h3:first-child { margin-top: 0; }
+.ann-item {
+  border: 1px solid var(--border); border-radius: 5px; background: #fff;
+  padding: 9px 10px; margin-bottom: 8px; font-size: 13px; line-height: 1.5;
+  cursor: pointer; transition: border-color 0.15s;
+}
+.ann-item:hover { border-color: var(--accent); }
+.ann-item.resolved { opacity: 0.55; }
+.ann-item .ann-q { font-family: var(--font-mono); font-size: 11px; color: var(--text-3);
+  border-left: 2px solid var(--accent); padding-left: 6px; margin-bottom: 4px;
+  max-height: 36px; overflow: hidden; }
+.ann-item .ann-c { color: var(--text); font-family: var(--font-ui); }
+.ann-item .ann-meta { font-size: 10.5px; color: var(--text-3); margin-top: 4px;
+  display: flex; justify-content: space-between; }
+
+.empty {
+  color: var(--text-3); font-style: italic; font-size: 13px;
+  padding: 12px 8px; text-align: center;
+}
+
+@media (max-width: 1100px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { position: static; height: auto; max-height: none;
+             border-left: none; border-top: 1px solid var(--border); }
+}
+@media (max-width: 700px) {
+  .paper { padding: 24px 16px 100px; }
+  .ann-toolbar { flex-wrap: wrap; left: 8px; right: 8px; transform: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="ann-toolbar" id="ann-toolbar">
+  <span class="status" id="ann-status">…</span>
+  <button id="btn-export">Export JSON</button>
+  <label style="border:none;padding:0;cursor:pointer;">
+    <input type="file" id="ann-import" accept="application/json" style="display:none">
+    <span style="display:inline-block;padding:4px 10px;border:1px solid var(--border);border-radius:4px;">Import JSON</span>
+  </label>
+  <button id="btn-clear">Clear all</button>
+  <button id="btn-toggle-resolved">Hide resolved</button>
+</div>
+
+<div class="layout">
+<div class="paper annotatable" id="paper">
+
+  <div class="title-block">
+    <div class="draft-tag">World-models · MultiPano · v0 draft</div>
+    <h1>MultiPano — map-anchored multi-panorama → real-geometry 3DGS</h1>
+    <p class="tagline">A second attempt at the world-models problem, fixing the core weakness of <code>3DGS/</code> (single-panorama → hallucinated parallax).</p>
+    <p class="meta-line">Concept doc · select any text to leave a comment <span>·</span> annotations auto-save</p>
+  </div>
+
+  <div class="abstract">
+    <div class="abstract-label">In one paragraph</div>
+    <p>Generate a top-down <strong>map</strong> of a fictional scene, then ask an image model to produce several <strong>360° panoramas</strong> from different positions on that map (each conditioned on the previous panoramas for identity), then run <strong>multi-view 3D Gaussian Splatting</strong> using the map-derived camera poses. With real parallax between panoramas the occlusion holes from iteration 1 disappear — provided the generator stays scene-consistent across views.</p>
+  </div>
+
+  <h2><span class="sn">1</span> The problem with iteration 1</h2>
+  <p>Single panorama → monocular depth → one Gaussian per pixel. Everything lives on a thin spherical shell around the original camera. Move the viewer sideways and you see (a) "depth skirts" stretched from silhouette edges, and (b) <strong>black voids</strong> behind every foreground object — because no pixel ever saw what was behind it.</p>
+  <div class="note-box note-red"><p><strong>This is geometry's fault, not the network's.</strong> One image cannot encode parallax. No amount of better depth modelling fixes occlusion from a single viewpoint.</p></div>
+
+  <h2><span class="sn">2</span> The idea</h2>
+  <p>Generate <strong>several panoramas from different positions in the same imagined scene</strong>, then reconstruct properly with multi-view 3DGS. With ≥ 2 panoramas separated by a real baseline, parallax is no longer hallucinated — it's <em>measurable</em>. The occluded regions of panorama A are visible in panorama B.</p>
+
+  <h2><span class="sn">3</span> Pipeline (left → right)</h2>
+<pre class="codeblock">   1. MAP                  2. PANORAMAS                     3. 3DGS SCENE
+   ─────                   ───────────                      ────────────
+top-down layout        N panoramas, one per           multi-view 3DGS
+of the scene,    ──►   marked map position,    ──►    optimization with
+N marked camera        each conditioned on map        map-given poses;
+positions              + previous panoramas           diffusion regularizer
+                       for consistency                fills residual gaps</pre>
+
+  <h3>Stage 1 — the map (first)</h3>
+  <p>A simple top-down illustration of the scene the user wants. Doesn't need to be photorealistic — it's a <em>layout document</em>. It encodes:</p>
+  <ul>
+    <li>where each object lives (trees, buildings, paths, characters)</li>
+    <li>where each camera will stand (N numbered pins, added programmatically after the map is generated)</li>
+    <li>approximate scale (so we can convert map distance → world metres)</li>
+  </ul>
+  <p>The map is generated <strong>once</strong> and frozen. Everything downstream cites it.</p>
+
+  <h3>Stage 2 — the panoramas (then, in order)</h3>
+  <ul>
+    <li><strong>Panorama 1</strong> at map position P1. Generated from a prompt that includes (a) the map image, (b) "you are standing at point 1", (c) the scene's style references. This panorama fixes the <em>visual identity</em> of the world: lighting, palette, character design, building materials, sky.</li>
+    <li><strong>Panorama k (k ≥ 2)</strong> at map position Pk. Generated from a prompt including (a) the map, (b) <strong>panorama 1 as image conditioning</strong>, (c) "you are standing at point k". The image conditioning is the critical part — text-to-image alone drifts; image-to-image keeps the church looking like the same church.</li>
+  </ul>
+  <p>Tools that support image conditioning on a 360° panorama prompt: <strong>OpenAI <code>gpt-image-2</code></strong> (16 image inputs, native thinking, 2K/4K) is the simplest. Stable Diffusion XL + IP-Adapter, PanoFusion, MVDiffusion are alternatives.</p>
+
+  <h3>Stage 3 — multi-view 3DGS</h3>
+  <ul>
+    <li><strong>Skip COLMAP.</strong> We don't need to recover camera poses from feature matches — we already know them from the map. Hand the poses to the optimizer directly.</li>
+    <li><strong>Equirectangular camera model</strong> in the rasterizer, or slice each panorama into ~20 perspective views per panorama and run standard perspective 3DGS.</li>
+    <li><strong>Loss:</strong> photometric reconstruction against the N panoramas + a 2D diffusion regularizer (SDS) on novel views to reconcile any residual inconsistencies the generator left behind.</li>
+  </ul>
+
+  <h2><span class="sn">4</span> The main risk</h2>
+  <p><strong>Cross-view consistency.</strong> Today's image generators don't have an internal 3D model of the world. Even with the map + image conditioning, panorama 2 may give you a slightly different church, the trees might shift, characters may teleport. Multi-view stereo lives or dies on feature correspondence.</p>
+  <p>Mitigations, in order of effort:</p>
+  <ol>
+    <li><strong>Image conditioning</strong> (above). Most of the benefit.</li>
+    <li><strong>Aggressive prompt anchoring</strong> — describe key landmarks verbatim each time, lock the style ("painted matte, soft light, 2 PM, high overcast").</li>
+    <li><strong>Small baselines first.</strong> Two panoramas 1–2 m apart fail less than two panoramas 20 m apart. Start small, then push.</li>
+    <li><strong>Diffusion regularizer in the 3DGS loss</strong> (Stage 3) — partial inconsistencies get smoothed into a plausible average.</li>
+    <li><strong>If all else fails:</strong> use a real multi-view-consistent generator like CAT3D / MVDream / WonderWorld instead of a generic LLM image model.</li>
+  </ol>
+
+  <h2><span class="sn">5</span> First concrete experiment</h2>
+  <p>Before building any pipeline, sanity-check the generator:</p>
+  <ol>
+    <li>Generate a top-down map of one scene.</li>
+    <li>Generate panorama 1 at P1 with the map as input.</li>
+    <li>Generate panorama 2 at P2 with map + panorama 1 as inputs.</li>
+    <li>Eyeball: do shared objects look like the same objects from a different angle?</li>
+  </ol>
+  <div class="note-box note-green"><p><strong>Yes →</strong> wire up multi-view 3DGS.</p><p><strong>No →</strong> swap the generator before writing any 3DGS code.</p></div>
+
+  <h2><span class="sn">6</span> Coordinate system (how we get poses)</h2>
+  <p>The scene is fictional, so the coordinate system is too. Two patterns work:</p>
+  <ol>
+    <li><strong>Declare a scale up front.</strong> "This map represents a 30 m × 30 m clearing." If the rendered map is 2048 × 2048 px, that fixes <code>1 px ≈ 1.5 cm</code>. Every pixel on the map now has a metric coordinate by construction.</li>
+    <li><strong>Click to place, programmatically.</strong> Generate a <em>clean</em> map (no pins, no markers). In a tiny script, open the image, click the N positions you want, save them as <code>(px, py)</code> pixel coords. Multiply by the declared scale → metric <code>(x, y)</code>.</li>
+  </ol>
+  <p>The pins drawn on diagram images are decoration. The <em>real</em> poses live in <code>poses.json</code>:</p>
+<pre class="codeblock">{
+  "scale_m_per_px": 0.015,
+  "world_north_in_image": "up",
+  "cameras": {
+    "1": { "px":  320, "py":  200, "yaw_deg": 0 },
+    "2": { "px":  480, "py":  650, "yaw_deg": 0 },
+    "3": { "px":  750, "py":  400, "yaw_deg": 0 }
+  }
+}</pre>
+  <p>For yaw: every panorama is 360°, so yaw is just the convention for "which column faces north." Pick one — <em>"the centre column of every equirectangular image faces map-north"</em> — and lock it. Then yaw is constant across all panoramas and you don't have to think about it.</p>
+  <div class="note-box note-orange"><p><strong>The honest catch.</strong> When we tell <code>gpt-image-2</code> "you've moved 4 m east," it won't honour that distance literally — it'll generate "kinda further east." So the declared coordinates won't match the visual parallax precisely. That mismatch is what the 3DGS bundle adjustment + SDS regularizer are for; they treat our poses as a starting guess, not ground truth.</p></div>
+
+  <h2><span class="sn">7</span> Related work — don't reinvent</h2>
+  <ul>
+    <li><strong>DreamScene360</strong> (Zhou et al., ECCV 2024) — single panorama → 3DGS with diffusion. Path B in the <code>3DGS/</code> folder.</li>
+    <li><strong>CAT3D</strong> (Google, NeurIPS 2024) — <em>multi-view-consistent</em> image generation from one image, then 3DGS.</li>
+    <li><strong>WonderJourney / WonderWorld</strong> (Stanford, 2024) — text → coherent 3D scene sequences.</li>
+    <li><strong>LucidDreamer</strong> — text-to-3D scene via diffusion + monocular depth.</li>
+  </ul>
+  <p>This experiment is closest in spirit to CAT3D but with a <em>human-authored map</em> in the loop instead of a model-generated multi-view set.</p>
+
+  <h2><span class="sn">8</span> Reusable ChatGPT prompts</h2>
+  <p>Target model: <strong><code>gpt-image-2</code></strong> (OpenAI, released April 2026). Key capabilities the prompts below rely on:</p>
+  <ul>
+    <li>Accepts <strong>up to 16 reference images</strong> per call.</li>
+    <li><strong>Native thinking mode</strong> — reasons over composition, object counts, lighting before rendering.</li>
+    <li><strong>Strong cross-image consistency</strong> — character, material, scene identity transfer across edits.</li>
+    <li><strong>Better spatial reasoning</strong> — "left of", "behind", "overlapping" honoured reliably.</li>
+    <li><strong>1K / 2K / 4K resolution.</strong> Maps at 2048², panoramas at 4096 × 2048.</li>
+  </ul>
+  <p>Prompt structure used below — keep this order, it parses cleanly: <strong>Goal → Inputs (labelled) → What to draw → Constraints → Intended use.</strong></p>
+
+  <h3>Step 1 — Generate the map</h3>
+  <p><strong>Inputs to attach</strong> (label them by index in the prompt — gpt-image-2 references each image by its slot):</p>
+  <table class="io-table">
+    <thead><tr><th>Slot</th><th>Image</th><th>Required?</th></tr></thead>
+    <tbody>
+      <tr><td>Image 1–N</td><td>4–8 stills of the <strong>same scene</strong> from the anime episode (mix wide establishing shots, mid-shots, close-ups)</td><td>✅</td></tr>
+      <tr><td>Image N+1</td><td>Rough hand-drawn sketch of the layout (blobs labelled "chapel", "tree", "path")</td><td>optional</td></tr>
+      <tr><td>Image N+2</td><td>One additional style still you want to match closely (palette / linework)</td><td>optional</td></tr>
+    </tbody>
+  </table>
+  <div class="prompt-card">
+    <div class="pc-head"><span>Prompt — Step 1 (Map)</span><button class="pc-copy" data-copy="prompt-map">Copy</button></div>
+    <div class="pc-body" id="prompt-map"><strong>Goal.</strong> Generate a top-down 2D illustrated map of one fictional outdoor scene. This map will be used as a layout reference for subsequent AI image generation.
+
+<strong>Inputs.</strong>
+- <strong>Images 1–N</strong> are stills of the same physical location from different angles, moments, and characters. Treat them as multiple views of one place — infer where each feature (building, tree, path, wall, water, prop) sits relative to the others.
+- <strong>Image N+1</strong> (if attached) is a rough hand sketch of the layout. When present, its proportions and relative positions <strong>override</strong> anything you'd infer from the stills.
+- <strong>Image N+2</strong> (if attached) is a dedicated style anchor — copy its linework, palette, and texture closely.
+
+<strong>What to draw.</strong>
+1. A <strong>top-down floor-plan-style map</strong> of the scene. Every significant feature visible in any input still must appear somewhere on the map.
+2. <strong>Style</strong> matches the input stills — illustrative watercolor / ink, soft palette, Witch Hat Atelier–like.
+3. <strong>Composition</strong> — <strong>strict orthographic top-down view</strong>, looking straight down. <strong>Zero perspective skew.</strong> No 3/4, no isometric, no axonometric tilt.
+4. <strong>Aspect ratio 1:1 (square), 2048 × 2048 px.</strong>
+
+<strong>Do NOT include.</strong>
+- No camera pins, numbered markers, dots, or icons.
+- No grid lines, scale bars, compass roses, or coordinate labels.
+- No text, captions, watermarks, or annotations.
+- No characters or living figures — environment only.
+- No 3/4 / isometric / tilted view. Strict top-down only.
+
+<strong>Intended use.</strong> Layout reference for a multi-view 3D pipeline. Pins are added programmatically afterwards. Treat the map as a precise spatial document, not a vibe sketch.</div>
+  </div>
+
+  <h3>Step 2 — Generate each panorama</h3>
+  <p><strong>Inputs to attach:</strong></p>
+  <table class="io-table">
+    <thead><tr><th>Slot</th><th>Image</th><th>Required?</th></tr></thead>
+    <tbody>
+      <tr><td>Image 1</td><td>The generated map, with the <strong>target camera position circled</strong> (or a red dot painted at the camera position)</td><td>✅</td></tr>
+      <tr><td>Image 2</td><td>One or two style stills (same anime frames as the map's style reference)</td><td>✅</td></tr>
+      <tr><td>Image 3</td><td><strong>Panorama 1</strong> of this scene — for panoramas with k ≥ 2 only</td><td>✅ if k ≥ 2</td></tr>
+    </tbody>
+  </table>
+  <div class="prompt-card">
+    <div class="pc-head"><span>Prompt — Step 2 (Panorama)</span><button class="pc-copy" data-copy="prompt-pano">Copy</button></div>
+    <div class="pc-body" id="prompt-pano"><strong>360 equirectangular panorama</strong> of one fictional outdoor scene, viewed from a specific position marked on the attached map.
+
+<strong>Inputs.</strong>
+- <strong>Image 1</strong> is the top-down map of the scene. A red mark / circle shows the <strong>camera position</strong> for this panorama. Specifically: the camera stands at [VIEWPOINT — e.g. "the south-west point near the stone path, ~5 m from the chapel"].
+- <strong>Image 2</strong> is the style anchor. Match its illustrative watercolor / ink style, palette, and linework.
+- <strong>Image 3</strong> (if attached) is panorama 1 of this same scene. <strong>The chapel, trees, walls, sky, time of day, lighting direction, palette, and weather must be identical to Image 3.</strong> Only the vantage point changes. Do not invent new buildings. Do not rearrange large features. Do not add or remove characters.
+
+<strong>What to draw.</strong>
+1. A <strong>full 360° view</strong> from the marked camera position.
+2. <strong>Equirectangular projection</strong> (cylindrical equidistant): the sky stretches across the entire top row, the ground across the entire bottom row, vertical objects bow into gentle vertical arcs near the top and bottom.
+3. <strong>Seamless horizontal wrap</strong> — the leftmost column of pixels continues into the rightmost column with no visible seam.
+4. <strong>Yaw convention.</strong> The <strong>centre column of the image faces map-north</strong>. The left half is west of the camera; the right half is east; the seam at the left/right edge is south.
+5. <strong>Aspect ratio exactly 2:1. Resolution 4096 × 2048 px.</strong>
+
+<strong>Do NOT include.</strong>
+- No HUD, watermark, logo, or text.
+- No characters not present in Image 3 (preserve cast).
+- No new buildings, paths, or large features not visible on Image 1.
+- No time-of-day, lighting, or weather change from Image 3.
+- No fisheye / wide-angle distortion <em>other than</em> what equirectangular projection naturally requires.
+
+<strong>Intended use.</strong> This panorama will be combined with others from different positions on the same map into a multi-view 3D reconstruction. <strong>Geometric and identity consistency with Image 3 matters more than artistic novelty.</strong> When in doubt, copy from Image 3 rather than invent.</div>
+  </div>
+
+  <h3>Step 2b — Iterating on a panorama</h3>
+  <p>If panorama-k disagrees with panorama-1 on something specific (the chapel roof colour drifted, an extra tree appeared, etc.):</p>
+  <div class="prompt-card">
+    <div class="pc-head"><span>Prompt — Step 2b (Iteration)</span><button class="pc-copy" data-copy="prompt-iter">Copy</button></div>
+    <div class="pc-body" id="prompt-iter"><strong>Change only:</strong> [one specific edit, e.g. "the chapel roof should be dark slate grey, matching Image 3"].
+
+<strong>Keep everything else the same</strong> — same composition, same projection, same camera position, same lighting, same palette, same characters, same buildings, same trees. Re-attach the same inputs as before (Image 1: map with the circle, Image 2: style anchor, Image 3: panorama 1). Do not introduce any other changes.</div>
+  </div>
+
+  <h2><span class="sn">9</span> TODOs / future work</h2>
+  <ul>
+    <li><strong><code>sketch.html</code></strong> — in-browser sketcher. A single HTML file with a canvas: drag to draw blobs / lines, label each blob (chapel / tree / path / wall) from a small palette, then click <em>Download PNG</em> to save the sketch as input for Step 1.</li>
+    <li><strong><code>place_pins.py</code></strong> — click-to-place pin coordinates. Open the generated map, click N positions, save them as <code>poses.json</code> (<code>{px, py, yaw_deg}</code> per pin). Converts to metric via a declared <code>scale_m_per_px</code>.</li>
+    <li><strong><code>generate_panoramas.py</code></strong> — <code>openai</code> SDK call that, given the map + <code>poses.json</code> + Step 2 prompt template, loops over pins and produces <code>pano_1.png</code>, <code>pano_2.png</code>, … Re-uses panorama 1 as a reference for panoramas k ≥ 2 automatically.</li>
+    <li><strong><code>recon_3dgs.py</code></strong> — multi-view 3DGS optimization with <code>poses.json</code> as ground-truth poses, equirectangular camera model, optional SDS loss. Outputs <code>scene.ply</code>.</li>
+  </ul>
+
+  <blockquote>
+    Select any text in this doc and a "+ Comment" pill will appear. Click it, type your note, and it auto-saves. If <code>serve.py</code> is running, comments persist to <code>MultiPano/annotations.json</code> on disk; otherwise they live in your browser's localStorage and can be exported as JSON from the toolbar at the top.
+  </blockquote>
+
+</div>
+
+<aside class="sidebar">
+  <h3>Comments <span id="ann-count" style="color: var(--accent); float: right;"></span></h3>
+  <div id="ann-list"><div class="empty">No comments yet. Select any text in the document to add one.</div></div>
+</aside>
+</div>
+
+<div class="add-pill" id="add-pill" style="display:none;">＋ Comment</div>
+
+<div class="ann-popover" id="ann-popover" style="display:none;">
+  <div class="ann-quote" id="popover-quote"></div>
+  <textarea id="popover-text" placeholder="What's wrong here, or what should change?"></textarea>
+  <div class="ann-actions">
+    <button class="danger"  id="popover-del">Delete</button>
+    <button class="success" id="popover-resolve">Resolve</button>
+    <button id="popover-cancel">Cancel</button>
+    <button class="primary" id="popover-save">Save</button>
+  </div>
+</div>
+
+<script>
+(function () {
+  const STORAGE_KEY = 'multipano-annotations-v1';
+  const paper = document.getElementById('paper');
+  const list  = document.getElementById('ann-list');
+  const count = document.getElementById('ann-count');
+  const pill  = document.getElementById('add-pill');
+  const pop   = document.getElementById('ann-popover');
+  const popQuote = document.getElementById('popover-quote');
+  const popText  = document.getElementById('popover-text');
+  const popSave  = document.getElementById('popover-save');
+  const popDel   = document.getElementById('popover-del');
+  const popRes   = document.getElementById('popover-resolve');
+  const popCancel= document.getElementById('popover-cancel');
+  const statusEl = document.getElementById('ann-status');
+  const btnExport= document.getElementById('btn-export');
+  const btnClear = document.getElementById('btn-clear');
+  const btnTogRes= document.getElementById('btn-toggle-resolved');
+  const fileImport=document.getElementById('ann-import');
+
+  let annotations = [];        // {id, blockId, quote, comment, status, ts}
+  let pendingRange = null;     // {blockId, quote} while popover is open for a new ann
+  let editingId = null;        // id of annotation currently being edited
+  let hideResolved = false;
+  let useServer = false;
+
+  // ── 1. Assign stable IDs to every annotatable block ────────────────
+  function tagBlocks() {
+    const blocks = paper.querySelectorAll('p, li, h1, h2, h3, h4, pre, blockquote, .abstract p, .note-box p, .pc-body');
+    blocks.forEach((el, i) => {
+      if (!el.dataset.aid) el.dataset.aid = 'b' + i;
+    });
+  }
+
+  // ── 2. Persistence: try server first, fall back to localStorage ────
+  async function load() {
+    try {
+      const r = await fetch('annotations.json', {cache: 'no-store'});
+      if (r.ok) {
+        const data = await r.json();
+        annotations = data.annotations || [];
+        useServer = true;
+        setStatus('Server · saved to disk', 'ok');
+        return;
+      }
+    } catch (e) {}
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      try { annotations = JSON.parse(raw).annotations || []; }
+      catch (e) { annotations = []; }
+    }
+    useServer = false;
+    setStatus('Local storage · use Export to share', '');
+  }
+
+  async function save() {
+    if (useServer) {
+      try {
+        const r = await fetch('save', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({annotations})
+        });
+        if (r.ok) { setStatus('Saved · ' + new Date().toLocaleTimeString(), 'ok'); return; }
+        setStatus('Save failed (server) · using local', 'err');
+        useServer = false;
+      } catch (e) {
+        setStatus('Save failed · using local', 'err');
+        useServer = false;
+      }
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({annotations}));
+    setStatus('Local storage · use Export to share', '');
+  }
+
+  function setStatus(t, cls) {
+    statusEl.textContent = t;
+    statusEl.className = 'status' + (cls ? ' ' + cls : '');
+  }
+
+  // ── 3. Highlight & render ──────────────────────────────────────────
+  function highlightAll() {
+    paper.querySelectorAll('mark.ann').forEach(m => {
+      const parent = m.parentNode;
+      while (m.firstChild) parent.insertBefore(m.firstChild, m);
+      parent.removeChild(m);
+      parent.normalize();
+    });
+    annotations.forEach(a => applyHighlight(a));
+  }
+
+  function applyHighlight(a) {
+    if (hideResolved && a.status === 'resolved') return;
+    const block = paper.querySelector(`[data-aid="${a.blockId}"]`);
+    if (!block) return;
+    const text = block.textContent;
+    const idx = text.indexOf(a.quote);
+    if (idx < 0) return;
+    wrapTextRange(block, idx, idx + a.quote.length, a);
+  }
+
+  // Walk text nodes inside `root`, wrap the range [start, end] in a <mark>
+  function wrapTextRange(root, start, end, ann) {
+    let pos = 0;
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+    const toWrap = [];
+    let n;
+    while ((n = walker.nextNode())) {
+      const len = n.nodeValue.length;
+      const nodeStart = pos, nodeEnd = pos + len;
+      if (nodeEnd <= start) { pos = nodeEnd; continue; }
+      if (nodeStart >= end) break;
+      const localStart = Math.max(0, start - nodeStart);
+      const localEnd = Math.min(len, end - nodeStart);
+      toWrap.push({node: n, localStart, localEnd});
+      pos = nodeEnd;
+    }
+    toWrap.forEach(({node, localStart, localEnd}) => {
+      const before = node.nodeValue.slice(0, localStart);
+      const middle = node.nodeValue.slice(localStart, localEnd);
+      const after  = node.nodeValue.slice(localEnd);
+      const parent = node.parentNode;
+      if (before) parent.insertBefore(document.createTextNode(before), node);
+      const mark = document.createElement('mark');
+      mark.className = 'ann' + (ann.status === 'resolved' ? ' resolved' : '');
+      mark.dataset.aid = ann.id;
+      mark.textContent = middle;
+      mark.addEventListener('click', e => { e.stopPropagation(); openEditPopover(ann.id, mark); });
+      parent.insertBefore(mark, node);
+      if (after) parent.insertBefore(document.createTextNode(after), node);
+      parent.removeChild(node);
+    });
+  }
+
+  function renderList() {
+    const visible = annotations.filter(a => !hideResolved || a.status !== 'resolved');
+    count.textContent = visible.length ? `(${visible.length})` : '';
+    if (!visible.length) {
+      list.innerHTML = '<div class="empty">No comments yet. Select any text in the document to add one.</div>';
+      return;
+    }
+    list.innerHTML = '';
+    visible.forEach(a => {
+      const div = document.createElement('div');
+      div.className = 'ann-item' + (a.status === 'resolved' ? ' resolved' : '');
+      div.innerHTML = `
+        <div class="ann-q">“${escapeHtml(a.quote.slice(0, 120))}${a.quote.length > 120 ? '…' : ''}”</div>
+        <div class="ann-c">${escapeHtml(a.comment)}</div>
+        <div class="ann-meta"><span>${formatTs(a.ts)}</span><span>${a.status}</span></div>
+      `;
+      div.addEventListener('click', () => {
+        const mark = paper.querySelector(`mark.ann[data-aid="${a.id}"]`);
+        if (mark) {
+          mark.scrollIntoView({behavior: 'smooth', block: 'center'});
+          setTimeout(() => openEditPopover(a.id, mark), 350);
+        }
+      });
+      list.appendChild(div);
+    });
+  }
+
+  function escapeHtml(s) {
+    return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+  }
+  function formatTs(ts) {
+    const d = new Date(ts);
+    return d.toLocaleString(undefined, {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
+  }
+
+  // ── 4. Selection → "+ Comment" pill ────────────────────────────────
+  let lastSelection = null;
+  document.addEventListener('selectionchange', () => {
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed) { hidePill(); return; }
+    const range = sel.getRangeAt(0);
+    if (!paper.contains(range.commonAncestorContainer)) { hidePill(); return; }
+    let block = range.commonAncestorContainer;
+    while (block && block.nodeType !== 1) block = block.parentNode;
+    while (block && !block.dataset?.aid) block = block.parentNode;
+    if (!block || !paper.contains(block)) { hidePill(); return; }
+    const quote = sel.toString().trim();
+    if (quote.length < 3) { hidePill(); return; }
+    if (block.querySelector('mark.ann') && range.startContainer.parentNode?.classList?.contains('ann')) {
+      hidePill(); return;
+    }
+    lastSelection = {blockId: block.dataset.aid, quote};
+    const rect = range.getBoundingClientRect();
+    pill.style.display = 'block';
+    pill.style.top  = (window.scrollY + rect.bottom + 8) + 'px';
+    pill.style.left = (window.scrollX + rect.left + rect.width/2 - 50) + 'px';
+  });
+  function hidePill() { pill.style.display = 'none'; lastSelection = null; }
+
+  pill.addEventListener('click', () => {
+    if (!lastSelection) return;
+    pendingRange = lastSelection;
+    editingId = null;
+    popQuote.textContent = '"' + pendingRange.quote.slice(0, 240) + (pendingRange.quote.length > 240 ? '…' : '') + '"';
+    popText.value = '';
+    popDel.style.display = 'none';
+    popRes.style.display = 'none';
+    showPopover(pill.getBoundingClientRect());
+    setTimeout(() => popText.focus(), 50);
+    hidePill();
+    window.getSelection().removeAllRanges();
+  });
+
+  function showPopover(refRect) {
+    pop.style.display = 'block';
+    const top  = window.scrollY + refRect.bottom + 8;
+    let left = window.scrollX + refRect.left;
+    const popW = 320;
+    if (left + popW > window.scrollX + window.innerWidth - 20) {
+      left = window.scrollX + window.innerWidth - popW - 20;
+    }
+    pop.style.top = top + 'px';
+    pop.style.left = left + 'px';
+  }
+  function hidePopover() { pop.style.display = 'none'; pendingRange = null; editingId = null; }
+
+  function openEditPopover(id, mark) {
+    const a = annotations.find(x => x.id === id);
+    if (!a) return;
+    editingId = id;
+    pendingRange = null;
+    popQuote.textContent = '"' + a.quote.slice(0, 240) + (a.quote.length > 240 ? '…' : '') + '"';
+    popText.value = a.comment;
+    popDel.style.display = '';
+    popRes.style.display = '';
+    popRes.textContent = a.status === 'resolved' ? 'Reopen' : 'Resolve';
+    showPopover(mark.getBoundingClientRect());
+    setTimeout(() => popText.focus(), 50);
+  }
+
+  popCancel.addEventListener('click', hidePopover);
+  popSave.addEventListener('click', async () => {
+    const text = popText.value.trim();
+    if (!text) { popText.focus(); return; }
+    if (editingId) {
+      const a = annotations.find(x => x.id === editingId);
+      if (a) { a.comment = text; a.ts = Date.now(); }
+    } else if (pendingRange) {
+      annotations.push({
+        id: 'a' + Date.now().toString(36) + Math.random().toString(36).slice(2,5),
+        blockId: pendingRange.blockId,
+        quote: pendingRange.quote,
+        comment: text,
+        status: 'open',
+        ts: Date.now(),
+      });
+    }
+    hidePopover();
+    highlightAll();
+    renderList();
+    await save();
+  });
+  popDel.addEventListener('click', async () => {
+    if (!editingId) return;
+    annotations = annotations.filter(a => a.id !== editingId);
+    hidePopover();
+    highlightAll();
+    renderList();
+    await save();
+  });
+  popRes.addEventListener('click', async () => {
+    if (!editingId) return;
+    const a = annotations.find(x => x.id === editingId);
+    if (!a) return;
+    a.status = a.status === 'resolved' ? 'open' : 'resolved';
+    a.ts = Date.now();
+    hidePopover();
+    highlightAll();
+    renderList();
+    await save();
+  });
+
+  document.addEventListener('mousedown', e => {
+    if (!pop.contains(e.target) && !pill.contains(e.target) && !e.target.classList.contains('ann')) {
+      hidePopover();
+    }
+  });
+
+  // ── 5. Toolbar ─────────────────────────────────────────────────────
+  btnExport.addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify({annotations}, null, 2)], {type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'annotations.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+  fileImport.addEventListener('change', async e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const text = await f.text();
+    try {
+      const data = JSON.parse(text);
+      if (Array.isArray(data.annotations)) {
+        annotations = data.annotations;
+        highlightAll();
+        renderList();
+        await save();
+      }
+    } catch (err) { alert('Could not parse JSON: ' + err.message); }
+    e.target.value = '';
+  });
+  btnClear.addEventListener('click', async () => {
+    if (!annotations.length) return;
+    if (!confirm('Clear all comments? This cannot be undone.')) return;
+    annotations = [];
+    highlightAll();
+    renderList();
+    await save();
+  });
+  btnTogRes.addEventListener('click', () => {
+    hideResolved = !hideResolved;
+    btnTogRes.textContent = hideResolved ? 'Show resolved' : 'Hide resolved';
+    highlightAll();
+    renderList();
+  });
+
+  // ── 6. Copy-prompt buttons ─────────────────────────────────────────
+  document.querySelectorAll('.pc-copy').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.copy;
+      const el = document.getElementById(id);
+      if (!el) return;
+      try {
+        await navigator.clipboard.writeText(el.innerText);
+        btn.classList.add('ok');
+        btn.textContent = 'Copied ✓';
+        setTimeout(() => { btn.classList.remove('ok'); btn.textContent = 'Copy'; }, 1500);
+      } catch (e) { alert('Copy failed: ' + e.message); }
+    });
+  });
+
+  // ── 7. Boot ────────────────────────────────────────────────────────
+  (async () => {
+    tagBlocks();
+    await load();
+    highlightAll();
+    renderList();
+  })();
+})();
+</script>
+</body>
+</html>

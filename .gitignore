@@ -55,3 +55,6 @@ datasets/
 
 # harness scratch (pasted images, etc.)
 _temp/
+
+# live annotation state (per-user / per-session)
+MultiPano/annotations.json
