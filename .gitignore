@@ -39,6 +39,9 @@ lightning_logs/
 *.ply
 *.splat
 *.mp4
+# …but keep the deployed demo files
+!docs/scene.ply
+!docs/scene.splat
 
 # Data (override with !)
 data/
