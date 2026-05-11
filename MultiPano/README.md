@@ -126,7 +126,68 @@ map* in the loop instead of a model-generated multi-view set.
 
 ---
 
-## ChatGPT prompt — visualize this pipeline
+## Reusable ChatGPT prompts
+
+Fill in the `[BRACKETED]` slots. For each generation, attach the relevant
+inputs as image inputs (the model needs to *see* the references, not just
+read them).
+
+### Step 1 — Generate the map
+
+Inputs to attach: 2–4 anime stills for style + your rough layout sketch
+(can be a hand drawing or even a text-described block diagram).
+
+> Generate a **top-down 2D map illustration** of [SCENE — e.g. "a small
+> forest clearing with a stone chapel near the centre, a winding stone
+> path entering from the south, three tall pine trees on the west side,
+> and a low moss-covered wall along the north edge"].
+>
+> Style reference: match the attached anime stills (illustrative
+> watercolor / ink, soft palette, Witch Hat Atelier–like).
+> Layout reference: the attached rough sketch defines relative positions
+> — preserve them.
+>
+> Strict requirements:
+> - **Strict orthographic top-down view** (looking straight down, zero
+>   perspective skew — every object drawn as if seen from directly above).
+> - **Aspect ratio 1:1 (square), 2048 × 2048 px.**
+> - **No camera pins, no numbered markers, no grid lines, no scale bars,
+>   no text annotations.** Pure illustrated map only — we'll add pins
+>   programmatically afterwards.
+> - Show the relative positions of every object clearly. Spatial layout
+>   matters more than artistic flourish.
+
+### Step 2 — Generate each panorama
+
+Inputs to attach: the same anime stills (style), the generated map (with
+the pin position you're currently shooting from circled or otherwise
+indicated), and *for panorama 2+*, panorama 1 (so the model preserves
+identity of the same scene).
+
+> Make a **full 360° equirectangular panorama photo** of [SCENE +
+> VIEWPOINT — e.g. "the same forest clearing as in the attached map,
+> shot from position **2** marked on the map (south-west of the chapel,
+> on the stone path). The chapel should appear in the northern half of
+> the panorama; the pine trees are on my right; the moss-covered wall
+> is in the far distance behind me."].
+>
+> Style reference: match the attached anime stills.
+> Scene identity reference: match the chapel, trees, lighting, and
+> palette of the attached panorama 1 — same world, different vantage
+> point. Do not invent new buildings or rearrange large features.
+>
+> Strict requirements:
+> - **Aspect ratio exactly 2:1** (e.g. 2048 × 1024).
+> - **Equirectangular projection**: sky stretches across the entire top,
+>   ground across the entire bottom, vertical objects bow into gentle
+>   vertical arcs. The image must **wrap seamlessly left-to-right**
+>   (leftmost column continues into rightmost column).
+> - Convention: the **centre column of the image faces map-north** for
+>   every panorama (locks yaw so we don't have to think about it).
+
+### Step 3 — Pipeline explainer image (the diagram)
+
+Used once, for slides / docs. Not part of the runtime pipeline.
 
 > A clean, modern technical infographic showing a 3-stage pipeline laid
 > out **left to right** on a soft off-white background, paper-figure /
@@ -135,24 +196,24 @@ map* in the loop instead of a model-generated multi-view set.
 > **Stage 1 — "Map":** a stylized top-down illustration of a small
 > outdoor fantasy scene (clearing with trees, stone path, small chapel,
 > low wall). Three small numbered camera-icon pins labelled **1**,
-> **2**, **3** are placed at different points on the map.
+> **2**, **3** at different points on the map.
 >
 > **Stage 2 — "Panoramas":** three horizontal equirectangular 360°
-> panorama strips drawn at 2:1 aspect ratio, stacked vertically and
-> labelled **1**, **2**, **3** to match the map pins. Each strip shows
-> the same scene — same chapel, same trees, same warm midday light —
-> but from a different vantage point: the chapel sits at a different
-> place in each strip, occlusions differ.
+> panorama strips at 2:1, stacked vertically and labelled **1**, **2**,
+> **3** to match the map pins. Each strip shows the same chapel, same
+> trees, same midday light, but from a different vantage point so the
+> chapel sits at a different position in each strip.
 >
 > **Stage 3 — "3D scene":** an isometric or 3/4-perspective view of the
-> reconstructed scene as a soft 3D Gaussian point cloud, with a faint
-> dotted curved arrow tracing a camera fly-through path winding past
-> the chapel and between trees.
+> reconstructed scene rendered as a soft cloud of overlapping translucent
+> coloured points (visible Gaussian-splat fuzz throughout, not just at
+> silhouettes), with a faint dotted curved arrow tracing a camera
+> fly-through path winding past the chapel.
 >
 > Connecting elements: thin arrows between the three stages (Map →
 > Panoramas → 3D scene). Subtle dotted lines link each numbered pin on
 > the map to its matching panorama strip.
 >
-> Style: warm, technical, clean — minimal text (just the stage titles
-> and small 1/2/3 numerals), soft shadows, restrained colour palette.
-> No screenshots, no UI chrome, no extra explanatory text on the image.
+> Style: warm, technical, clean — minimal text (only stage titles and
+> small 1/2/3 numerals), soft shadows, restrained colour palette. No
+> screenshots, no UI chrome, no extra explanatory text on the image.
