@@ -254,7 +254,7 @@ a:hover { text-decoration: underline; }
   // ── load scenes from server ─────────────────────────────────────
   async function loadScenes() {
     try {
-      const r = await fetch('/list', {cache: 'no-store'});
+      const r = await fetch('list', {cache: 'no-store'});
       if (!r.ok) throw new Error('list failed: ' + r.status);
       const data = await r.json();
       scenes = data.scenes || [];
@@ -350,7 +350,7 @@ a:hover { text-decoration: underline; }
         e.stopPropagation();
         if (!confirm(`Delete ${img.filename}?`)) return;
         try {
-          const r = await fetch(`/image?scene=${encodeURIComponent(scene.name)}&file=${encodeURIComponent(img.filename)}`, {method: 'DELETE'});
+          const r = await fetch(`image?scene=${encodeURIComponent(scene.name)}&file=${encodeURIComponent(img.filename)}`, {method: 'DELETE'});
           if (!r.ok) throw new Error(r.status);
           flashStatus('Deleted ' + img.filename, 'ok');
           await loadScenes();
@@ -404,7 +404,7 @@ a:hover { text-decoration: underline; }
       row.innerHTML = `<span>↑ ${escapeHtml(safe)}</span><span>${bytes(f.size)}…</span>`;
       progress.appendChild(row);
       try {
-        const r = await fetch(`/upload?scene=${encodeURIComponent(activeScene)}&filename=${encodeURIComponent(safe)}`, {
+        const r = await fetch(`upload?scene=${encodeURIComponent(activeScene)}&filename=${encodeURIComponent(safe)}`, {
           method: 'POST',
           headers: {'Content-Type': f.type || 'application/octet-stream'},
           body: f,
@@ -436,7 +436,7 @@ a:hover { text-decoration: underline; }
       activeScene = name; renderScenes(); renderMain(); return;
     }
     try {
-      const r = await fetch(`/create-scene?name=${encodeURIComponent(name)}`, {method: 'POST'});
+      const r = await fetch(`create-scene?name=${encodeURIComponent(name)}`, {method: 'POST'});
       if (!r.ok) throw new Error('HTTP ' + r.status);
       flashStatus('Created ' + name, 'ok');
       newSceneIn.value = '';
