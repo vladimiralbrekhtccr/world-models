@@ -660,10 +660,28 @@ positions              + previous panoramas           diffusion regularizer
     pill.style.top  = (window.scrollY + rect.bottom + 8) + 'px';
     pill.style.left = (window.scrollX + rect.left + rect.width/2 - 50) + 'px';
   });
-  function hidePill() { pill.style.display = 'none'; lastSelection = null; }
+  function hidePill() { pill.style.display = 'none'; }
+
+  // Keep the selection alive when the user mousedowns on the pill —
+  // without this, clicking the pill steals focus and the selection
+  // collapses before our click handler can read it.
+  pill.addEventListener('mousedown', e => e.preventDefault());
 
   pill.addEventListener('click', () => {
-    if (!lastSelection) return;
+    if (!lastSelection) {
+      // Fallback: re-read the live selection in case the listener missed it.
+      const sel = window.getSelection();
+      if (sel && !sel.isCollapsed) {
+        const range = sel.getRangeAt(0);
+        let block = range.commonAncestorContainer;
+        while (block && block.nodeType !== 1) block = block.parentNode;
+        while (block && !block.dataset?.aid) block = block.parentNode;
+        if (block && paper.contains(block)) {
+          lastSelection = {blockId: block.dataset.aid, quote: sel.toString().trim()};
+        }
+      }
+      if (!lastSelection) return;
+    }
     pendingRange = lastSelection;
     editingId = null;
     popQuote.textContent = '"' + pendingRange.quote.slice(0, 240) + (pendingRange.quote.length > 240 ? '…' : '') + '"';
