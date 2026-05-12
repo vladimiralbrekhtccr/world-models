@@ -107,12 +107,60 @@ def save_3dgs_ply(path: Path, xyz: np.ndarray, rgb: np.ndarray,
     PlyData([el], text=False).write(str(path))
 
 
+def build_textured_mesh(depth: np.ndarray, panorama_path: Path, stride: int):
+    """Build a textured triangle mesh from an equirectangular depth map.
+
+    Each (downsampled) depth pixel becomes a vertex; quads of 4 adjacent
+    vertices become 2 triangles. UVs are equirectangular, so the panorama
+    image maps directly onto the mesh with no projection step needed.
+    Returns a trimesh.Trimesh ready to export as .glb.
+    """
+    import trimesh
+    d = depth[::stride, ::stride] if stride > 1 else depth
+    H, W = d.shape
+
+    # Vertex positions via spherical unprojection (same convention as PLY path).
+    v, u = np.meshgrid(np.arange(H), np.arange(W), indexing="ij")
+    lon = 2 * np.pi * (u + 0.5) / W - np.pi
+    lat = np.pi / 2 - np.pi * (v + 0.5) / H
+    cos_lat = np.cos(lat)
+    x = d * cos_lat * np.sin(lon)
+    y = d * np.sin(lat)
+    z = d * cos_lat * np.cos(lon)
+    verts = np.stack([x, y, z], axis=-1).reshape(-1, 3).astype(np.float32)
+
+    # UVs: equirectangular → flat (u/W, 1 - v/H). 1 - v flips for image origin.
+    uvs = np.stack(
+        [(u + 0.5) / W, 1.0 - (v + 0.5) / H], axis=-1
+    ).reshape(-1, 2).astype(np.float32)
+
+    # Quad-grid triangulation. Inward-facing (wind triangles so the inside of
+    # the spherical shell is the "front" — that's where the camera lives).
+    rows = np.arange(H - 1)
+    cols = np.arange(W - 1)
+    r, c = np.meshgrid(rows, cols, indexing="ij")
+    i00 = (r * W + c).reshape(-1)
+    i01 = (r * W + c + 1).reshape(-1)
+    i10 = ((r + 1) * W + c).reshape(-1)
+    i11 = ((r + 1) * W + c + 1).reshape(-1)
+    tris = np.empty((i00.size * 2, 3), dtype=np.int32)
+    tris[0::2] = np.stack([i00, i11, i10], axis=1)   # inward-facing winding
+    tris[1::2] = np.stack([i00, i01, i11], axis=1)
+
+    img = Image.open(panorama_path).convert("RGB")
+    mesh = trimesh.Trimesh(vertices=verts, faces=tris, process=False)
+    mesh.visual = trimesh.visual.TextureVisuals(uv=uvs, image=img)
+    return mesh
+
+
 def main() -> None:
     p = argparse.ArgumentParser()
     p.add_argument("--panorama", default="panorama.png")
     p.add_argument("--out",      default="out/fast.ply")
+    p.add_argument("--export",   choices=("ply", "glb", "both"), default="ply",
+                   help="ply = 3DGS Gaussians; glb = textured triangle mesh; both = side-by-side outputs")
     p.add_argument("--stride",   type=int, default=1,
-                   help="keep 1 of every N pixels (>1 = lighter PLY)")
+                   help="keep 1 of every N pixels (>1 = lighter PLY / coarser mesh)")
     p.add_argument("--near",     type=float, default=0.5)
     p.add_argument("--far",      type=float, default=30.0)
     p.add_argument("--scale_log",     type=float, default=-3.0,
@@ -121,7 +169,8 @@ def main() -> None:
                    help="opacity in logit space; 2.0 ≈ 0.88 sigmoid")
     args = p.parse_args()
 
-    Path(args.out).parent.mkdir(parents=True, exist_ok=True)
+    out_path = Path(args.out)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
 
     device = 0 if torch.cuda.is_available() else -1
     print(f"[fast] device={'cuda:0' if device == 0 else 'cpu'}")
@@ -137,17 +186,25 @@ def main() -> None:
     depth_m = to_metric_range(depth_raw, near=args.near, far=args.far)
     print(f"[fast] mapped to [{args.near}, {args.far}] m")
 
-    # Save depth viz
+    # Save depth viz next to the primary output
     viz = (255 * (depth_m - depth_m.min()) / (depth_m.max() - depth_m.min() + 1e-8)).astype(np.uint8)
-    Image.fromarray(viz).save(Path(args.out).parent / "fast_depth.png")
+    Image.fromarray(viz).save(out_path.parent / "fast_depth.png")
 
-    xyz, rgb = unproject_equirect(depth_m, color)
-    xyz, rgb = downsample(xyz, rgb, stride=args.stride)
-    print(f"[fast] {xyz.shape[0]:,} gaussians")
+    if args.export in ("ply", "both"):
+        xyz, rgb = unproject_equirect(depth_m, color)
+        xyz, rgb = downsample(xyz, rgb, stride=args.stride)
+        ply_path = out_path if args.export == "ply" else out_path.with_suffix(".ply")
+        print(f"[fast] {xyz.shape[0]:,} gaussians → {ply_path}")
+        save_3dgs_ply(ply_path, xyz, rgb,
+                      scale_log=args.scale_log, opacity_logit=args.opacity_logit)
 
-    save_3dgs_ply(Path(args.out), xyz, rgb,
-                  scale_log=args.scale_log, opacity_logit=args.opacity_logit)
-    print(f"[fast] wrote {args.out}")
+    if args.export in ("glb", "both"):
+        glb_path = out_path if args.export == "glb" else out_path.with_suffix(".glb")
+        if glb_path.suffix.lower() != ".glb":
+            glb_path = glb_path.with_suffix(".glb")
+        mesh = build_textured_mesh(depth_m, Path(args.panorama), stride=args.stride)
+        print(f"[fast] {len(mesh.vertices):,} verts · {len(mesh.faces):,} tris → {glb_path}")
+        mesh.export(glb_path)
 
 
 if __name__ == "__main__":
