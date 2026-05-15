@@ -3,6 +3,12 @@
 Exploration folder for **world-model** experiments — turning images / video /
 panoramas into explorable 3D scenes.
 
+> **Coming back to this repo?** Read [**PLAN.md**](PLAN.md) first — it has
+> the current state, the immediate next action, and where every piece
+> lives. The page at
+> <https://vladimiralbrekhtccr.github.io/360-panorama-viewer/project/>
+> is the outward-facing intro for collaborators.
+
 Each experiment lives in its own subfolder. Current ones:
 
 - [`3DGS/`](3DGS/) — one 360° panorama → 3D Gaussian Splatting `.ply`.
