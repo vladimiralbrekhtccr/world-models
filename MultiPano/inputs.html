@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Literata:wght@400;500;700&family=DM+Sans:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 :root {
   --text: #111; --text-2: #3a3a3a; --text-3: #777;
@@ -134,15 +135,29 @@ a:hover { text-decoration: underline; }
 }
 .thumb .filename { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 65%; }
 .thumb .size { color: var(--text-3); }
-.thumb .del-btn {
-  position: absolute; top: 6px; right: 6px;
+.thumb .del-btn, .thumb .dl-btn {
+  position: absolute; top: 6px;
   background: rgba(0,0,0,0.55); color: #fff;
   font-size: 11px; font-weight: 700; line-height: 1;
   border: none; padding: 4px 7px; border-radius: 3px; cursor: pointer;
-  opacity: 0; transition: opacity 0.15s;
+  opacity: 0; transition: opacity 0.15s, background 0.15s;
 }
-.thumb:hover .del-btn { opacity: 1; }
+.thumb .del-btn { right: 6px; }
+.thumb .dl-btn  { left: 6px; }
+.thumb:hover .del-btn,
+.thumb:hover .dl-btn  { opacity: 1; }
 .thumb .del-btn:hover { background: var(--red); }
+.thumb .dl-btn:hover  { background: var(--green); }
+
+/* Download-all button in scene header */
+.dl-all-btn {
+  font-family: var(--font-ui); font-size: 12px; font-weight: 700;
+  background: var(--accent); color: #fff;
+  border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer;
+  margin-left: 12px;
+}
+.dl-all-btn:hover { background: #6925d6; }
+.dl-all-btn:disabled { background: #ccc; cursor: not-allowed; }
 
 .empty-state {
   border: 1px dashed var(--border); border-radius: 8px;
@@ -312,7 +327,10 @@ a:hover { text-decoration: underline; }
     mainContent.innerHTML = `
       <div class="main-header">
         <h1>${escapeHtml(s.name)}</h1>
-        <div class="meta">${s.images.length} image${s.images.length===1?'':'s'} · ${bytes(totalBytes)} · input/${escapeHtml(s.name)}/</div>
+        <div class="meta">
+          ${s.images.length} image${s.images.length===1?'':'s'} · ${bytes(totalBytes)} · input/${escapeHtml(s.name)}/
+          ${s.images.length ? `<button class="dl-all-btn" id="dl-all-btn">↓ Download all (.zip)</button>` : ''}
+        </div>
       </div>
       <div class="drop-zone" id="drop-zone">
         <strong>Drop images here</strong>
@@ -325,6 +343,48 @@ a:hover { text-decoration: underline; }
     `;
     renderThumbs(s);
     wireDropZone();
+    wireDownloadAll(s);
+  }
+
+  // Trigger a single-file download from a URL (fetch as blob → object URL).
+  async function downloadOne(url, filename) {
+    try {
+      const r = await fetch(url);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const blob = await r.blob();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    } catch (e) { flashStatus('Download failed: ' + e.message, 'err'); }
+  }
+
+  function wireDownloadAll(scene) {
+    const btn = document.getElementById('dl-all-btn');
+    if (!btn) return;
+    btn.addEventListener('click', async () => {
+      btn.disabled = true; btn.textContent = '⏳ zipping…';
+      try {
+        const zip = new JSZip();
+        for (const img of scene.images) {
+          const r = await fetch(busted(img.url));
+          if (!r.ok) continue;
+          zip.file(img.filename, await r.blob());
+        }
+        const blob = await zip.generateAsync({type: 'blob'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = scene.name + '.zip';
+        document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+        flashStatus('Downloaded ' + scene.images.length + ' files as ' + scene.name + '.zip', 'ok');
+      } catch (e) {
+        flashStatus('Zip failed: ' + e.message, 'err');
+      } finally {
+        btn.disabled = false; btn.textContent = '↓ Download all (.zip)';
+      }
+    });
   }
 
   function renderThumbs(scene) {
@@ -343,9 +403,14 @@ a:hover { text-decoration: underline; }
           <span class="filename" title="${escapeHtml(img.filename)}">${escapeHtml(img.filename)}</span>
           <span class="size">${bytes(img.size)}</span>
         </figcaption>
+        <button class="dl-btn"  title="Download">↓</button>
         <button class="del-btn" title="Delete">✕</button>
       `;
       fig.querySelector('img').addEventListener('click', () => openLightbox(img));
+      fig.querySelector('.dl-btn').addEventListener('click', e => {
+        e.stopPropagation();
+        downloadOne(busted(img.url), img.filename);
+      });
       fig.querySelector('.del-btn').addEventListener('click', async (e) => {
         e.stopPropagation();
         if (!confirm(`Delete ${img.filename}?`)) return;
