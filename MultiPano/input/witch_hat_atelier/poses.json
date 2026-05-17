@@ -1,0 +1,21 @@
+{
+  "scale_m_per_px": 0.023923444976076555,
+  "world_north_in_image": "up",
+  "cameras": {
+    "1": {
+      "px": 357,
+      "py": 346,
+      "yaw_deg": 0
+    },
+    "2": {
+      "px": 656,
+      "py": 901,
+      "yaw_deg": 0
+    },
+    "3": {
+      "px": 957,
+      "py": 438,
+      "yaw_deg": 0
+    }
+  }
+}

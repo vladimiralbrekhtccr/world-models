@@ -1,0 +1,2161 @@
+Cloning into 'lyra'...
+Submodule 'Lyra-2/lyra_2/_src/inference/depth_anything_3' (https://github.com/frankshen07/Depth-Anything-3.git) registered for path 'Lyra-2/lyra_2/_src/inference/depth_anything_3'
+Submodule 'Lyra-2/lyra_2/_src/inference/vipe' (https://github.com/nv-tlabs/vipe.git) registered for path 'Lyra-2/lyra_2/_src/inference/vipe'
+Cloning into '/scratch/vladimir_albrekht/projects/lyra/lyra/Lyra-2/lyra_2/_src/inference/depth_anything_3'...
+Cloning into '/scratch/vladimir_albrekht/projects/lyra/lyra/Lyra-2/lyra_2/_src/inference/vipe'...
+Submodule path 'Lyra-2/lyra_2/_src/inference/depth_anything_3': checked out '1ed6cb8eee386a3c94077d907b09c7aa1c312cd8'
+Submodule 'da3_streaming/loop_utils/salad' (https://github.com/serizba/salad.git) registered for path 'Lyra-2/lyra_2/_src/inference/depth_anything_3/da3_streaming/loop_utils/salad'
+Cloning into '/scratch/vladimir_albrekht/projects/lyra/lyra/Lyra-2/lyra_2/_src/inference/depth_anything_3/da3_streaming/loop_utils/salad'...
+Submodule path 'Lyra-2/lyra_2/_src/inference/depth_anything_3/da3_streaming/loop_utils/salad': checked out '6aede13a3f6c25750bf7fde10209c06cb73060bb'
+Submodule path 'Lyra-2/lyra_2/_src/inference/vipe': checked out 'b7cac64616763bc755009db79a1815c7cdc9b130'
+Channels:
+ - conda-forge
+ - defaults
+Platform: linux-64
+Collecting package metadata (repodata.json): ...working... done
+Solving environment: ...working... done
+
+## Package Plan ##
+
+  environment location: /scratch/vladimir_albrekht/projects/lyra/.conda/lyra2
+
+  added / updated specs:
+    - cmake
+    - ffmpeg
+    - libgl
+    - ninja
+    - packaging
+    - pip
+    - python=3.10
+
+
+The following packages will be downloaded:
+
+    package                    |            build
+    ---------------------------|-----------------
+    bzip2-1.0.8                |       hda65f42_9         254 KB  conda-forge
+    c-ares-1.34.6              |       hb03c661_0         203 KB  conda-forge
+    ca-certificates-2026.4.22  |       hbd8a1cb_0         128 KB  conda-forge
+    cmake-4.3.2                |       hc85cc9f_0        22.0 MB  conda-forge
+    ffmpeg-8.1.1               | gpl_h23ee523_701        12.4 MB  conda-forge
+    fontconfig-2.17.1          |       h27c8c51_0         264 KB  conda-forge
+    gdk-pixbuf-2.44.6          |       h2b0a6b4_0         564 KB  conda-forge
+    glslang-16.3.0             |       h96af755_0         1.3 MB  conda-forge
+    harfbuzz-14.2.0            |       h6083320_0         2.2 MB  conda-forge
+    icu-78.3                   |       h33c6efd_0        12.1 MB  conda-forge
+    intel-gmmlib-22.10.0       |       hb700be7_0         990 KB  conda-forge
+    intel-media-driver-26.1.6  |       hecca717_0         8.4 MB  conda-forge
+    keyutils-1.6.3             |       hb9d3cd8_0         131 KB  conda-forge
+    krb5-1.22.2                |       ha1258a1_0         1.3 MB  conda-forge
+    lcms2-2.19.1               |       h0c24ade_0         245 KB  conda-forge
+    ld_impl_linux-64-2.45.1    |default_hbd61a6d_102         711 KB  conda-forge
+    lerc-4.1.0                 |       hdb68285_0         255 KB  conda-forge
+    level-zero-1.28.4          |       hb700be7_0         838 KB  conda-forge
+    libabseil-20260107.1       | cxx17_h7b12aa8_0         1.3 MB  conda-forge
+    libcap-2.77                |       hd0affe5_1         122 KB  conda-forge
+    libcurl-8.20.0             |       hcf29cc6_0         458 KB  conda-forge
+    libdovi-3.3.2              |       ha23c83e_4         304 KB  conda-forge
+    libdrm-2.4.127             |       hb03c661_0         304 KB  conda-forge
+    libedit-3.1.20250104       | pl5321h7949ede_0         132 KB  conda-forge
+    libev-4.33                 |       hd590300_2         110 KB  conda-forge
+    libexpat-2.8.0             |       hecca717_0          75 KB  conda-forge
+    libfreetype-2.14.3         |       ha770c72_0           8 KB  conda-forge
+    libfreetype6-2.14.3        |       h73754d4_0         376 KB  conda-forge
+    libgcc-15.2.0              |      he0feb66_19        1017 KB  conda-forge
+    libgcc-ng-15.2.0           |      h69a702a_19          27 KB  conda-forge
+    libglib-2.88.1             |       h0d30a3d_2         4.5 MB  conda-forge
+    libgomp-15.2.0             |      he0feb66_19         590 KB  conda-forge
+    libhwloc-2.13.0            |default_he001693_1000         2.3 MB  conda-forge
+    libhwy-1.4.0               |       h10be129_0         1.4 MB  conda-forge
+    libjpeg-turbo-3.1.4.1      |       hb03c661_0         619 KB  conda-forge
+    libjxl-0.11.2              |       h174a0a3_1         1.8 MB  conda-forge
+    liblzma-5.8.3              |       hb03c661_0         111 KB  conda-forge
+    libnghttp2-1.68.1          |       h877daf1_0         648 KB  conda-forge
+    libnsl-2.0.1               |       hb9d3cd8_1          33 KB  conda-forge
+    libopenvino-2026.0.0       |       hb56ce9e_1         6.3 MB  conda-forge
+    libopenvino-auto-batch-plugin-2026.0.0|       hd85de46_1         112 KB  conda-forge
+    libopenvino-auto-plugin-2026.0.0|       hd85de46_1         243 KB  conda-forge
+    libopenvino-hetero-plugin-2026.0.0|       hd41364c_1         207 KB  conda-forge
+    libopenvino-intel-cpu-plugin-2026.0.0|       hb56ce9e_1        12.6 MB  conda-forge
+    libopenvino-intel-gpu-plugin-2026.0.0|       hb56ce9e_1        10.9 MB  conda-forge
+    libopenvino-intel-npu-plugin-2026.0.0|       hb56ce9e_1         1.9 MB  conda-forge
+    libopenvino-ir-frontend-2026.0.0|       hd41364c_1         188 KB  conda-forge
+    libopenvino-onnx-frontend-2026.0.0|       h7a07914_1         1.8 MB  conda-forge
+    libopenvino-paddle-frontend-2026.0.0|       h7a07914_1         668 KB  conda-forge
+    libopenvino-pytorch-frontend-2026.0.0|       hecca717_1         1.1 MB  conda-forge
+    libopenvino-tensorflow-frontend-2026.0.0|       h78e8023_1         1.2 MB  conda-forge
+    libopenvino-tensorflow-lite-frontend-2026.0.0|       hecca717_1         446 KB  conda-forge
+    libpciaccess-0.19          |       hb03c661_0          28 KB  conda-forge
+    libplacebo-7.360.1         |       h9eeb4b2_0         536 KB  conda-forge
+    libpng-1.6.58              |       h421ea60_0         310 KB  conda-forge
+    libprotobuf-6.33.5         |       h2b00c02_0         3.5 MB  conda-forge
+    librsvg-2.62.1             |       h4c96295_0         3.3 MB  conda-forge
+    libsqlite-3.53.1           |       h0c1763c_0         933 KB  conda-forge
+    libssh2-1.11.1             |       hcf80075_0         298 KB  conda-forge
+    libstdcxx-15.2.0           |      h934c35e_19         5.6 MB  conda-forge
+    libstdcxx-ng-15.2.0        |      hdf11a46_19          27 KB  conda-forge
+    libsystemd0-260.1          |       h6569c3e_0         518 KB  conda-forge
+    libudev1-260.1             |       h6569c3e_0         168 KB  conda-forge
+    liburing-2.14              |       hb700be7_0         151 KB  conda-forge
+    libuuid-2.42               |       h5347b49_0          39 KB  conda-forge
+    libvpl-2.16.0              |       h54a6638_0         281 KB  conda-forge
+    libvulkan-loader-1.4.341.0 |       h5279c79_0         195 KB  conda-forge
+    libxml2-2.15.3             |       h49c6c72_0          46 KB  conda-forge
+    libxml2-16-2.15.3          |       hca6bf5a_0         547 KB  conda-forge
+    libzlib-1.3.2              |       h25fd6f3_2          62 KB  conda-forge
+    ncurses-6.6                |       hdb14827_0         897 KB  conda-forge
+    ninja-1.13.2               |       h171cf75_0         182 KB  conda-forge
+    opencl-headers-2025.06.13  |       hecca717_0          54 KB  conda-forge
+    openssl-3.6.2              |       h35e630c_0         3.0 MB  conda-forge
+    packaging-26.2             |     pyhc364b38_0          89 KB  conda-forge
+    pango-1.56.4               |       hda50119_1         447 KB  conda-forge
+    pip-26.1.1                 |     pyh8b19718_0         1.1 MB  conda-forge
+    python-3.10.20             |h3c07f61_0_cpython        24.3 MB  conda-forge
+    readline-8.3               |       h853b02a_0         337 KB  conda-forge
+    rhash-1.4.6                |       hb9d3cd8_1         189 KB  conda-forge
+    sdl3-3.4.8                 |       hdeec2a5_0         2.0 MB  conda-forge
+    setuptools-82.0.1          |     pyh332efcf_0         625 KB  conda-forge
+    shaderc-2026.2             |       h718be3e_0         111 KB  conda-forge
+    spirv-tools-2026.1         |       hb700be7_0         2.2 MB  conda-forge
+    tbb-2023.0.0               |       hab88423_2         178 KB  conda-forge
+    tk-8.6.13                  |noxft_h366c992_103         3.1 MB  conda-forge
+    tzdata-2025c               |       hc9c84f9_1         116 KB  conda-forge
+    wayland-1.25.0             |       hd6090a7_0         326 KB  conda-forge
+    wheel-0.47.0               |     pyhd8ed1ab_0          33 KB  conda-forge
+    xkeyboard-config-2.47      |       hb03c661_0         390 KB  conda-forge
+    xorg-libx11-1.8.13         |       he1eb515_0         820 KB  conda-forge
+    ------------------------------------------------------------
+                                           Total:       174.8 MB
+
+The following NEW packages will be INSTALLED:
+
+  _openmp_mutex      conda-forge/linux-64::_openmp_mutex-4.5-20_gnu 
+  alsa-lib           conda-forge/linux-64::alsa-lib-1.2.15.3-hb03c661_0 
+  aom                conda-forge/linux-64::aom-3.9.1-hac33072_0 
+  bzip2              conda-forge/linux-64::bzip2-1.0.8-hda65f42_9 
+  c-ares             conda-forge/linux-64::c-ares-1.34.6-hb03c661_0 
+  ca-certificates    conda-forge/noarch::ca-certificates-2026.4.22-hbd8a1cb_0 
+  cairo              conda-forge/linux-64::cairo-1.18.4-he90730b_1 
+  cmake              conda-forge/linux-64::cmake-4.3.2-hc85cc9f_0 
+  dav1d              conda-forge/linux-64::dav1d-1.2.1-hd590300_0 
+  dbus               conda-forge/linux-64::dbus-1.16.2-h24cb091_1 
+  ffmpeg             conda-forge/linux-64::ffmpeg-8.1.1-gpl_h23ee523_701 
+  font-ttf-dejavu-s~ conda-forge/noarch::font-ttf-dejavu-sans-mono-2.37-hab24e00_0 
+  font-ttf-inconsol~ conda-forge/noarch::font-ttf-inconsolata-3.000-h77eed37_0 
+  font-ttf-source-c~ conda-forge/noarch::font-ttf-source-code-pro-2.038-h77eed37_0 
+  font-ttf-ubuntu    conda-forge/noarch::font-ttf-ubuntu-0.83-h77eed37_3 
+  fontconfig         conda-forge/linux-64::fontconfig-2.17.1-h27c8c51_0 
+  fonts-conda-ecosy~ conda-forge/noarch::fonts-conda-ecosystem-1-0 
+  fonts-conda-forge  conda-forge/noarch::fonts-conda-forge-1-hc364b38_1 
+  fribidi            conda-forge/linux-64::fribidi-1.0.16-hb03c661_0 
+  gdk-pixbuf         conda-forge/linux-64::gdk-pixbuf-2.44.6-h2b0a6b4_0 
+  glslang            conda-forge/linux-64::glslang-16.3.0-h96af755_0 
+  gmp                conda-forge/linux-64::gmp-6.3.0-hac33072_2 
+  graphite2          conda-forge/linux-64::graphite2-1.3.14-hecca717_2 
+  harfbuzz           conda-forge/linux-64::harfbuzz-14.2.0-h6083320_0 
+  icu                conda-forge/linux-64::icu-78.3-h33c6efd_0 
+  intel-gmmlib       conda-forge/linux-64::intel-gmmlib-22.10.0-hb700be7_0 
+  intel-media-driver conda-forge/linux-64::intel-media-driver-26.1.6-hecca717_0 
+  keyutils           conda-forge/linux-64::keyutils-1.6.3-hb9d3cd8_0 
+  krb5               conda-forge/linux-64::krb5-1.22.2-ha1258a1_0 
+  lame               conda-forge/linux-64::lame-3.100-h166bdaf_1003 
+  lcms2              conda-forge/linux-64::lcms2-2.19.1-h0c24ade_0 
+  ld_impl_linux-64   conda-forge/linux-64::ld_impl_linux-64-2.45.1-default_hbd61a6d_102 
+  lerc               conda-forge/linux-64::lerc-4.1.0-hdb68285_0 
+  level-zero         conda-forge/linux-64::level-zero-1.28.4-hb700be7_0 
+  libabseil          conda-forge/linux-64::libabseil-20260107.1-cxx17_h7b12aa8_0 
+  libass             conda-forge/linux-64::libass-0.17.4-h96ad9f0_0 
+  libbrotlicommon    conda-forge/linux-64::libbrotlicommon-1.2.0-hb03c661_1 
+  libbrotlidec       conda-forge/linux-64::libbrotlidec-1.2.0-hb03c661_1 
+  libbrotlienc       conda-forge/linux-64::libbrotlienc-1.2.0-hb03c661_1 
+  libcap             conda-forge/linux-64::libcap-2.77-hd0affe5_1 
+  libcurl            conda-forge/linux-64::libcurl-8.20.0-hcf29cc6_0 
+  libdeflate         conda-forge/linux-64::libdeflate-1.25-h17f619e_0 
+  libdovi            conda-forge/linux-64::libdovi-3.3.2-ha23c83e_4 
+  libdrm             conda-forge/linux-64::libdrm-2.4.127-hb03c661_0 
+  libedit            conda-forge/linux-64::libedit-3.1.20250104-pl5321h7949ede_0 
+  libegl             conda-forge/linux-64::libegl-1.7.0-ha4b6fd6_2 
+  libev              conda-forge/linux-64::libev-4.33-hd590300_2 
+  libexpat           conda-forge/linux-64::libexpat-2.8.0-hecca717_0 
+  libffi             conda-forge/linux-64::libffi-3.5.2-h3435931_0 
+  libflac            conda-forge/linux-64::libflac-1.5.0-he200343_1 
+  libfreetype        conda-forge/linux-64::libfreetype-2.14.3-ha770c72_0 
+  libfreetype6       conda-forge/linux-64::libfreetype6-2.14.3-h73754d4_0 
+  libgcc             conda-forge/linux-64::libgcc-15.2.0-he0feb66_19 
+  libgcc-ng          conda-forge/linux-64::libgcc-ng-15.2.0-h69a702a_19 
+  libgl              conda-forge/linux-64::libgl-1.7.0-ha4b6fd6_2 
+  libglib            conda-forge/linux-64::libglib-2.88.1-h0d30a3d_2 
+  libglvnd           conda-forge/linux-64::libglvnd-1.7.0-ha4b6fd6_2 
+  libglx             conda-forge/linux-64::libglx-1.7.0-ha4b6fd6_2 
+  libgomp            conda-forge/linux-64::libgomp-15.2.0-he0feb66_19 
+  libhwloc           conda-forge/linux-64::libhwloc-2.13.0-default_he001693_1000 
+  libhwy             conda-forge/linux-64::libhwy-1.4.0-h10be129_0 
+  libiconv           conda-forge/linux-64::libiconv-1.18-h3b78370_2 
+  libjpeg-turbo      conda-forge/linux-64::libjpeg-turbo-3.1.4.1-hb03c661_0 
+  libjxl             conda-forge/linux-64::libjxl-0.11.2-h174a0a3_1 
+  liblzma            conda-forge/linux-64::liblzma-5.8.3-hb03c661_0 
+  libnghttp2         conda-forge/linux-64::libnghttp2-1.68.1-h877daf1_0 
+  libnsl             conda-forge/linux-64::libnsl-2.0.1-hb9d3cd8_1 
+  libogg             conda-forge/linux-64::libogg-1.3.5-hd0c01bc_1 
+  libopenvino        conda-forge/linux-64::libopenvino-2026.0.0-hb56ce9e_1 
+  libopenvino-auto-~ conda-forge/linux-64::libopenvino-auto-batch-plugin-2026.0.0-hd85de46_1 
+  libopenvino-auto-~ conda-forge/linux-64::libopenvino-auto-plugin-2026.0.0-hd85de46_1 
+  libopenvino-heter~ conda-forge/linux-64::libopenvino-hetero-plugin-2026.0.0-hd41364c_1 
+  libopenvino-intel~ conda-forge/linux-64::libopenvino-intel-cpu-plugin-2026.0.0-hb56ce9e_1 
+  libopenvino-intel~ conda-forge/linux-64::libopenvino-intel-gpu-plugin-2026.0.0-hb56ce9e_1 
+  libopenvino-intel~ conda-forge/linux-64::libopenvino-intel-npu-plugin-2026.0.0-hb56ce9e_1 
+  libopenvino-ir-fr~ conda-forge/linux-64::libopenvino-ir-frontend-2026.0.0-hd41364c_1 
+  libopenvino-onnx-~ conda-forge/linux-64::libopenvino-onnx-frontend-2026.0.0-h7a07914_1 
+  libopenvino-paddl~ conda-forge/linux-64::libopenvino-paddle-frontend-2026.0.0-h7a07914_1 
+  libopenvino-pytor~ conda-forge/linux-64::libopenvino-pytorch-frontend-2026.0.0-hecca717_1 
+  libopenvino-tenso~ conda-forge/linux-64::libopenvino-tensorflow-frontend-2026.0.0-h78e8023_1 
+  libopenvino-tenso~ conda-forge/linux-64::libopenvino-tensorflow-lite-frontend-2026.0.0-hecca717_1 
+  libopus            conda-forge/linux-64::libopus-1.6.1-h280c20c_0 
+  libpciaccess       conda-forge/linux-64::libpciaccess-0.19-hb03c661_0 
+  libplacebo         conda-forge/linux-64::libplacebo-7.360.1-h9eeb4b2_0 
+  libpng             conda-forge/linux-64::libpng-1.6.58-h421ea60_0 
+  libprotobuf        conda-forge/linux-64::libprotobuf-6.33.5-h2b00c02_0 
+  librsvg            conda-forge/linux-64::librsvg-2.62.1-h4c96295_0 
+  libsndfile         conda-forge/linux-64::libsndfile-1.2.2-hc7d488a_2 
+  libsqlite          conda-forge/linux-64::libsqlite-3.53.1-h0c1763c_0 
+  libssh2            conda-forge/linux-64::libssh2-1.11.1-hcf80075_0 
+  libstdcxx          conda-forge/linux-64::libstdcxx-15.2.0-h934c35e_19 
+  libstdcxx-ng       conda-forge/linux-64::libstdcxx-ng-15.2.0-hdf11a46_19 
+  libsystemd0        conda-forge/linux-64::libsystemd0-260.1-h6569c3e_0 
+  libtiff            conda-forge/linux-64::libtiff-4.7.1-h9d88235_1 
+  libudev1           conda-forge/linux-64::libudev1-260.1-h6569c3e_0 
+  libunwind          conda-forge/linux-64::libunwind-1.8.3-h65a8314_0 
+  liburing           conda-forge/linux-64::liburing-2.14-hb700be7_0 
+  libusb             conda-forge/linux-64::libusb-1.0.29-h73b1eb8_0 
+  libuuid            conda-forge/linux-64::libuuid-2.42-h5347b49_0 
+  libuv              conda-forge/linux-64::libuv-1.51.0-hb03c661_1 
+  libva              conda-forge/linux-64::libva-2.23.0-he1eb515_0 
+  libvorbis          conda-forge/linux-64::libvorbis-1.3.7-h54a6638_2 
+  libvpl             conda-forge/linux-64::libvpl-2.16.0-h54a6638_0 
+  libvpx             conda-forge/linux-64::libvpx-1.15.2-hecca717_0 
+  libvulkan-loader   conda-forge/linux-64::libvulkan-loader-1.4.341.0-h5279c79_0 
+  libwebp-base       conda-forge/linux-64::libwebp-base-1.6.0-hd42ef1d_0 
+  libxcb             conda-forge/linux-64::libxcb-1.17.0-h8a09558_0 
+  libxcrypt          conda-forge/linux-64::libxcrypt-4.4.36-hd590300_1 
+  libxkbcommon       conda-forge/linux-64::libxkbcommon-1.13.1-hca5e8e5_0 
+  libxml2            conda-forge/linux-64::libxml2-2.15.3-h49c6c72_0 
+  libxml2-16         conda-forge/linux-64::libxml2-16-2.15.3-hca6bf5a_0 
+  libzlib            conda-forge/linux-64::libzlib-1.3.2-h25fd6f3_2 
+  mpg123             conda-forge/linux-64::mpg123-1.32.9-hc50e24c_0 
+  ncurses            conda-forge/linux-64::ncurses-6.6-hdb14827_0 
+  ninja              conda-forge/linux-64::ninja-1.13.2-h171cf75_0 
+  ocl-icd            conda-forge/linux-64::ocl-icd-2.3.3-hb9d3cd8_0 
+  opencl-headers     conda-forge/linux-64::opencl-headers-2025.06.13-hecca717_0 
+  openh264           conda-forge/linux-64::openh264-2.6.0-hc22cd8d_0 
+  openssl            conda-forge/linux-64::openssl-3.6.2-h35e630c_0 
+  packaging          conda-forge/noarch::packaging-26.2-pyhc364b38_0 
+  pango              conda-forge/linux-64::pango-1.56.4-hda50119_1 
+  pcre2              conda-forge/linux-64::pcre2-10.47-haa7fec5_0 
+  pip                conda-forge/noarch::pip-26.1.1-pyh8b19718_0 
+  pixman             conda-forge/linux-64::pixman-0.46.4-h54a6638_1 
+  pthread-stubs      conda-forge/linux-64::pthread-stubs-0.4-hb9d3cd8_1002 
+  pugixml            conda-forge/linux-64::pugixml-1.15-h3f63f65_0 
+  pulseaudio-client  conda-forge/linux-64::pulseaudio-client-17.0-h9a6aba3_3 
+  python             conda-forge/linux-64::python-3.10.20-h3c07f61_0_cpython 
+  readline           conda-forge/linux-64::readline-8.3-h853b02a_0 
+  rhash              conda-forge/linux-64::rhash-1.4.6-hb9d3cd8_1 
+  sdl2               conda-forge/linux-64::sdl2-2.32.56-h54a6638_0 
+  sdl3               conda-forge/linux-64::sdl3-3.4.8-hdeec2a5_0 
+  setuptools         conda-forge/noarch::setuptools-82.0.1-pyh332efcf_0 
+  shaderc            conda-forge/linux-64::shaderc-2026.2-h718be3e_0 
+  snappy             conda-forge/linux-64::snappy-1.2.2-h03e3b7b_1 
+  spirv-tools        conda-forge/linux-64::spirv-tools-2026.1-hb700be7_0 
+  svt-av1            conda-forge/linux-64::svt-av1-4.0.1-hecca717_0 
+  tbb                conda-forge/linux-64::tbb-2023.0.0-hab88423_2 
+  tk                 conda-forge/linux-64::tk-8.6.13-noxft_h366c992_103 
+  tzdata             conda-forge/noarch::tzdata-2025c-hc9c84f9_1 
+  wayland            conda-forge/linux-64::wayland-1.25.0-hd6090a7_0 
+  wayland-protocols  conda-forge/noarch::wayland-protocols-1.47-hd8ed1ab_0 
+  wheel              conda-forge/noarch::wheel-0.47.0-pyhd8ed1ab_0 
+  x264               conda-forge/linux-64::x264-1!164.3095-h166bdaf_2 
+  x265               conda-forge/linux-64::x265-3.5-h924138e_3 
+  xkeyboard-config   conda-forge/linux-64::xkeyboard-config-2.47-hb03c661_0 
+  xorg-libice        conda-forge/linux-64::xorg-libice-1.1.2-hb9d3cd8_0 
+  xorg-libsm         conda-forge/linux-64::xorg-libsm-1.2.6-he73a12e_0 
+  xorg-libx11        conda-forge/linux-64::xorg-libx11-1.8.13-he1eb515_0 
+  xorg-libxau        conda-forge/linux-64::xorg-libxau-1.0.12-hb03c661_1 
+  xorg-libxcursor    conda-forge/linux-64::xorg-libxcursor-1.2.3-hb9d3cd8_0 
+  xorg-libxdmcp      conda-forge/linux-64::xorg-libxdmcp-1.1.5-hb03c661_1 
+  xorg-libxext       conda-forge/linux-64::xorg-libxext-1.3.7-hb03c661_0 
+  xorg-libxfixes     conda-forge/linux-64::xorg-libxfixes-6.0.2-hb03c661_0 
+  xorg-libxi         conda-forge/linux-64::xorg-libxi-1.8.2-hb9d3cd8_0 
+  xorg-libxrandr     conda-forge/linux-64::xorg-libxrandr-1.5.5-hb03c661_0 
+  xorg-libxrender    conda-forge/linux-64::xorg-libxrender-0.9.12-hb9d3cd8_0 
+  xorg-libxscrnsaver conda-forge/linux-64::xorg-libxscrnsaver-1.2.4-hb9d3cd8_0 
+  xorg-libxtst       conda-forge/linux-64::xorg-libxtst-1.2.5-hb9d3cd8_3 
+  zstd               conda-forge/linux-64::zstd-1.5.7-hb78ec9c_6 
+
+
+
+Downloading and Extracting Packages: ...working...python-3.10.20       | 24.3 MB   |            |   0% 
+cmake-4.3.2          | 22.0 MB   |            |   0% [A
+
+libopenvino-intel-cp | 12.6 MB   |            |   0% [A[A
+
+
+ffmpeg-8.1.1         | 12.4 MB   |            |   0% [A[A[A
+
+
+
+icu-78.3             | 12.1 MB   |            |   0% [A[A[A[A
+
+
+
+
+libopenvino-intel-gp | 10.9 MB   |            |   0% [A[A[A[A[A
+
+
+
+
+
+intel-media-driver-2 | 8.4 MB    |            |   0% [A[A[A[A[A[A
+
+
+
+
+
+
+libopenvino-2026.0.0 | 6.3 MB    |            |   0% [A[A[A[A[A[A[A
+
+
+
+
+
+
+
+libstdcxx-15.2.0     | 5.6 MB    |            |   0% [A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+libglib-2.88.1       | 4.5 MB    |            |   0% [A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+libprotobuf-6.33.5   | 3.5 MB    |            |   0% [A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+librsvg-2.62.1       | 3.3 MB    |            |   0% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+tk-8.6.13            | 3.1 MB    |            |   0% [A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+openssl-3.6.2        | 3.0 MB    |            |   0% [A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+libhwloc-2.13.0      | 2.3 MB    |            |   0% [A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+harfbuzz-14.2.0      | 2.2 MB    |            |   0% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+spirv-tools-2026.1   | 2.2 MB    |            |   0% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+sdl3-3.4.8           | 2.0 MB    |            |   0% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+libopenvino-intel-np | 1.9 MB    |            |   0% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ ... (more hidden) ...[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[Apython-3.10.20       | 24.3 MB   | #3         |  13% 
+
+
+ffmpeg-8.1.1         | 12.4 MB   | 1          |   1% [A[A[A
+cmake-4.3.2          | 22.0 MB   |            |   0% [A
+
+
+
+icu-78.3             | 12.1 MB   |            |   1% [A[A[A[A
+
+libopenvino-intel-cp | 12.6 MB   |            |   0% [A[A
+
+
+ffmpeg-8.1.1         | 12.4 MB   | #1         |  12% [A[A[A
+cmake-4.3.2          | 22.0 MB   | 7          |   7% [Apython-3.10.20       | 24.3 MB   | ###1       |  32% 
+
+
+
+icu-78.3             | 12.1 MB   | #8         |  18% [A[A[A[A
+
+libopenvino-intel-cp | 12.6 MB   | #2         |  13% [A[A
+
+
+ffmpeg-8.1.1         | 12.4 MB   | ##2        |  22% [A[A[A
+cmake-4.3.2          | 22.0 MB   | #2         |  13% [Apython-3.10.20       | 24.3 MB   | ####8      |  49% 
+
+
+
+icu-78.3             | 12.1 MB   | ###4       |  34% [A[A[A[A
+
+libopenvino-intel-cp | 12.6 MB   | ##6        |  27% [A[A
+
+
+ffmpeg-8.1.1         | 12.4 MB   | ###8       |  38% [A[A[A
+cmake-4.3.2          | 22.0 MB   | ##4        |  24% [Apython-3.10.20       | 24.3 MB   | ######5    |  66% 
+
+
+
+icu-78.3             | 12.1 MB   | #####5     |  55% [A[A[A[A
+
+libopenvino-intel-cp | 12.6 MB   | ####3      |  43% [A[A
+
+
+ffmpeg-8.1.1         | 12.4 MB   | #####      |  51% [A[A[A
+cmake-4.3.2          | 22.0 MB   | ###4       |  34% [A
+
+
+
+icu-78.3             | 12.1 MB   | #######4   |  74% [A[A[A[A
+
+libopenvino-intel-cp | 12.6 MB   | #####7     |  57% [A[Apython-3.10.20       | 24.3 MB   | ########1  |  82% 
+
+
+ffmpeg-8.1.1         | 12.4 MB   | ######4    |  65% [A[A[A
+cmake-4.3.2          | 22.0 MB   | ####5      |  45% [A
+
+
+
+icu-78.3             | 12.1 MB   | #########4 |  95% [A[A[A[A
+
+libopenvino-intel-cp | 12.6 MB   | #######    |  71% [A[Apython-3.10.20       | 24.3 MB   | #########7 |  97% 
+
+
+
+icu-78.3             | 12.1 MB   | ########## | 100% [A[A[A[A
+
+
+
+
+libopenvino-intel-gp | 10.9 MB   |            |   0% [A[A[A[A[A
+
+
+ffmpeg-8.1.1         | 12.4 MB   | ########1  |  82% [A[A[A
+cmake-4.3.2          | 22.0 MB   | #####8     |  58% [A
+
+libopenvino-intel-cp | 12.6 MB   | ########8  |  89% [A[Apython-3.10.20       | 24.3 MB   | ########## | 100% 
+
+
+
+
+
+intel-media-driver-2 | 8.4 MB    |            |   0% [A[A[A[A[A[A
+
+
+
+
+libopenvino-intel-gp | 10.9 MB   | ##3        |  24% [A[A[A[A[A
+
+
+ffmpeg-8.1.1         | 12.4 MB   | #########9 |  99% [A[A[A
+cmake-4.3.2          | 22.0 MB   | #######2   |  73% [A
+
+libopenvino-intel-cp | 12.6 MB   | ########## | 100% [A[A
+
+
+
+
+
+intel-media-driver-2 | 8.4 MB    | ###9       |  40% [A[A[A[A[A[A
+
+
+ffmpeg-8.1.1         | 12.4 MB   | ########## | 100% [A[A[A
+
+
+
+
+
+
+libopenvino-2026.0.0 | 6.3 MB    |            |   0% [A[A[A[A[A[A[A
+
+
+
+
+libopenvino-intel-gp | 10.9 MB   | #####1     |  51% [A[A[A[A[A
+
+
+
+
+
+
+
+libstdcxx-15.2.0     | 5.6 MB    |            |   0% [A[A[A[A[A[A[A[A
+cmake-4.3.2          | 22.0 MB   | ########9  |  89% [A
+
+
+
+
+
+intel-media-driver-2 | 8.4 MB    | #######    |  70% [A[A[A[A[A[A
+
+
+
+
+
+
+libopenvino-2026.0.0 | 6.3 MB    | ###        |  31% [A[A[A[A[A[A[A
+
+
+
+
+libopenvino-intel-gp | 10.9 MB   | #######1   |  71% [A[A[A[A[A
+
+
+
+
+
+
+
+libstdcxx-15.2.0     | 5.6 MB    | ##3        |  23% [A[A[A[A[A[A[A[A
+
+
+
+
+
+intel-media-driver-2 | 8.4 MB    | ########## | 100% [A[A[A[A[A[A
+
+
+
+
+
+intel-media-driver-2 | 8.4 MB    | ########## | 100% [A[A[A[A[A[A
+
+
+
+
+
+
+libopenvino-2026.0.0 | 6.3 MB    | #######8   |  78% [A[A[A[A[A[A[A
+
+
+
+
+
+
+
+libstdcxx-15.2.0     | 5.6 MB    | ########2  |  82% [A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+libglib-2.88.1       | 4.5 MB    |            |   0% [A[A[A[A[A[A[A[A[A
+
+
+
+
+libopenvino-intel-gp | 10.9 MB   | ########## | 100% [A[A[A[A[A
+
+
+
+
+libopenvino-intel-gp | 10.9 MB   | ########## | 100% [A[A[A[A[A
+
+
+
+
+
+
+libopenvino-2026.0.0 | 6.3 MB    | ########## | 100% [A[A[A[A[A[A[A
+
+
+
+
+
+
+
+libstdcxx-15.2.0     | 5.6 MB    | ########## | 100% [A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+libprotobuf-6.33.5   | 3.5 MB    |            |   0% [A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+librsvg-2.62.1       | 3.3 MB    |            |   0% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+tk-8.6.13            | 3.1 MB    |            |   0% [A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+libglib-2.88.1       | 4.5 MB    | ########## | 100% [A[A[A[A[A[A[A[A[A
+cmake-4.3.2          | 22.0 MB   | ########## | 100% [A
+
+
+
+
+
+
+
+
+
+
+
+
+openssl-3.6.2        | 3.0 MB    |            |   1% [A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+libhwloc-2.13.0      | 2.3 MB    |            |   1% [A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+libopenvino-intel-cp | 12.6 MB   | ########## | 100% [A[A
+
+
+
+
+
+
+
+
+
+libprotobuf-6.33.5   | 3.5 MB    | #########2 |  93% [A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+tk-8.6.13            | 3.1 MB    | #####5     |  55% [A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+librsvg-2.62.1       | 3.3 MB    | ########1  |  81% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+libprotobuf-6.33.5   | 3.5 MB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+harfbuzz-14.2.0      | 2.2 MB    |            |   1% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+libhwloc-2.13.0      | 2.3 MB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+libhwloc-2.13.0      | 2.3 MB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+librsvg-2.62.1       | 3.3 MB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+harfbuzz-14.2.0      | 2.2 MB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+openssl-3.6.2        | 3.0 MB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+tk-8.6.13            | 3.1 MB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+openssl-3.6.2        | 3.0 MB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+tk-8.6.13            | 3.1 MB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+sdl3-3.4.8           | 2.0 MB    |            |   1% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+spirv-tools-2026.1   | 2.2 MB    |            |   1% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ ... (more hidden) ...[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+libopenvino-intel-np | 1.9 MB    |            |   1% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+icu-78.3             | 12.1 MB   | ########## | 100% [A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ ... (more hidden) ...[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+libopenvino-intel-np | 1.9 MB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+sdl3-3.4.8           | 2.0 MB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+sdl3-3.4.8           | 2.0 MB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+spirv-tools-2026.1   | 2.2 MB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+spirv-tools-2026.1   | 2.2 MB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+intel-media-driver-2 | 8.4 MB    | ########## | 100% [A[A[A[A[A[A
+
+
+ffmpeg-8.1.1         | 12.4 MB   | ########## | 100% [A[A[A
+
+
+
+
+libopenvino-intel-gp | 10.9 MB   | ########## | 100% [A[A[A[A[A
+
+
+
+
+
+
+libopenvino-2026.0.0 | 6.3 MB    | ########## | 100% [A[A[A[A[A[A[A
+
+
+
+
+
+
+
+libstdcxx-15.2.0     | 5.6 MB    | ########## | 100% [A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+libglib-2.88.1       | 4.5 MB    | ########## | 100% [A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+libglib-2.88.1       | 4.5 MB    | ########## | 100% [A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+libprotobuf-6.33.5   | 3.5 MB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+libhwloc-2.13.0      | 2.3 MB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[Apython-3.10.20       | 24.3 MB   | ########## | 100% 
+
+
+
+
+
+
+
+
+
+
+librsvg-2.62.1       | 3.3 MB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+harfbuzz-14.2.0      | 2.2 MB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+harfbuzz-14.2.0      | 2.2 MB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+openssl-3.6.2        | 3.0 MB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ ... (more hidden) ...[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ ... (more hidden) ...[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+libopenvino-intel-np | 1.9 MB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+libopenvino-intel-np | 1.9 MB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+tk-8.6.13            | 3.1 MB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+spirv-tools-2026.1   | 2.2 MB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+sdl3-3.4.8           | 2.0 MB    | ########## | 100% [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+cmake-4.3.2          | 22.0 MB   | ########## | 100% [A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                      [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A                                                     
+                                                     [A
+
+                                                     [A[A
+
+
+                                                     [A[A[A
+
+
+
+                                                     [A[A[A[A
+
+
+
+
+                                                     [A[A[A[A[A
+
+
+
+
+
+                                                     [A[A[A[A[A[A
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                                                     [A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+[A
+
+[A[A
+
+
+[A[A[A
+
+
+
+[A[A[A[A
+
+
+
+
+[A[A[A[A[A
+
+
+
+
+
+[A[A[A[A[A[A
+
+
+
+
+
+
+[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+[A
+
+[A[A
+
+
+[A[A[A
+
+
+
+[A[A[A[A
+
+
+
+
+[A[A[A[A[A
+
+
+
+
+
+[A[A[A[A[A[A
+
+
+
+
+
+
+[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+[A
+
+[A[A
+
+
+[A[A[A
+
+
+
+[A[A[A[A
+
+
+
+
+[A[A[A[A[A
+
+
+
+
+
+[A[A[A[A[A[A
+
+
+
+
+
+
+[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A[A
+[A
+
+[A[A
+
+
+[A[A[A
+
+
+
+[A[A[A[A
+
+
+
+
+[A[A[A[A[A
+
+
+
+
+
+[A[A[A[A[A[A
+
+
+
+
+
+
+[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A[A[A[A
+
+
+
+
+
+
+
+
+
+
+
+
+
+[A[A[A[A[A[A[A[A[A[A[A[A[A[A done
+Preparing transaction: - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ done
+Verifying transaction: / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | done
+Executing transaction: - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ | / - \ 
