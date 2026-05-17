@@ -12,13 +12,26 @@ That page is for collaborators; this file is for you.
 
 ## What changed while you were AFK (2026-05-17 session)
 
-**A walkable MultiPano scene exists.** Path from one panorama to map to
-3 panoramas to walkable 3DGS now runs end-to-end:
+**TWO walkable MultiPano scenes exist now (compare them side-by-side):**
+
+- 🟡 Depth-fusion baseline: <https://vladimiralbrekhtccr.github.io/360-panorama-viewer/3dgs-multipano/>
+- 🟢 **Real multi-view 3DGS**: <https://vladimiralbrekhtccr.github.io/360-panorama-viewer/3dgs-multipano-mv/>
+  (this is the artifact the entire pipeline was designed to produce —
+  proper parallax-driven Gaussians, ~590k of them, 38 MB, trained in
+  ~14 s on one H100 once gsplat finally compiled).
+
+**Path from one panorama to map to 3 panoramas to walkable 3DGS now
+runs end-to-end:**
 
 - 3 Codex-generated panoramas of `witch_hat_atelier` (Step 4 done).
 - Camera pins placed via `place-pins.html`; `poses.json` saved.
-- `recon_fusion.py` written + run on node001 → 1.18 M-Gaussian PLY.
-- Deployed at <https://vladimiralbrekhtccr.github.io/360-panorama-viewer/3dgs-multipano/>.
+- `recon_fusion.py` written + run on node001 → 1.18 M-Gaussian PLY
+  (deployed as `/3dgs-multipano/`, the depth-fusion baseline).
+- `recon_3dgs.py` finally runs too — after pointing `CUDA_HOME` at
+  miniconda3's 12.8 toolkit, gsplat JIT-compiled and the **real
+  multi-view 3DGS** training produced a 590k-Gaussian PLY in ~94s
+  (deployed as `/3dgs-multipano-mv/`). The working incantation is
+  preserved in `MultiPano/run_recon_3dgs.sh`.
 
 **A diffusion-refinement plan is documented** in
 `MultiPano/RESEARCH-DIFFUSION-INTEGRATION.md`. The headline find: NVIDIA
@@ -86,24 +99,27 @@ Once `map.png` exists, the rest of the pipeline can move.
 ┌──── Step 1 ────┐  ┌── Step 2 ──┐  ┌── Step 3 ──┐  ┌── Step 4 ──┐  ┌── Step 5 ──┐  ┌── Step 6 ──┐
 │ Style + layout │→ │    Map     │→ │   Camera   │→ │ 3 Panoramas│→ │ Multi-view │→ │   Browser  │
 │ references     │  │ gpt-image-2│  │ pin coords │  │ gpt-image-2│  │ 3DGS train │  │ walkthrough│
-│   ✅ done     │  │  ✅ done    │  │  ✅ done   │  │  ✅ done    │  │  ⚠️ fallback │  │  ✅ first   │
+│   ✅ done     │  │  ✅ done    │  │  ✅ done   │  │  ✅ done    │  │  ✅ done    │  │  ✅ TWO    │
 └────────────────┘  └────────────┘  └────────────┘  └────────────┘  └────────────┘  └────────────┘
-   Google + sketch    in ChatGPT      place-pins.html  via Codex's       recon_fusion.py   /3dgs-multipano/
-   (no anime          → map.png       + pano-prompts   image_gen tool    (depth-fusion;    on panorama-viewer
-   scrubbing)                         → poses.json     (real equirect —  not real MV       Pages
-                                                       not ChatGPT UI)   3DGS — see below)
+   Google + sketch    in ChatGPT      place-pins.html  via Codex's       recon_3dgs.py     /3dgs-multipano/
+   (no anime          → map.png       + pano-prompts   image_gen tool    (real MV 3DGS     +/3dgs-multipano-mv/
+   scrubbing)                         → poses.json     (real equirect    via gsplat        on panorama-viewer
+                                                       — not ChatGPT     + DefaultStrategy) Pages
+                                                       UI)               + recon_fusion.py
+                                                                         (depth fusion)
 ```
 
-**The fallback caveat at Step 5:** the intended `recon_3dgs.py` uses
-`gsplat` for proper multi-view photometric optimization, but `gsplat`'s
-CUDA kernels won't JIT-compile on node001 without a system `nvcc` —
-only conda-installed nvcc 12.8 is available, and the prebuilt wheels at
-`docs.gsplat.studio/whl/pt24cu124/` don't ship binaries for our combo.
-The fallback `recon_fusion.py` (per-pano DepthAnything-V2 → world-space
-point cloud → fuse → single 3DGS PLY) gives a working scene with
-~1.2 M Gaussians, but **no parallax-driven geometry refinement and no
-occlusion-hole filling**. Upgrade paths in
-`MultiPano/RESEARCH-DIFFUSION-INTEGRATION.md`.
+**Step 5 (gsplat) finally works.** It needed `CUDA_HOME` pointing at
+`~/miniconda3` (which has CUDA 12.8 + dev headers) and the
+`LIBRARY_PATH`/`LD_LIBRARY_PATH`/`CPATH` triad set to the miniconda
+lib + targets/x86_64-linux dirs. `MultiPano/run_recon_3dgs.sh` has the
+incantation. After that gsplat JIT-compiles in ~80 s once per session,
+then training is fast: 5000 iters in ~14 s on one H100, growing 20k →
+590k Gaussians with `DefaultStrategy` adaptive density control.
+
+`recon_fusion.py` (depth-fusion) is kept as a complementary baseline
+for comparison — it's still useful when no GPU with CUDA libs is
+available, or as a sanity-check oracle.
 
 ### Step-by-step detail
 
@@ -191,12 +207,17 @@ occlusion-hole filling**. Upgrade paths in
 - **2026-05-17** — Step 4 done: 3 Codex-generated panoramas of the
   witch_hat_atelier scene, chapel framed right / centre / left to give
   real parallax between viewpoints.
-- **2026-05-17** — Step 5 done as a fallback: gsplat won't JIT-compile
-  on node001 (no system nvcc), so wrote `recon_fusion.py` — pure-PyTorch
-  depth-fusion of the 3 panoramas using `poses.json`. Output:
-  `MultiPano/input/witch_hat_atelier/scene.ply` (1.18M Gaussians, 77 MB).
-- **2026-05-17** — Step 6 first cut deployed at
-  <https://vladimiralbrekhtccr.github.io/360-panorama-viewer/3dgs-multipano/>.
+- **2026-05-17** — Step 5 first cut as a fallback: gsplat wouldn't
+  JIT-compile, so wrote `recon_fusion.py` — pure-PyTorch depth-fusion
+  of the 3 panoramas. Output: `scene.ply` (1.18 M Gaussians, 77 MB),
+  deployed as `/3dgs-multipano/`.
+- **2026-05-17** — Step 5 PROPER: `recon_3dgs.py` works after pointing
+  `CUDA_HOME` at `~/miniconda3` (CUDA 12.8 + dev headers were present
+  all along, the conda install command's "InvalidSpec" error misled
+  me — the headers under `.../targets/x86_64-linux/include/` already
+  worked). gsplat JIT-compiles in ~80 s, then trains in ~14 s for 5000
+  iters. Real multi-view scene: 590k Gaussians, 38 MB, deployed as
+  `/3dgs-multipano-mv/`.
 - **2026-05-17** — Started installation of NVIDIA's **Lyra 2.0** in the
   background on node001 (~45–60 min) — Apache-2.0 feed-forward video-
   diffusion 3D scene generator that could replace large parts of the
