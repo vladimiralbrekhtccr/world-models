@@ -14,6 +14,7 @@ Endpoints
     GET  /list                      → list scenes + images under input/
     POST /create-scene?name=…       → mkdir input/<name>/
     POST /upload?scene=…&filename=… → save raw body to input/<scene>/<filename>
+    POST /poses?scene=…             → write JSON body to input/<scene>/poses.json
     DELETE /image?scene=…&file=…    → delete input/<scene>/<file>
 Anything else is served as a static file from this directory.
 """
@@ -108,6 +109,21 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 self.send_error(400, "invalid scene name"); return
             (INPUT / name).mkdir(parents=True, exist_ok=True)
             self._json(201, {"name": name}); return
+
+        if p == "/poses":
+            scene = q.get("scene", [""])[0]
+            if not _safe_seg(scene):
+                self.send_error(400, "invalid scene"); return
+            n = int(self.headers.get("Content-Length", "0"))
+            body = self.rfile.read(n)
+            try:
+                parsed = json.loads(body or b"{}")
+            except json.JSONDecodeError as e:
+                self.send_error(400, f"bad json: {e}"); return
+            target = INPUT / scene / "poses.json"
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(json.dumps(parsed, indent=2))
+            self._empty(204); return
 
         if p == "/upload":
             scene = q.get("scene", [""])[0]

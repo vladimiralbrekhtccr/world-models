@@ -330,6 +330,9 @@ a:hover { text-decoration: underline; }
         <div class="meta">
           ${s.images.length} image${s.images.length===1?'':'s'} · ${bytes(totalBytes)} · input/${escapeHtml(s.name)}/
           ${s.images.length ? `<button class="dl-all-btn" id="dl-all-btn">↓ Download all (.zip)</button>` : ''}
+          ${s.images.some(im => im.filename === 'map.png')
+            ? `<a class="dl-all-btn" style="text-decoration:none; display:inline-block;" href="place-pins.html?scene=${encodeURIComponent(s.name)}">📍 Place camera pins on map →</a>`
+            : ''}
         </div>
       </div>
       <div class="drop-zone" id="drop-zone">
