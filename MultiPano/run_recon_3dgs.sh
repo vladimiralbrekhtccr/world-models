@@ -22,5 +22,7 @@ echo "[run] CUDA_HOME=$CUDA_HOME"
 echo "[run] nvcc: $($CUDACXX --version | tail -1)"
 CUDA_VISIBLE_DEVICES=0 "$VENV_PYTHON" MultiPano/recon_3dgs.py \
     --scene MultiPano/input/witch_hat_atelier \
-    --iters 5000 --num-yaw 8 --num-pitch 3 --view-size 384 --n-init 20000 \
-    --out MultiPano/input/witch_hat_atelier/scene_mv.ply
+    --iters 15000 --num-yaw 12 --num-pitch 3 --view-size 384 --n-init 200000 \
+    --init-ply MultiPano/input/witch_hat_atelier/scene.ply \
+    --ssim 0.2 \
+    --out MultiPano/input/witch_hat_atelier/scene_mv2.ply

@@ -171,20 +171,45 @@ def build_views(scene_dir: Path, num_yaw: int, num_pitch: int,
 
 
 # ── 3DGS init + train ─────────────────────────────────────────────
-def init_splats(scene_center: np.ndarray, scene_radius: float, n_init: int, device):
-    # Random points in a ball around scene centre
-    rng = np.random.default_rng(0)
-    direc = rng.standard_normal((n_init, 3))
-    direc /= np.linalg.norm(direc, axis=1, keepdims=True) + 1e-9
-    r = scene_radius * np.cbrt(rng.uniform(0.05, 1.0, n_init))
-    pts = scene_center + direc * r[:, None]
-
-    means_init = torch.tensor(pts, dtype=torch.float32, device=device)
-    scales_init = torch.full((n_init, 3), math.log(0.1), device=device)   # ~10 cm
-    quats_init = torch.zeros(n_init, 4, device=device)
-    quats_init[:, 0] = 1.0
-    opacities_init = torch.full((n_init,), float(np.log(0.1 / 0.9)), device=device)  # logit(0.1)
-    colors_init = torch.full((n_init, 3), 0.0, device=device)              # zero before sigmoid → 0.5
+def init_splats(scene_center: np.ndarray, scene_radius: float, n_init: int, device,
+                init_ply: Path = None):
+    """Initialise splats either from a sparse-init PLY (positions + colors from
+    depth-fusion) or from random points in a ball. Random init produces
+    over-smoothed garbage for sparse-view setups; sparse-init is the standard
+    3DGS practice and dramatically improves convergence."""
+    if init_ply and Path(init_ply).exists():
+        print(f"[init] sparse-init from {init_ply}")
+        ply = PlyData.read(str(init_ply))
+        v = ply["vertex"]
+        pts = np.stack([v["x"], v["y"], v["z"]], axis=-1).astype(np.float32)
+        # Recover RGB from f_dc (canonical 3DGS PLY uses f_dc = (rgb - 0.5) / SH_C0)
+        fdc = np.stack([v["f_dc_0"], v["f_dc_1"], v["f_dc_2"]], axis=-1).astype(np.float32)
+        rgb = np.clip(fdc * SH_C0 + 0.5, 1e-3, 1.0 - 1e-3)
+        # Downsample if too many points
+        if len(pts) > n_init:
+            keep = np.random.default_rng(0).choice(len(pts), n_init, replace=False)
+            pts = pts[keep]; rgb = rgb[keep]
+        N = len(pts)
+        means_init = torch.tensor(pts, dtype=torch.float32, device=device)
+        # Logit of the color so sigmoid(stored) = rgb
+        logit_rgb = np.log(rgb / (1.0 - rgb))
+        colors_init = torch.tensor(logit_rgb, dtype=torch.float32, device=device)
+        scales_init = torch.full((N, 3), math.log(0.05), device=device)   # ~5 cm
+        quats_init = torch.zeros(N, 4, device=device); quats_init[:, 0] = 1.0
+        opacities_init = torch.full((N,), float(np.log(0.5 / 0.5)), device=device)  # logit(0.5)
+    else:
+        print(f"[init] random ball around scene centre · {n_init} points")
+        rng = np.random.default_rng(0)
+        direc = rng.standard_normal((n_init, 3))
+        direc /= np.linalg.norm(direc, axis=1, keepdims=True) + 1e-9
+        r = scene_radius * np.cbrt(rng.uniform(0.05, 1.0, n_init))
+        pts = scene_center + direc * r[:, None]
+        N = n_init
+        means_init = torch.tensor(pts, dtype=torch.float32, device=device)
+        scales_init = torch.full((N, 3), math.log(0.1), device=device)
+        quats_init = torch.zeros(N, 4, device=device); quats_init[:, 0] = 1.0
+        opacities_init = torch.full((N,), float(np.log(0.1 / 0.9)), device=device)
+        colors_init = torch.full((N, 3), 0.0, device=device)
 
     splats = nn.ParameterDict({
         "means":     nn.Parameter(means_init),
@@ -194,6 +219,33 @@ def init_splats(scene_center: np.ndarray, scene_radius: float, n_init: int, devi
         "colors":    nn.Parameter(colors_init),
     })
     return splats
+
+
+def ssim_1d(x: torch.Tensor, y: torch.Tensor, window_size: int = 11) -> torch.Tensor:
+    """Simple SSIM over an HxWx3 image (no batch dim). Returns scalar in [0,1]."""
+    # Move channels to front and add batch
+    x = x.permute(2, 0, 1).unsqueeze(0)  # 1,3,H,W
+    y = y.permute(2, 0, 1).unsqueeze(0)
+    pad = window_size // 2
+    sigma = 1.5
+    coords = torch.arange(window_size, device=x.device, dtype=torch.float32) - pad
+    g = torch.exp(-(coords**2) / (2 * sigma**2))
+    g = (g / g.sum()).view(1, 1, 1, -1)
+    g = g.expand(3, 1, 1, window_size)
+    gT = g.transpose(2, 3)
+    def conv(t):
+        t = F.conv2d(t, g, padding=(0, pad), groups=3)
+        t = F.conv2d(t, gT, padding=(pad, 0), groups=3)
+        return t
+    mu_x, mu_y = conv(x), conv(y)
+    mu_x2, mu_y2, mu_xy = mu_x*mu_x, mu_y*mu_y, mu_x*mu_y
+    sig_x2 = conv(x*x) - mu_x2
+    sig_y2 = conv(y*y) - mu_y2
+    sig_xy = conv(x*y) - mu_xy
+    C1, C2 = 0.01**2, 0.03**2
+    ssim_map = ((2*mu_xy + C1) * (2*sig_xy + C2)) / \
+               ((mu_x2 + mu_y2 + C1) * (sig_x2 + sig_y2 + C2))
+    return ssim_map.mean()
 
 
 def make_optimizers(splats: nn.ParameterDict, scene_radius: float):
@@ -220,8 +272,8 @@ def render_view(splats, viewmat, K, W, H):
 
 
 def train(views, scene_center, scene_radius, n_init, n_iters, fov_deg, view_size,
-          out_ply, device, log_every=200):
-    splats = init_splats(scene_center, scene_radius, n_init, device)
+          out_ply, device, log_every=200, init_ply: Path = None, ssim_weight: float = 0.2):
+    splats = init_splats(scene_center, scene_radius, n_init, device, init_ply=init_ply)
     optimizers = make_optimizers(splats, scene_radius)
 
     strategy = DefaultStrategy(
@@ -251,7 +303,11 @@ def train(views, scene_center, scene_radius, n_init, n_iters, fov_deg, view_size
         img, info = render_view(splats, viewmat, K, W, H)
 
         loss_l1 = (img - gt).abs().mean()
-        loss = loss_l1
+        if ssim_weight > 0:
+            loss_ssim = 1.0 - ssim_1d(img, gt)
+            loss = (1.0 - ssim_weight) * loss_l1 + ssim_weight * loss_ssim
+        else:
+            loss = loss_l1
 
         for opt in optimizers.values():
             opt.zero_grad(set_to_none=True)
@@ -316,6 +372,11 @@ def main():
     p.add_argument("--camera-height", type=float, default=1.6, help="metres above ground for cameras")
     p.add_argument("--iters",     type=int,   default=10000)
     p.add_argument("--n-init",    type=int,   default=30000)
+    p.add_argument("--init-ply",  default=None,
+                   help="sparse-init from this PLY (e.g. depth-fusion scene.ply). "
+                        "Greatly improves convergence vs random init.")
+    p.add_argument("--ssim",      type=float, default=0.2,
+                   help="weight of (1 - SSIM) in the loss (standard 3DGS uses 0.2)")
     args = p.parse_args()
 
     if not torch.cuda.is_available():
@@ -340,7 +401,9 @@ def main():
 
     train(views, scene_center, scene_radius, n_init=args.n_init, n_iters=args.iters,
           fov_deg=args.fov, view_size=args.view_size,
-          out_ply=out_ply, device=device)
+          out_ply=out_ply, device=device,
+          init_ply=Path(args.init_ply) if args.init_ply else None,
+          ssim_weight=args.ssim)
 
 
 if __name__ == "__main__":
