@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MultiPano · panorama prompts</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Literata:wght@400;500;700&family=DM+Sans:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --text:#111; --text-2:#3a3a3a; --text-3:#777;
+  --accent:#7c3aed; --accent-bg:#faf5ff;
+  --bg:#fbf9f2; --panel:#fff; --border:#d9d2bf; --code-bg:#f1ead8;
+  --green:#15803d; --green-bg:#dff5e3; --red:#b91c1c;
+  --font-body:'Literata',Georgia,serif;
+  --font-ui:'DM Sans',system-ui,sans-serif;
+  --font-mono:'IBM Plex Mono',monospace;
+}
+* { box-sizing: border-box; }
+body { margin:0; background:var(--bg); color:var(--text);
+       font-family:var(--font-ui); font-size:14px; line-height:1.6; }
+a { color:var(--accent); text-decoration:none; }
+a:hover { text-decoration:underline; }
+.page { max-width: 1100px; margin: 0 auto; padding: 24px 22px 80px; }
+
+.crumbs { font-size:12.5px; color:var(--text-3); margin-bottom: 12px; }
+.crumbs a { color:var(--text-3); }
+.crumbs a:hover { color:var(--accent); }
+.crumbs .sep { color:#ccc; margin: 0 6px; }
+
+h1 { font-family:var(--font-body); font-size:26px; font-weight:700; margin:0 0 4px; }
+.tagline { color: var(--text-2); font-size: 14.5px; margin: 0 0 22px; }
+
+.intro {
+  background: var(--panel); border:1px solid var(--border); border-radius: 8px;
+  padding: 14px 18px; margin-bottom: 22px; font-size: 13.5px; line-height:1.6;
+}
+.intro ol { margin: 6px 0 0; padding-left: 20px; }
+.intro code { font-family:var(--font-mono); font-size:12px;
+  background:var(--code-bg); padding:1px 5px; border-radius:3px; }
+
+.pin-cards { display: grid; gap: 22px; }
+
+.pin-card {
+  background: var(--panel); border: 2px solid var(--border); border-radius: 10px;
+  padding: 18px; display: grid; grid-template-columns: 320px 1fr; gap: 18px;
+}
+@media (max-width: 800px) { .pin-card { grid-template-columns: 1fr; } }
+
+.pin-card .map-col { display:flex; flex-direction:column; gap:8px; }
+.pin-card canvas {
+  width: 100%; height: auto; border: 1px solid var(--border); border-radius: 6px;
+  background:#000; display:block;
+}
+.pin-card .map-actions {
+  display:flex; gap: 6px;
+}
+.pin-card .map-actions button {
+  flex: 1; font-family: var(--font-ui); font-size: 12px; font-weight: 600;
+  border: 1px solid var(--border); background: #fff; color: var(--text-2);
+  padding: 6px 10px; border-radius: 4px; cursor: pointer;
+}
+.pin-card .map-actions button:hover { background: var(--accent-bg); color: var(--accent); border-color: var(--accent); }
+.pin-card .map-actions button.primary { background: var(--accent); color:#fff; border-color: var(--accent); }
+.pin-card .map-actions button.primary:hover { background: #6925d6; }
+
+.pin-card .body { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.pin-card .head { display: flex; align-items: center; gap: 10px; }
+.pin-card .badge {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--accent); color: #fff;
+  font-family: var(--font-ui); font-weight: 700; font-size: 14px;
+  display: flex; align-items: center; justify-content: center;
+}
+.pin-card .where {
+  font-family: var(--font-mono); font-size: 12px; color: var(--text-3);
+}
+.pin-card .where strong { color: var(--text); font-family: var(--font-ui); }
+
+.field {
+  display: flex; flex-direction: column; gap: 4px;
+}
+.field label {
+  font-family: var(--font-ui); font-size: 11px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1.2px; color: var(--text-3);
+}
+.field input, .field textarea {
+  font-family: var(--font-mono); font-size: 12.5px; line-height: 1.55;
+  padding: 7px 9px; border: 1px solid var(--border); border-radius: 4px;
+  background: #fff; resize: vertical;
+}
+.field input:focus, .field textarea:focus { outline: none; border-color: var(--accent); }
+.field textarea { min-height: 220px; white-space: pre-wrap; }
+
+.field .row { display:flex; gap:8px; align-items: center; justify-content: space-between; }
+.copy-btn {
+  font-family: var(--font-ui); font-size: 12px; font-weight: 600;
+  background: var(--accent); color:#fff; border: none;
+  padding: 5px 12px; border-radius: 4px; cursor: pointer;
+}
+.copy-btn:hover { background: #6925d6; }
+.copy-btn.ok { background: var(--green); }
+
+.miss {
+  background: #fef2f2; border: 1px solid #fca5a5; color: var(--red);
+  padding: 14px 18px; border-radius: 8px;
+}
+
+.toast {
+  position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%) translateY(140%);
+  background: rgba(0,0,0,0.85); color:#eee; font-family: var(--font-mono); font-size: 12.5px;
+  padding: 8px 14px; border-radius: 6px; z-index: 100;
+  transition: transform 0.18s; pointer-events: none;
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.ok { background: var(--green); color: #fff; }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <div class="crumbs">
+    <a href="inputs.html">← inputs gallery</a>
+    <span class="sep">·</span>
+    <a id="back-pins" href="#">← edit pins</a>
+    <span class="sep">·</span>
+    <span id="scene-name" style="color: var(--accent); font-weight:600;">…</span>
+  </div>
+
+  <h1>Panorama prompts</h1>
+  <p class="tagline">One ready-to-paste ChatGPT prompt per camera pin, with an auto-annotated map image you download and attach.</p>
+
+  <div class="intro">
+    <strong>Run in this order:</strong>
+    <ol>
+      <li><strong>Pin 1 first.</strong> Download its annotated map, copy its prompt, paste into ChatGPT (gpt-image-2) along with the annotated map + one Witch-Hat-Atelier style still. Save the result as <code>pano_1.png</code>.</li>
+      <li><strong>Pin 2.</strong> Same, but also attach <code>pano_1.png</code> for scene-identity reference (the prompt expects "Image 3 = panorama 1").</li>
+      <li><strong>Pin 3.</strong> Same as pin 2 — attach <code>pano_1.png</code> as Image 3.</li>
+      <li>Upload each <code>pano_k.png</code> back to <a href="inputs.html">the inputs gallery</a> for this scene.</li>
+    </ol>
+  </div>
+
+  <div id="cards" class="pin-cards">
+    <div class="miss" id="loading-msg">Loading scene…</div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  const params = new URLSearchParams(location.search);
+  const scene = params.get('scene') || '';
+  const sceneNameEl = document.getElementById('scene-name');
+  const cardsEl = document.getElementById('cards');
+  const loadingEl = document.getElementById('loading-msg');
+  const backPinsEl = document.getElementById('back-pins');
+  const toast = document.getElementById('toast');
+
+  if (!scene) {
+    loadingEl.innerHTML = 'No scene specified. Open as <code>pano-prompts.html?scene=&lt;name&gt;</code>.';
+    return;
+  }
+  sceneNameEl.textContent = scene;
+  document.title = 'MultiPano · pano prompts · ' + scene;
+  backPinsEl.href = 'place-pins.html?scene=' + encodeURIComponent(scene);
+
+  function flash(msg, cls='', ttl=1500) {
+    toast.textContent = msg;
+    toast.className = 'toast show' + (cls ? ' ' + cls : '');
+    clearTimeout(flash._t);
+    flash._t = setTimeout(() => toast.classList.remove('show'), ttl);
+  }
+
+  async function init() {
+    let posesData, img;
+    try {
+      const r = await fetch(`input/${encodeURIComponent(scene)}/poses.json?t=${Date.now()}`, {cache:'no-store'});
+      if (!r.ok) throw new Error(`poses.json not found (HTTP ${r.status})`);
+      posesData = await r.json();
+    } catch (e) {
+      loadingEl.innerHTML = `Could not load <code>input/${scene}/poses.json</code>: ${e.message}<br>
+        Go to <a href="place-pins.html?scene=${encodeURIComponent(scene)}">place-pins</a> first.`;
+      return;
+    }
+    try {
+      img = new Image();
+      img.src = `input/${encodeURIComponent(scene)}/map.png?t=${Date.now()}`;
+      await img.decode();
+    } catch (e) {
+      loadingEl.innerHTML = `Could not load <code>map.png</code> in this scene.`;
+      return;
+    }
+
+    const W = img.naturalWidth, H = img.naturalHeight;
+    const cameras = posesData.cameras || {};
+    const ids = Object.keys(cameras).sort((a,b) => +a - +b);
+    if (!ids.length) {
+      loadingEl.innerHTML = `<code>poses.json</code> has no cameras. Place pins first.`;
+      return;
+    }
+
+    loadingEl.remove();
+    cardsEl.innerHTML = '';
+
+    // Pre-compute everyone's compass position relative to the map's centre.
+    const cx = W / 2, cy = H / 2;
+    function bearingFromCenterTo(px, py) {
+      // image y goes down; north = up = decreasing y.
+      const dx = px - cx;
+      const dy = py - cy;
+      const ang = Math.atan2(dx, -dy);             // 0 = north, +π/2 = east
+      const deg = ((ang * 180/Math.PI) + 360) % 360;
+      const sectors = ['N','NE','E','SE','S','SW','W','NW'];
+      const idx = Math.round(deg / 45) % 8;
+      const dist_m = Math.hypot(dx, dy) * (posesData.scale_m_per_px || 0.02);
+      return { sector: sectors[idx], deg, dist_m };
+    }
+    function viewpointPhrase(px, py) {
+      const b = bearingFromCenterTo(px, py);
+      const longNames = {
+        N:'north', NE:'north-east', E:'east', SE:'south-east',
+        S:'south', SW:'south-west', W:'west', NW:'north-west',
+      };
+      const opp = { N:'south', NE:'south-west', E:'west', SE:'north-west',
+                    S:'north', SW:'north-east', W:'east', NW:'south-east' };
+      const dir = longNames[b.sector];
+      const lookDir = opp[b.sector];
+      return `near the ${dir} edge of the clearing, approximately ${b.dist_m.toFixed(0)} m from the centre, looking ${lookDir} toward the chapel`;
+    }
+
+    for (const id of ids) {
+      const cam = cameras[id];
+      const card = makeCard(id, cam, W, H);
+      cardsEl.appendChild(card);
+    }
+
+    function makeCard(id, cam, W, H) {
+      const phrase = viewpointPhrase(cam.px, cam.py);
+      const mpp = posesData.scale_m_per_px || 0.02;
+      const xm = (cam.px * mpp).toFixed(1);
+      const ym = (cam.py * mpp).toFixed(1);
+
+      const wrap = document.createElement('div');
+      wrap.className = 'pin-card';
+      wrap.innerHTML = `
+        <div class="map-col">
+          <canvas data-id="${id}"></canvas>
+          <div class="map-actions">
+            <button class="dl-map primary" data-id="${id}">↓ Download annotated map (Image 1)</button>
+          </div>
+        </div>
+        <div class="body">
+          <div class="head">
+            <div class="badge">${id}</div>
+            <div>
+              <div style="font-weight:700; font-family:var(--font-body); font-size: 17px;">Panorama from pin ${id}</div>
+              <div class="where">pixel ${cam.px}, ${cam.py}
+                <strong>· ${(xm)} m, ${(ym)} m</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Viewpoint (editable — refine if needed)</label>
+            <input type="text" class="vp" value="${escapeAttr(phrase)}">
+          </div>
+
+          <div class="field">
+            <div class="row">
+              <label>Full prompt for ChatGPT (gpt-image-2)</label>
+              <button class="copy-btn copy-prompt" data-id="${id}">📋 Copy prompt</button>
+            </div>
+            <textarea class="prompt-ta" readonly></textarea>
+          </div>
+
+          <div class="field">
+            <label>Inputs to attach in ChatGPT</label>
+            <div style="font-size:13px; color:var(--text-2); line-height:1.55;">
+              <strong>Image 1:</strong> the annotated map you just downloaded.<br>
+              <strong>Image 2:</strong> a Witch-Hat-Atelier style still.<br>
+              ${id === '1'
+                ? `<strong>Image 3:</strong> <em>(not needed for pin 1)</em>`
+                : `<strong>Image 3:</strong> <code>pano_1.png</code> for scene-identity preservation.`}
+            </div>
+          </div>
+        </div>
+      `;
+
+      // Render annotated map on the canvas
+      const canvas = wrap.querySelector('canvas');
+      drawAnnotatedMap(canvas, id);
+
+      const ta = wrap.querySelector('.prompt-ta');
+      const vp = wrap.querySelector('.vp');
+      function updatePrompt() {
+        ta.value = buildPrompt(id, vp.value.trim());
+      }
+      vp.addEventListener('input', updatePrompt);
+      updatePrompt();
+
+      wrap.querySelector('.dl-map').addEventListener('click', () => {
+        canvas.toBlob(blob => {
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = `map_pin_${id}.png`;
+          document.body.appendChild(a); a.click(); document.body.removeChild(a);
+          setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+          flash('Downloaded map_pin_' + id + '.png', 'ok');
+        }, 'image/png');
+      });
+      wrap.querySelector('.copy-prompt').addEventListener('click', async (e) => {
+        try {
+          await navigator.clipboard.writeText(ta.value);
+          e.target.textContent = '✓ Copied';
+          e.target.classList.add('ok');
+          setTimeout(() => {
+            e.target.textContent = '📋 Copy prompt';
+            e.target.classList.remove('ok');
+          }, 1500);
+        } catch (err) {
+          ta.select(); document.execCommand('copy');
+          flash('Copied (fallback)', 'ok');
+        }
+      });
+      return wrap;
+    }
+
+    function drawAnnotatedMap(canvas, activeId) {
+      const ctx = canvas.getContext('2d');
+      const cssW = canvas.parentElement.offsetWidth || 300;
+      const scale = cssW / W;
+      canvas.width  = Math.floor(W * scale * 2);  // 2× for retina sharpness
+      canvas.height = Math.floor(H * scale * 2);
+      canvas.style.width = '100%';
+      const sx = canvas.width / W;
+      const sy = canvas.height / H;
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+      // Subtle white wash so pins pop
+      ctx.fillStyle = 'rgba(255,255,255,0.10)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw other pins muted
+      for (const id of ids) {
+        if (id === activeId) continue;
+        const c = cameras[id];
+        drawPin(ctx, c.px * sx, c.py * sy, id, '#bbb', '#999');
+      }
+      // Active pin in red
+      const a = cameras[activeId];
+      drawPin(ctx, a.px * sx, a.py * sy, activeId, '#e11d48', '#fff', true);
+    }
+    function drawPin(ctx, x, y, label, fill, stroke, big = false) {
+      const r = big ? 26 : 16;
+      // big outer ring for emphasis on active
+      if (big) {
+        ctx.beginPath(); ctx.arc(x, y, r + 14, 0, Math.PI*2);
+        ctx.fillStyle = 'rgba(225,29,72,0.20)'; ctx.fill();
+        ctx.beginPath(); ctx.arc(x, y, r + 6, 0, Math.PI*2);
+        ctx.strokeStyle = 'rgba(225,29,72,0.6)'; ctx.lineWidth = 3; ctx.stroke();
+      }
+      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2);
+      ctx.fillStyle = fill; ctx.fill();
+      ctx.strokeStyle = stroke; ctx.lineWidth = 3; ctx.stroke();
+      ctx.fillStyle = stroke;
+      ctx.font = `700 ${big ? 22 : 16}px DM Sans, system-ui, sans-serif`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(String(label), x, y);
+    }
+
+    function buildPrompt(id, viewpoint) {
+      const k = parseInt(id, 10);
+      const identityBlock = k === 1 ?
+`- Image 1 is the top-down map of the scene. A red mark / circle shows the camera position for this panorama. The camera stands ${viewpoint}.
+- Image 2 is the style anchor (a Witch Hat Atelier still). Match its illustrative watercolour / ink style, palette, and linework.
+- (No panorama-1 reference for this first panorama — this one defines the scene's visual identity.)`
+:
+`- Image 1 is the top-down map of the scene. A red mark / circle shows the camera position for this panorama. The camera stands ${viewpoint}.
+- Image 2 is the style anchor.
+- Image 3 is panorama 1 of this same scene. THE CHAPEL, TREES, WALLS, SKY, TIME OF DAY, LIGHTING DIRECTION, PALETTE, AND WEATHER MUST BE IDENTICAL TO IMAGE 3. Only the vantage point changes. Do not invent new buildings. Do not rearrange large features. Do not add or remove characters.`;
+
+      return `360 equirectangular panorama of one fictional outdoor scene, viewed from a specific position marked on the attached map.
+
+Inputs.
+${identityBlock}
+
+What to draw.
+1. A full 360° view from the marked camera position.
+2. Equirectangular projection (cylindrical equidistant): the sky stretches across the entire top row, the ground across the entire bottom row, vertical objects bow into gentle vertical arcs near the top and bottom.
+3. Seamless horizontal wrap — the leftmost column of pixels must continue into the rightmost column with no visible seam.
+4. Yaw convention. The centre column of the image faces map-north (top of the map). The left half is west of the camera; the right half is east; the seam at the left/right edge is south.
+5. Aspect ratio exactly 2:1. Resolution 4096 × 2048 px.
+
+Do NOT include.
+- No HUD, watermark, logo, or text.
+${k > 1 ? `- No characters not present in Image 3 (preserve cast).
+- No new buildings, paths, or large features not visible on Image 1.
+- No time-of-day, lighting, or weather change from Image 3.` : `- Sensible characters or none — this panorama sets the cast for subsequent panoramas.`}
+- No fisheye / wide-angle distortion other than what equirectangular projection naturally requires.
+
+Intended use. This panorama will be combined with two others from different positions on the same map into a multi-view 3D reconstruction. Geometric and identity consistency ${k > 1 ? 'with Image 3 ' : ''}matters more than artistic novelty.${k > 1 ? ' When in doubt, copy from Image 3 rather than invent.' : ''}`;
+    }
+
+    function escapeAttr(s) {
+      return String(s).replace(/[&<>"']/g, c =>
+        ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+    }
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>

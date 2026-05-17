@@ -153,6 +153,7 @@ a { color:var(--accent); text-decoration:none; }
     <span class="grow"></span>
     <button id="reset-btn" title="Reload from saved poses.json (or clear)">↻ Reset</button>
     <button id="save-btn" class="primary" disabled>Save poses.json</button>
+    <button id="prompts-btn" title="Go to panorama-prompts page for this scene">→ Panorama prompts</button>
   </header>
 
   <main class="viewer" id="viewer">
@@ -416,6 +417,10 @@ a { color:var(--accent); text-decoration:none; }
     } catch (e) {
       flash('Save failed: ' + e.message, 'err');
     }
+  });
+
+  document.getElementById('prompts-btn').addEventListener('click', () => {
+    location.href = 'pano-prompts.html?scene=' + encodeURIComponent(scene);
   });
 
   resetBtn.addEventListener('click', async () => {
