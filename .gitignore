@@ -64,3 +64,4 @@ MultiPano/input/**/*.png
 MultiPano/input/**/*.jpg
 MultiPano/input/**/*.jpeg
 MultiPano/input/**/*.webp
+MultiPano/setup_lyra.log
