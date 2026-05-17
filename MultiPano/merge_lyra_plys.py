@@ -48,6 +48,8 @@ def main():
     ap.add_argument("--target_count", type=int, default=1_500_000)
     ap.add_argument("--min_opacity", type=float, default=0.1)
     ap.add_argument("--max_radius", type=float, default=100.0)
+    ap.add_argument("--max_scale", type=float, default=None,
+                    help="Drop gaussians whose max(exp(scale_i)) exceeds this (smear pruning).")
     ap.add_argument("--seed", type=int, default=0)
     args = ap.parse_args()
 
@@ -61,8 +63,12 @@ def main():
         print(f"  {len(v):,} gaussians")
         op = sigmoid(v["opacity"])
         r = np.sqrt(v["x"] ** 2 + v["y"] ** 2 + v["z"] ** 2)
-        pool = np.where((op > args.min_opacity) & (r < args.max_radius))[0]
-        print(f"  after opacity>{args.min_opacity} + r<{args.max_radius}: {len(pool):,}")
+        cond = (op > args.min_opacity) & (r < args.max_radius)
+        if args.max_scale is not None:
+            smax = np.maximum.reduce([np.exp(v[f"scale_{k}"]) for k in (0, 1, 2)])
+            cond &= smax < args.max_scale
+        pool = np.where(cond)[0]
+        print(f"  after filters: {len(pool):,}")
         v = v[pool]
         if yaw != 0.0:
             v = rotate_y(v, float(np.deg2rad(yaw)))
