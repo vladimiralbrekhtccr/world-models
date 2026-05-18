@@ -10,6 +10,12 @@ MAX_ITERS="${4:-30000}"
 PREFIX=/scratch/vladimir_albrekht/projects/world-models/MultiPano/.conda/nerfstudio
 source $HOME/miniconda3/etc/profile.d/conda.sh
 conda activate $PREFIX
+# gsplat JIT-compiles CUDA kernels; CUDA 11.8 nvcc requires gcc<=11.
+export CUDA_HOME=$PREFIX
+export PATH=$CUDA_HOME/bin:$PATH
+export LD_LIBRARY_PATH=$CUDA_HOME/lib:$LD_LIBRARY_PATH
+export CC=$PREFIX/bin/x86_64-conda-linux-gnu-gcc
+export CXX=$PREFIX/bin/x86_64-conda-linux-gnu-g++
 
 mkdir -p "$PROJECT/processed"
 
@@ -20,8 +26,7 @@ CUDA_VISIBLE_DEVICES=0 ns-process-data video \
   --num-frames-target "$N_FRAMES" \
   --camera-type perspective \
   --matching-method exhaustive \
-  --feature-type sift \
-  --no-gpu
+  --feature-type sift
 
 echo "=== Step 2: ns-train splatfacto ==="
 CUDA_VISIBLE_DEVICES=0 ns-train splatfacto \

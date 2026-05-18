@@ -41,3 +41,49 @@ conversation, not the filesystem.
   <https://github.com/vladimiralbrekhtccr/360-panorama-viewer>
 - The user is on macOS, reaches this cluster via `ssh foggen` → `ssh US` →
   `ssh node007`.
+
+## video → 3DGS with nerfstudio — READ BEFORE TOUCHING SPLATS
+
+The canonical, working pipeline for a phone video → explorable 3D
+gaussian splat. Do NOT reinvent any of these stages.
+
+**Env** (already built, ~30 GB, on scratch — not home):
+`/scratch/vladimir_albrekht/projects/world-models/MultiPano/.conda/nerfstudio`
+- python 3.10 CPython, torch 2.1.2+cu118, gsplat 1.4.0, nerfstudio 1.1.5
+- colmap 3.10 (conda-forge — 3.13 dropped `--SiftExtraction.use_gpu` which
+  nerfstudio still passes), nvcc 11.8 + gcc 11 (cu118 nvcc rejects gcc>11),
+  ffmpeg/ffprobe via `static-ffmpeg`
+- `libcudart.so` is symlinked to torch's bundled cu11 runtime
+
+**Pipeline** (`MultiPano/run_nerfstudio.sh` does steps 1-2):
+1. `ns-process-data video --data <vid> --output-dir <proc> --num-frames-target 200
+   --matching-method exhaustive` — ffmpeg extract + COLMAP SfM.
+2. `ns-train splatfacto --data <proc> --max-num-iterations 30000` — ~4 min on H100.
+3. **To get a PLY**: `MultiPano/export_via_nerfstudio.py` (runs nerfstudio's
+   own `ExportGaussianSplat` with `pymeshlab` stubbed out — pymeshlab's
+   import is broken in this env but is only needed for *mesh* export).
+4. **To get a video**: `ns-render interpolate --load-config <cfg>
+   --pose-source train --interpolation-steps N`.
+
+### Mistakes made on 2026-05-18 — do NOT repeat
+- **Do NOT hand-write a splatfacto→PLY exporter.** splatfacto stores SH
+  rest coeffs as `(N,K,3)`; the INRIA/standard PLY wants `(N,3,K)` — needs
+  a `.transpose(1,2)`. Also splat coords are in nerfstudio's *normalised*
+  dataparser frame, not COLMAP world. Getting any of this wrong renders as
+  noise needles. Just use `export_via_nerfstudio.py`.
+- **Verify training FIRST with `ns-render` before assuming anything is
+  broken.** On 2026-05-18 a bad custom PLY export was misdiagnosed as a
+  training failure → wasted ~1.5 h GPU on COLMAP MVS + 25 min CPU on
+  Poisson meshing as a "workaround" for a 1-line export bug.
+- **Don't pivot to mesh/MVS to dodge a splat bug.** Mesh is a separate
+  deliverable, not a fix for a broken splat export.
+- ns-export's `gaussian-splat` subcommand can't even be reached because
+  `nerfstudio.scripts.exporter` top-level imports `pymeshlab` → stub it
+  (see `export_via_nerfstudio.py`).
+
+## kitan-a.com deploy
+- foggen serves `kitan-a.com` via Caddy. Static routes live under
+  `/var/www/<name>/` with a `handle_path /<name>/*` block in
+  `/etc/caddy/Caddyfile` (+ a `redir /<name> /<name>/ 308`).
+- `/var/www/3dgs/` is already wired up — scp files there, served at
+  `https://kitan-a.com/3dgs/...`. No 100 MB limit (unlike GH Pages).
