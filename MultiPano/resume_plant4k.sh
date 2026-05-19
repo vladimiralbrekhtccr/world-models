@@ -1,36 +1,29 @@
 #!/bin/bash
-# splatfacto-big pipeline: extract → COLMAP → splatfacto-big → PLY → ksplat.
-# Args: <video> <project-dir> <experiment-name> [gpu=6] [n-frames=400]
+# Resume the 4K plant pipeline — COLMAP already finished (sparse/0 exists),
+# the process died before writing transforms.json. Finalize → train → export.
 set -e
 
-VIDEO="${1:?usage: run_nerfstudio_big.sh <video> <proj-dir> <exp-name> [gpu] [n-frames]}"
-PROJ="${2:?need project dir}"
-EXP="${3:?need experiment name}"
-GPU="${4:-6}"
-NFRAMES="${5:-400}"
-
+PROJ=/scratch/vladimir_albrekht/projects/world-models/MultiPano/ns_plant_4k
+VIDEO=/scratch/vladimir_albrekht/projects/world-models/_temp/videos/plant_4K_VID20260519141238.mp4
 PREFIX=/scratch/vladimir_albrekht/projects/world-models/MultiPano/.conda/nerfstudio
 KSPLAT=/scratch/vladimir_albrekht/projects/world-models/MultiPano/ksplat
+EXP=plant_4k
 
 source $HOME/miniconda3/etc/profile.d/conda.sh
 conda activate $PREFIX
-export CUDA_HOME=$PREFIX
-export PATH=$CUDA_HOME/bin:$PATH
-export LD_LIBRARY_PATH=$CUDA_HOME/lib:$LD_LIBRARY_PATH
-export CC=$PREFIX/bin/x86_64-conda-linux-gnu-gcc
-export CXX=$PREFIX/bin/x86_64-conda-linux-gnu-g++
+export CUDA_HOME=$PREFIX PATH=$PREFIX/bin:$PATH LD_LIBRARY_PATH=$PREFIX/lib:$LD_LIBRARY_PATH
+export CC=$PREFIX/bin/x86_64-conda-linux-gnu-gcc CXX=$PREFIX/bin/x86_64-conda-linux-gnu-g++
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
-export CUDA_VISIBLE_DEVICES=$GPU
-mkdir -p $PROJ
+export CUDA_VISIBLE_DEVICES=6
 
-echo "=== Step 1: ns-process-data ($NFRAMES frames) on GPU $GPU ==="
+echo "=== Step 1b: finalize ns-process-data (skip COLMAP — already done) ==="
 ns-process-data video \
   --data "$VIDEO" \
   --output-dir "$PROJ/processed" \
-  --num-frames-target "$NFRAMES" \
+  --num-frames-target 400 \
   --camera-type perspective \
-  --matching-method exhaustive \
-  --feature-type sift
+  --skip-colmap --skip-image-processing \
+  --colmap-model-path "$PROJ/processed/colmap/sparse/0"
 
 echo "=== Step 2: ns-train splatfacto-big ==="
 ns-train splatfacto-big \
@@ -46,14 +39,13 @@ python /scratch/vladimir_albrekht/projects/world-models/MultiPano/export_via_ner
   --load-config "$CFG" --output-dir "$PROJ/export" --output-filename splat.ply
 
 echo "=== Step 4: PLY → ksplat ==="
-NODE=$HOME/miniconda3/envs/node20/bin/node
-$NODE $KSPLAT/convert.mjs "$PROJ/export/splat.ply" "$PROJ/export/scene.ksplat" 1 1 2
+$HOME/miniconda3/envs/node20/bin/node $KSPLAT/convert.mjs \
+  "$PROJ/export/splat.ply" "$PROJ/export/scene.ksplat" 1 1 2
 
 echo "=== Step 5: flythrough video ==="
 ns-render interpolate --load-config "$CFG" \
   --output-path "$PROJ/flythrough.mp4" \
-  --pose-source train --interpolation-steps 8 --frame-rate 30 \
-  --output-format video
+  --pose-source train --interpolation-steps 8 --frame-rate 30 --output-format video
 
 echo "=== DONE ==="
 ls -la "$PROJ/export/splat.ply" "$PROJ/export/scene.ksplat" "$PROJ/flythrough.mp4"
