@@ -6,13 +6,15 @@ the experiment-specific `README.md`.
 
 ## Execution environment — IMPORTANT
 - **Do NOT use SLURM / sbatch / srun.** The user holds an interactive
-  allocation. Just `ssh node007` and run commands there.
-- **Use GPU index 0 only.** Always set `CUDA_VISIBLE_DEVICES=0` — other
-  GPUs on node007 are in use by other workloads.
-- `nvcc` and the CUDA toolkit are available on `node007`, not on the login
-  node. Build any CUDA extensions from inside `ssh node007`.
-- **Python envs use `uv`**, not conda. Each experiment carries its own
-  `.venv/` built by its `env_setup.sh`.
+  allocation. Just `ssh node001` and run commands there.
+- **Use GPU index 6 only** (as of 2026-05-18). Always set
+  `CUDA_VISIBLE_DEVICES=6` — other GPUs on node001 are in use by other
+  workloads. (The MultiPano `run_*.sh` scripts still hardcode
+  `CUDA_VISIBLE_DEVICES=0` from earlier — update them to 6 before reuse.)
+- `nvcc` / CUDA toolkit live inside the per-experiment conda envs, not on
+  the login node. Build CUDA extensions from inside `ssh node001`.
+- **Python envs:** `3DGS/` uses a `uv` `.venv`; `MultiPano/` uses conda
+  envs on scratch (nerfstudio, lyra2) — see the nerfstudio section below.
 
 ## File-creation rule — IMPORTANT
 **Do not sprawl files.** Keep each experiment lean: one script per path,
