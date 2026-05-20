@@ -131,7 +131,32 @@ Result: 1.5M optimized gaussians, a real navigable chapel. The chain is:
   + R/F up-down + drag-look). Splatfacto PLYs are +Z-up → rotate the
   SplatMesh `-X/2`; Lyra PLYs are OpenCV Y-down → rotate `X=π`.
 - Live demos: `/3dgs/plant/` (720p), `/3dgs/plant-4k/`, `/3dgs/lyra/`,
+  `/3dgs/hyworld/` (HY-WorldMirror scenes, dropdown switcher),
   `/3dgs/` (room), `/3dgs/colmap/` (COLMAP dense MVS point cloud).
+
+## F. HY-WorldMirror 2.0  (validated 2026-05-19 — by far the fastest path)
+**Tencent's feed-forward multi-view → 3DGS** model, ~1.2B params.
+Live: <https://kitan-a.com/3dgs/hyworld/>. See `HunyuanWorld/README.md`.
+
+The win: **no COLMAP, no optimization, no SLURM** — just `python -m
+hyworld2.worldrecon.pipeline --input_path <dir>` and ~1s of GPU.
+- 2-32 images at 504² → 504² → 952×630 → millions of gaussians directly.
+- 2.35GB VRAM regardless of scene (model is tiny; only output PLY scales).
+- Inference: 0.3-5s. Saving the PLY is the expensive part (3-30s).
+- Output is SH-degree-0 (`f_dc_0/1/2` only, no `f_rest`) → ksplat with
+  `shDeg 0` like Lyra. Coord convention is OpenCV (Y-down) → SplatMesh
+  `rotation.set(π, 0, 0)`.
+
+Env: `/scratch/.../hunyuanworld/.conda/hyworld2` — python 3.11.15,
+torch 2.7.1+cu128, gsplat 1.5.3 (their `gsplat_maskgaussian` fork),
+flash-attn 2.8.3. Built by `setup_hyworld.sh` in one shot — gotchas:
+swap `cupy==13.6.0` → `cupy-cuda12x==13.6.0` (prebuilt wheel); install
+`glm` from conda-forge + `export CPATH=$PREFIX/include:$CPATH` for
+`gsplat_maskgaussian`; pin `gcc_linux-64=11` for cu128 nvcc.
+
+**Skipped** (won't fit one GPU): HY-Pano-2 (~80B params), full WorldGen
+pipeline (needs a separate vLLM server hosting Qwen3-VL-8B for stages
+1+2, plus 8-GPU FSDP for the WorldStereo keyframe diffusion).
 
 ## Mistakes made — do NOT repeat
 - **Don't hand-write a splatfacto→PLY exporter.** SH rest coeffs need a
