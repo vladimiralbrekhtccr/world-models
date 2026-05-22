@@ -57,10 +57,7 @@ Outputs per scene (in a timestamped subdir):
 - `camera_params.json`
 - `pipeline_timing.json`
 
-Use the same Spark/mkkellogg viewer setup we have on kitan-a.com for
-splatfacto/Lyra splats (see `world-models/CLAUDE.md` section C+E).
-Convert PLY → ksplat with shDeg `0` (these are SH-0 only) and rotation
-TBD per the WorldMirror coord convention.
+Deployed to kitan-a.com — see the **Deployment** section below.
 
 ## What does NOT fit on one GPU (skipped)
 
@@ -131,3 +128,46 @@ Takeaways:
   (= num_imgs × H × W after their down-stride).
 - 32-image scenes at 952×630 are the practical ceiling for one PLY save
   on 80GB scratch budget — `Small_Room` is 18.4M gaussians pre-prune.
+
+## Deployment — kitan-a.com/3dgs/hyworld/
+
+Three sweep scenes are live in a Spark viewer with a dropdown switcher:
+**Statue_Face** (2.3M gs, 53M ksplat), **Small_Room** (4.9M gs, 113M),
+**Tree_Building** (3.9M gs, 90M).
+
+Pipeline PLY → deployed scene:
+
+1. **ksplat conversion** — `MultiPano/ksplat/convert.mjs` with node20:
+   ```
+   node convert.mjs <gaussians.ply> <out.ksplat> 1 0.01 0
+   ```
+   - compression `1` (16-bit, visually lossless, ~65% smaller).
+   - `shDeg 0` — WorldMirror PLYs carry only `f_dc_*` (no `f_rest`),
+     i.e. spherical-harmonics degree 0, same as Lyra.
+2. **coord convention** — WorldMirror outputs are **OpenCV (Y-down)**.
+   In the Spark viewer rotate the SplatMesh `rotation.set(Math.PI,0,0)`
+   (X = π) — same flip as Lyra PLYs. (Splatfacto PLYs differ: +Z-up,
+   `-X/2`.)
+3. **upload** — `scp` the ksplats + `index.html` to
+   `foggen:/var/www/3dgs/hyworld/`.
+4. **Caddy route** — `/var/www/3dgs/` is already wired with a generic
+   `handle_path /3dgs/*` block. A new sub-path only needs a redirect so
+   the bare URL doesn't 404:
+   ```
+   redir /3dgs/hyworld /3dgs/hyworld/ 308
+   ```
+   added to `/etc/caddy/Caddyfile`, then `sudo systemctl reload caddy`.
+
+Viewer (`output/ksplat/index.html`): Spark `SplatMesh`, dual control —
+orbit (default, auto-spin + zoom clamps) and fly (WASD move, QE roll,
+RF up/down, drag-look). **Fly-mode roll fix:** the camera quaternion is
+rebuilt every frame from `yaw`/`pitch`, so roll must be tracked as its
+own state variable and baked into the `Euler(pitch, yaw, roll, 'YXZ')`
+— a one-shot `camera.rotateZ()` gets wiped on the next frame.
+
+## Related files in this repo
+
+- `HUNYUANWORLD_PIPELINE.md` — the full 5-stage HY-World pipeline
+  (HY-Pano → WorldNav → WorldStereo → WorldMirror → gsplat trainer),
+  plus an infographic image-generation brief.
+- `CLAUDE.md` section F — the condensed WorldMirror recipe.
