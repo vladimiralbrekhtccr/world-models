@@ -1,12 +1,16 @@
-# Learn 3DGS — fundamentals study guide
+# Learn 3DGS — text fallback
+
+> **The primary version is now an interactive HTML course** with widgets
+> integrated through every module:
+> ### 👉 <https://kitan-a.com/3dgs/learn/>
+>
+> Read that. Come back to this file only if you need a printable / offline
+> text version. The HTML course teaches the same material with widgets
+> you can poke — far better for a visual topic like this.
 
 A read-top-to-bottom guide to **3D Gaussian Splatting** and the world-model
 work in this repo. Written so that after each module you can *answer
 questions* about it — not just recognise the words.
-
-**Interactive companion:** <https://kitan-a.com/3dgs/learn/> — a Gaussian
-you can manipulate with sliders, plus a real splat to orbit. Open it in a
-second tab; each module says when to use it.
 
 How to read this:
 - Each module has a plain-language explanation, then **sidebars** (the
