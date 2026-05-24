@@ -1385,13 +1385,13 @@ lazyInit('m3', () => {
   // ── central subject: load the GLB cat ──
   new GLTFLoader().load('cat.glb', (gltf) => {
     const cat = gltf.scene;
-    // Auto-fit: scale so the model's longest dimension is ~0.9 units,
+    // Auto-fit: scale so the model's longest dimension is ~1.4 units,
     // then re-centre + drop it onto the grass.
     const box = new THREE.Box3().setFromObject(cat);
     const size = box.getSize(new THREE.Vector3());
     const ctr  = box.getCenter(new THREE.Vector3());
     const maxDim = Math.max(size.x, size.y, size.z);
-    const s = 0.9 / maxDim;
+    const s = 1.4 / maxDim;
     cat.scale.setScalar(s);
     cat.position.set(-ctr.x * s, -box.min.y * s - 0.40, -ctr.z * s);
     scene.add(cat);
