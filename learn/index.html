@@ -444,9 +444,22 @@
   round spheres, you'd need far more.</p>
 
   <p>Try <span class="demo" data-act="m2:fade">fading the opacity</span>
-  too. Notice the blob doesn't have a hard edge — it dissolves smoothly.
-  <em>That</em> softness is why blobs blend into a continuous image
-  instead of looking like a heap of pebbles.</p>
+  too. Notice the blob doesn't have a hard edge — it dissolves smoothly,
+  denser in the middle and fading outward. The nested shells in the
+  figure show exactly that: outer shell faint, inner core opaque. <em>That</em>
+  softness is why blobs blend into a continuous image instead of looking
+  like a heap of pebbles.</p>
+
+  <h3>A handful of Gaussians blends into one image</h3>
+  <p>A single Gaussian alone is just a soft blob. The real magic happens
+  when you put a few of them next to each other — try the splat demo on
+  the right. In <b>individual</b> mode you see four distinct fuzzy dots.
+  Hit <b>splat</b> and the renderer does what it actually does at render
+  time — projects, sorts, and blends them into a single continuous image
+  where the four colours flow into each other. Slide the size up: as the
+  blobs overlap more, they look like one painted scene rather than four
+  dots. A real splatfacto scene is the same trick with <em>millions</em>
+  of overlapping Gaussians.</p>
 
   <h3>Colour can change with viewing angle</h3>
   <p>A matte wall looks the same colour from every angle. A glossy apple
@@ -502,8 +515,21 @@
       <div class="readout" id="readout2"></div>
     </div>
 
+    <div class="widget">
+      <div class="figcap"><b>Figure 2.2</b> Four Gaussians side by side — hit "splat" to blend them into one image.</div>
+      <canvas id="m2c" class="stage" style="height:280px"></canvas>
+      <div class="controls">
+        <div class="ctl"><label>blob size <span id="m2csizev">60</span></label>
+          <input type="range" id="m2csize" min="15" max="120" step="1" value="60"></div>
+      </div>
+      <div class="btnrow">
+        <button class="alt" id="m2cindiv">individual</button>
+        <button id="m2csplat">▶ splat (blend)</button>
+      </div>
+    </div>
+
     <div class="widget" data-lazy="m2b">
-      <div class="figcap"><b>Figure 2.2</b> Flat vs view-dependent colour. Drag to orbit; toggle with the buttons or the orange links on the left.</div>
+      <div class="figcap"><b>Figure 2.3</b> Flat vs view-dependent colour. Drag to orbit; toggle with the buttons or the orange links on the left.</div>
       <canvas id="m2b" class="stage" style="height:260px"></canvas>
       <div class="btnrow">
         <button id="m2bflat">flat colour (SH-0)</button>
@@ -1131,16 +1157,25 @@ lazyInit('m2a', () => {
   camera.position.set(2.6, 1.8, 2.6);
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-  scene.add(new THREE.AmbientLight(0xffffff, 1.1));
-  const key = new THREE.DirectionalLight(0xffffff, 1.4);
-  key.position.set(3, 5, 2); scene.add(key);
+  // Nested concentric shells convey the bell-curve density falloff:
+  // outer shell faint, middle medium, inner core opaque.
   const geo = new THREE.SphereGeometry(1, 64, 48);
-  const core = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
-    color: 0x6fae8d, transparent: true, opacity: 0.85, roughness: 0.55 }));
-  const shell = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
-    color: 0xffffff, wireframe: true, transparent: true, opacity: 0.12 }));
+  const SHELL_SCALES   = [1.00, 0.72, 0.42];
+  const SHELL_OPACITIES = [0.10, 0.22, 0.55];
+  const shells = SHELL_SCALES.map((s, i) => {
+    const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
+      color: 0x6fae8d, transparent: true, opacity: SHELL_OPACITIES[i],
+      depthWrite: false, side: THREE.DoubleSide,
+    }));
+    m.scale.setScalar(s);
+    return m;
+  });
+  const wire = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
+    color: 0xffffff, wireframe: true, transparent: true, opacity: 0.10 }));
   const group = new THREE.Group();
-  group.add(core); group.add(shell); scene.add(group);
+  shells.forEach(s => group.add(s));
+  group.add(wire);
+  scene.add(group);
   scene.add(new THREE.AxesHelper(1.6));
   const orbit = new OrbitControls(camera, canvas);
   orbit.enableDamping = true;
@@ -1153,8 +1188,11 @@ lazyInit('m2a', () => {
     const rot=+el.rot.value, op=+el.op.value, col=el.col.value;
     group.scale.set(sx, sy, sz);
     group.rotation.y = rot * Math.PI/180;
-    core.material.opacity = op;
-    core.material.color.set(col);
+    shells.forEach((s, i) => {
+      s.material.opacity = SHELL_OPACITIES[i] * op;
+      s.material.color.set(col);
+    });
+    wire.material.opacity = 0.10 * op;
     document.getElementById('vsx').textContent = sx.toFixed(2);
     document.getElementById('vsy').textContent = sy.toFixed(2);
     document.getElementById('vsz').textContent = sz.toFixed(2);
@@ -1198,6 +1236,86 @@ lazyInit('m2a', () => {
   }
   tick();
 });
+
+/* ─── widget m2c — few Gaussians blended ("splat") — 2D canvas ─── */
+(() => {
+  const canvas = document.getElementById('m2c');
+  const ctx = canvas.getContext('2d');
+  const gaussians = [
+    { x: 0.30, y: 0.32, color: [232, 96,  96]  },   // red
+    { x: 0.70, y: 0.32, color: [232, 200, 88]  },   // yellow
+    { x: 0.30, y: 0.72, color: [96,  192, 232] },   // cyan
+    { x: 0.70, y: 0.72, color: [188, 112, 224] },   // purple
+  ];
+  let mode = 'individual';
+  let radius = 60;
+
+  function fit() {
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    if (canvas.width !== w * devicePixelRatio || canvas.height !== h * devicePixelRatio) {
+      canvas.width  = w * devicePixelRatio;
+      canvas.height = h * devicePixelRatio;
+      ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+    }
+    return { w, h };
+  }
+
+  function draw() {
+    const { w, h } = fit();
+    ctx.fillStyle = '#0a0b0d';
+    ctx.fillRect(0, 0, w, h);
+    if (mode === 'individual') {
+      // 4 distinct solid colored discs — you can count them
+      gaussians.forEach(g => {
+        ctx.fillStyle = `rgb(${g.color.join(',')})`;
+        ctx.beginPath();
+        ctx.arc(g.x * w, g.y * h, radius * 0.45, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+      });
+      // labels so it's obvious there are 4 separate things
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      ctx.font = '11px ui-monospace, monospace';
+      ctx.textAlign = 'center';
+      gaussians.forEach((g, i) => {
+        ctx.fillText(`#${i+1}`, g.x * w, g.y * h - radius * 0.55);
+      });
+    } else {
+      // Additive Gaussian falloff — the four blobs blend into one image
+      ctx.globalCompositeOperation = 'lighter';
+      gaussians.forEach(g => {
+        const cx = g.x * w, cy = g.y * h;
+        const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+        grad.addColorStop(0,   `rgba(${g.color.join(',')}, 0.95)`);
+        grad.addColorStop(0.4, `rgba(${g.color.join(',')}, 0.4)`);
+        grad.addColorStop(1,   `rgba(${g.color.join(',')}, 0)`);
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, w, h);
+      });
+      ctx.globalCompositeOperation = 'source-over';
+    }
+  }
+  function setMode(m) {
+    mode = m;
+    const indiv = document.getElementById('m2cindiv');
+    const splat = document.getElementById('m2csplat');
+    indiv.classList.toggle('alt', m !== 'individual');
+    splat.classList.toggle('alt', m === 'individual');
+    draw();
+  }
+  document.getElementById('m2cindiv').addEventListener('click', () => setMode('individual'));
+  document.getElementById('m2csplat').addEventListener('click', () => setMode('splat'));
+  document.getElementById('m2csize').addEventListener('input', e => {
+    radius = +e.target.value;
+    document.getElementById('m2csizev').textContent = radius;
+    draw();
+  });
+  window.addEventListener('resize', draw);
+  // first paint after layout settles
+  requestAnimationFrame(() => requestAnimationFrame(draw));
+})();
 
 /* ─── widget m2b — flat vs view-dependent colour (LAZY) ─── */
 lazyInit('m2b', () => {
