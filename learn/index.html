@@ -259,6 +259,14 @@
     justify-content:space-between;align-items:center;}
   .m1-time b{color:var(--accent);}
   .m1-time .ms{color:var(--fg);font-size:14px;font-weight:600;}
+
+  /* M3 active-camera thumbnail strip */
+  .thumb-row{display:flex;align-items:center;gap:14px;
+    padding:12px 18px;background:#fbf7e4;
+    border-top:1px solid var(--line);}
+  .thumb-label{font-size:12.5px;color:var(--dim);font-style:italic;}
+  #m3-thumb{border:1px solid var(--line);border-radius:4px;
+    background:#15171a;display:block;flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -627,9 +635,13 @@
   </div>
   <div class="widgetcol">
     <div class="widget" data-lazy="m3">
-      <div class="figcap"><b>Figure 3.1</b> COLMAP needs many overlapping photos of the same subject — taken from positions all around it. The highlighted camera is the one currently "taking" a shot.</div>
-      <canvas id="m3-canvas" class="stage"></canvas>
-      <div class="hint">~24 camera positions in three orbital rings around one statue. Drag to orbit the whole scene.</div>
+      <div class="figcap"><b>Figure 3.1</b> COLMAP needs many photos of the same subject from positions all around it. As the highlighted camera below cycles through positions, the thumbnail on the right shows exactly what <em>that</em> camera sees — these are the 2D photos COLMAP works from.</div>
+      <canvas id="m3-canvas" class="stage" style="height:340px"></canvas>
+      <div class="thumb-row">
+        <span class="thumb-label">📷 active camera view&nbsp;→</span>
+        <canvas id="m3-thumb" width="180" height="120"></canvas>
+      </div>
+      <div class="hint">24 cameras in three orbital rings around a bunny. Drag to orbit the whole scene.</div>
     </div>
   </div>
 </section>
@@ -1344,39 +1356,91 @@ lazyInit('m2a', () => {
   requestAnimationFrame(() => requestAnimationFrame(draw));
 })();
 
-/* ─── widget m3 — COLMAP / SfM: cameras orbiting a subject (LAZY) ─── */
+/* ─── widget m3 — COLMAP / SfM: cameras orbiting a bunny + live thumbnail (LAZY) ─── */
 lazyInit('m3', () => {
   const canvas = document.getElementById('m3-canvas');
+  const thumbCanvas = document.getElementById('m3-thumb');
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x15171a);
-  const camera = new THREE.PerspectiveCamera(45, 2, 0.1, 100);
-  camera.position.set(3.2, 1.8, 3.2);
+  const camera = new THREE.PerspectiveCamera(42, 2, 0.1, 100);
+  camera.position.set(3.0, 1.7, 3.0);
   camera.lookAt(0, 0, 0);
 
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 
+  // second renderer for the "what the active camera sees" thumbnail.
+  const thumbRenderer = new THREE.WebGLRenderer({ canvas: thumbCanvas, antialias: true });
+  thumbRenderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  thumbRenderer.setSize(180, 120, false);
+  const thumbCam = new THREE.PerspectiveCamera(38, 180/120, 0.1, 100);
+
   // soft three-point lighting
-  scene.add(new THREE.AmbientLight(0xffffff, 0.55));
-  const key = new THREE.DirectionalLight(0xffffff, 0.95);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+  const key = new THREE.DirectionalLight(0xffffff, 1.0);
   key.position.set(3, 5, 3); scene.add(key);
   const fill = new THREE.DirectionalLight(0xffe1aa, 0.35);
   fill.position.set(-3, 2, -3); scene.add(fill);
 
-  // ── central subject: a tiny bronze "statue" (pedestal + body + head) ──
-  const statueMat = new THREE.MeshStandardMaterial({
-    color: 0x5a8a6c, roughness: 0.55, metalness: 0.35 });
-  const stoneMat = new THREE.MeshStandardMaterial({
-    color: 0xb0a280, roughness: 0.85 });
+  // ── central subject: a stylised bunny built from primitives ──
+  const fur     = new THREE.MeshStandardMaterial({ color: 0xead4b3, roughness: 0.78 });
+  const innerEar = new THREE.MeshStandardMaterial({ color: 0xf5b8b0, roughness: 0.85 });
+  const eyeMat  = new THREE.MeshStandardMaterial({ color: 0x1a1a1f, roughness: 0.35 });
+  const noseMat = new THREE.MeshStandardMaterial({ color: 0xe8888a, roughness: 0.5 });
+  const tailMat = new THREE.MeshStandardMaterial({ color: 0xfdfaf2, roughness: 0.95 });
 
-  const pedestal = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.40, 0.55), stoneMat);
-  pedestal.position.y = -0.55; scene.add(pedestal);
-  const pedTop  = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.06, 0.62), stoneMat);
-  pedTop.position.y = -0.32; scene.add(pedTop);
-  const body    = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.22, 0.55, 18), statueMat);
-  body.position.y = -0.01; scene.add(body);
-  const head    = new THREE.Mesh(new THREE.SphereGeometry(0.13, 24, 16), statueMat);
-  head.position.y = 0.37; scene.add(head);
+  const bunny = new THREE.Group();
+  // body — elongated sphere
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.32, 28, 20), fur);
+  body.scale.set(0.85, 0.78, 1.05);
+  body.position.set(0, -0.10, -0.05);
+  bunny.add(body);
+  // head
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.22, 28, 20), fur);
+  head.position.set(0, 0.18, 0.32);
+  bunny.add(head);
+  // ears (outer + inner)
+  const earGeo = new THREE.CapsuleGeometry(0.055, 0.30, 6, 12);
+  const earInnerGeo = new THREE.CapsuleGeometry(0.030, 0.24, 6, 10);
+  function makeEar(x, tilt) {
+    const g = new THREE.Group();
+    const outer = new THREE.Mesh(earGeo, fur);
+    g.add(outer);
+    const inner = new THREE.Mesh(earInnerGeo, innerEar);
+    inner.position.z = 0.025;
+    g.add(inner);
+    g.position.set(x, 0.46, 0.28);
+    g.rotation.set(-0.25, 0, tilt);
+    return g;
+  }
+  bunny.add(makeEar(-0.10, -0.18));
+  bunny.add(makeEar( 0.10,  0.18));
+  // eyes
+  const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.028, 14, 10), eyeMat);
+  eyeL.position.set(-0.085, 0.22, 0.49); bunny.add(eyeL);
+  const eyeR = new THREE.Mesh(new THREE.SphereGeometry(0.028, 14, 10), eyeMat);
+  eyeR.position.set( 0.085, 0.22, 0.49); bunny.add(eyeR);
+  // nose
+  const nose = new THREE.Mesh(new THREE.SphereGeometry(0.025, 14, 10), noseMat);
+  nose.position.set(0, 0.155, 0.535); bunny.add(nose);
+  // tail
+  const tail = new THREE.Mesh(new THREE.SphereGeometry(0.10, 16, 12), tailMat);
+  tail.position.set(0, -0.05, -0.40); bunny.add(tail);
+  // little feet
+  const foot = new THREE.SphereGeometry(0.08, 16, 12);
+  const fl = new THREE.Mesh(foot, fur); fl.position.set(-0.18, -0.32, 0.15);
+  fl.scale.set(1, 0.5, 1.2); bunny.add(fl);
+  const fr = new THREE.Mesh(foot, fur); fr.position.set( 0.18, -0.32, 0.15);
+  fr.scale.set(1, 0.5, 1.2); bunny.add(fr);
+  scene.add(bunny);
+
+  // grass disc beneath
+  const grass = new THREE.Mesh(
+    new THREE.CircleGeometry(1.6, 48),
+    new THREE.MeshStandardMaterial({ color: 0x4a6b48, roughness: 0.95 }));
+  grass.rotation.x = -Math.PI / 2;
+  grass.position.y = -0.40;
+  scene.add(grass);
 
   // ── camera frustum factory: tiny body + lens + 4 frustum lines ──
   function makeCam() {
@@ -1455,12 +1519,12 @@ lazyInit('m3', () => {
   orbit.minDistance = 2.5;
   orbit.maxDistance = 8;
 
-  // ── animate "active" camera flashing through positions (suggests shutter firing) ──
+  // ── animate "active" camera + render the thumbnail of its view ──
   const FLASH_COLOR = 0xffe69d;
   const REST_COLOR = 0xc5573b;
   let active = 0, lastFlash = 0;
   function step(now) {
-    if (now - lastFlash > 750) {
+    if (now - lastFlash > 1100) {
       cams[active].userData.lines.material.color.setHex(REST_COLOR);
       cams[active].userData.lines.material.opacity = 0.55;
       active = (active + 1) % cams.length;
@@ -1468,6 +1532,9 @@ lazyInit('m3', () => {
       cams[active].userData.lines.material.opacity = 1.0;
       lastFlash = now;
     }
+    // position the thumb camera at the active camera, looking at the bunny
+    thumbCam.position.copy(cams[active].position);
+    thumbCam.lookAt(0, 0, 0);
   }
 
   function tick(now) {
@@ -1478,6 +1545,11 @@ lazyInit('m3', () => {
     }
     step(now);
     orbit.update();
+    // 1) render the thumbnail — hide camera frustums so they don't pollute the photo
+    cams.forEach(c => c.visible = false);
+    thumbRenderer.render(scene, thumbCam);
+    cams.forEach(c => c.visible = true);
+    // 2) render the main view
     renderer.render(scene, camera);
     requestAnimationFrame(tick);
   }
