@@ -1382,137 +1382,145 @@ lazyInit('m3', () => {
   const fill = new THREE.DirectionalLight(0xffe1aa, 0.35);
   fill.position.set(-3, 2, -3); scene.add(fill);
 
-  // ── central subject: a very cute ginger cat built from primitives ──
-  const fur      = new THREE.MeshStandardMaterial({ color: 0xe8a560, roughness: 0.85 });
+  // ── central subject: a chibi sitting cat with BIG anime eyes ──
+  const fur      = new THREE.MeshStandardMaterial({ color: 0xeaa765, roughness: 0.85 });
   const stripe   = new THREE.MeshStandardMaterial({ color: 0xc97c30, roughness: 0.95 });
   const innerEar = new THREE.MeshStandardMaterial({ color: 0xf5b8b0, roughness: 0.85 });
-  const eyeWhite = new THREE.MeshStandardMaterial({ color: 0xfdf6e3, roughness: 0.4 });
-  const eyeMat   = new THREE.MeshStandardMaterial({ color: 0x2a3e1a, roughness: 0.3, metalness: 0.1 });
-  const pupil    = new THREE.MeshStandardMaterial({ color: 0x080808, roughness: 0.2 });
+  const eyeWhite = new THREE.MeshStandardMaterial({ color: 0xfdfaf0, roughness: 0.4 });
+  const irisMat  = new THREE.MeshStandardMaterial({ color: 0x2e6b3a, roughness: 0.3, metalness: 0.05 });
+  const pupil    = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.2 });
+  const sparkleM = new THREE.MeshBasicMaterial({ color: 0xffffff });
   const noseMat  = new THREE.MeshStandardMaterial({ color: 0xe890a0, roughness: 0.5 });
 
   const cat = new THREE.Group();
 
-  // body — slightly elongated, low-slung
-  const body = new THREE.Mesh(new THREE.SphereGeometry(0.34, 28, 20), fur);
-  body.scale.set(0.95, 0.72, 1.20);
-  body.position.set(0, -0.10, -0.10);
+  // body — sitting upright, small + slightly taller than wide (chibi)
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.28, 28, 20), fur);
+  body.scale.set(0.95, 1.10, 0.95);
+  body.position.set(0, -0.10, 0);
   cat.add(body);
 
-  // 3 subtle stripes on body (very thin rings)
-  for (let i = 0; i < 3; i++) {
-    const z = -0.30 + i * 0.18;
-    const ring = new THREE.Mesh(
-      new THREE.TorusGeometry(0.30, 0.018, 8, 28),
-      stripe);
-    ring.rotation.y = Math.PI / 2;
-    ring.position.set(0, -0.10, z);
-    ring.scale.set(0.95, 0.72, 1);
-    cat.add(ring);
-  }
+  // belly highlight — very soft lighter sphere just in front of body
+  const belly = new THREE.Mesh(new THREE.SphereGeometry(0.20, 22, 16),
+    new THREE.MeshStandardMaterial({ color: 0xfdf5d8, roughness: 0.85 }));
+  belly.scale.set(0.7, 0.85, 0.55);
+  belly.position.set(0, -0.13, 0.15);
+  cat.add(belly);
 
-  // head — round, slightly squashed
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.26, 28, 20), fur);
-  head.scale.set(1.08, 0.95, 0.98);
-  head.position.set(0, 0.20, 0.34);
+  // head — BIG (chibi proportions), slightly squashed sphere on top
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.30, 32, 22), fur);
+  head.scale.set(1.10, 1.02, 1.00);
+  head.position.set(0, 0.36, 0.06);
   cat.add(head);
 
-  // chubby cheeks
+  // chubby cheeks for cuteness
   const cheekL = new THREE.Mesh(new THREE.SphereGeometry(0.10, 18, 14), fur);
-  cheekL.position.set(-0.16, 0.10, 0.46); cat.add(cheekL);
+  cheekL.position.set(-0.20, 0.30, 0.22); cat.add(cheekL);
   const cheekR = new THREE.Mesh(new THREE.SphereGeometry(0.10, 18, 14), fur);
-  cheekR.position.set( 0.16, 0.10, 0.46); cat.add(cheekR);
+  cheekR.position.set( 0.20, 0.30, 0.22); cat.add(cheekR);
 
-  // triangular ears — outer + pink inner
+  // triangular ears — outer + pink inner, on top of head
   function makeEar(x, tilt) {
     const g = new THREE.Group();
-    const outer = new THREE.Mesh(new THREE.ConeGeometry(0.11, 0.22, 4), fur);
+    const outer = new THREE.Mesh(new THREE.ConeGeometry(0.12, 0.24, 4), fur);
     g.add(outer);
-    const inner = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.14, 4), innerEar);
-    inner.position.set(0, -0.025, 0.025);
+    const inner = new THREE.Mesh(new THREE.ConeGeometry(0.065, 0.16, 4), innerEar);
+    inner.position.set(0, -0.025, 0.028);
     g.add(inner);
-    g.position.set(x, 0.45, 0.30);
-    g.rotation.set(-0.10, 0, tilt);
+    g.position.set(x, 0.65, 0.02);
+    g.rotation.set(-0.08, 0, tilt);
     return g;
   }
-  cat.add(makeEar(-0.14, -0.12));
-  cat.add(makeEar( 0.14,  0.12));
+  cat.add(makeEar(-0.16, -0.14));
+  cat.add(makeEar( 0.16,  0.14));
 
-  // big eyes — white sclera + green iris + tiny pupil
+  // BIG anime eyes — large sclera + iris + slit pupil + sparkle highlight
   function makeEye(x) {
     const g = new THREE.Group();
-    const w = new THREE.Mesh(new THREE.SphereGeometry(0.055, 18, 14), eyeWhite);
+    const w = new THREE.Mesh(new THREE.SphereGeometry(0.075, 22, 16), eyeWhite);
     g.add(w);
-    const iris = new THREE.Mesh(new THREE.SphereGeometry(0.038, 16, 12), eyeMat);
-    iris.position.z = 0.024;
+    const iris = new THREE.Mesh(new THREE.SphereGeometry(0.055, 18, 14), irisMat);
+    iris.position.z = 0.028;
     g.add(iris);
-    const p = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.011, 0.011, 0.04, 8),
-      pupil);
+    // vertical slit pupil (very cat-like)
+    const p = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.04, 10), pupil);
     p.rotation.x = Math.PI / 2;
-    p.scale.set(1, 2.0, 1);   // tall slit pupil for cat
-    p.position.z = 0.052;
+    p.scale.set(1, 2.8, 1);
+    p.position.z = 0.075;
     g.add(p);
-    g.position.set(x, 0.22, 0.50);
+    // sparkle highlight — top-right for cuteness
+    const sparkle = new THREE.Mesh(new THREE.SphereGeometry(0.020, 12, 10), sparkleM);
+    sparkle.position.set(x > 0 ? -0.018 : 0.018, 0.025, 0.082);
+    g.add(sparkle);
+    // smaller secondary sparkle
+    const spark2 = new THREE.Mesh(new THREE.SphereGeometry(0.010, 10, 8), sparkleM);
+    spark2.position.set(x > 0 ? -0.005 : 0.005, -0.015, 0.082);
+    g.add(spark2);
+    g.position.set(x, 0.38, 0.32);
     return g;
   }
-  cat.add(makeEye(-0.10));
-  cat.add(makeEye( 0.10));
+  cat.add(makeEye(-0.13));
+  cat.add(makeEye( 0.13));
 
   // pink triangular nose
-  const nose = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.04, 3), noseMat);
+  const nose = new THREE.Mesh(new THREE.ConeGeometry(0.040, 0.045, 3), noseMat);
   nose.rotation.x = Math.PI;
-  nose.position.set(0, 0.13, 0.58);
+  nose.position.set(0, 0.27, 0.39);
   cat.add(nose);
 
-  // little mouth — two short lines (W shape)
-  const mouthMat = new THREE.LineBasicMaterial({ color: 0x4a2818, transparent: true, opacity: 0.85 });
+  // little smile — gentle upward arc made of a few small line segments
+  const mouthMat = new THREE.LineBasicMaterial({ color: 0x4a2818, transparent: true, opacity: 0.88 });
   const mouthGeo = new THREE.BufferGeometry().setFromPoints([
-    new THREE.Vector3(0,     0.105, 0.58),
-    new THREE.Vector3(-0.03, 0.085, 0.58),
-    new THREE.Vector3(0,     0.105, 0.58),
-    new THREE.Vector3( 0.03, 0.085, 0.58),
+    new THREE.Vector3(-0.045, 0.225, 0.40),
+    new THREE.Vector3(-0.025, 0.214, 0.41),
+    new THREE.Vector3(-0.025, 0.214, 0.41),
+    new THREE.Vector3( 0.000, 0.222, 0.41),
+    new THREE.Vector3( 0.000, 0.222, 0.41),
+    new THREE.Vector3( 0.025, 0.214, 0.41),
+    new THREE.Vector3( 0.025, 0.214, 0.41),
+    new THREE.Vector3( 0.045, 0.225, 0.40),
   ]);
   cat.add(new THREE.LineSegments(mouthGeo, mouthMat));
 
   // whiskers — 3 each side
-  const whiskerMat = new THREE.LineBasicMaterial({ color: 0x6a5538, transparent: true, opacity: 0.7 });
+  const whiskerMat = new THREE.LineBasicMaterial({ color: 0x6a5538, transparent: true, opacity: 0.75 });
   function whisker(a, b) {
     const g = new THREE.BufferGeometry().setFromPoints([
       new THREE.Vector3(...a), new THREE.Vector3(...b)]);
     return new THREE.Line(g, whiskerMat);
   }
-  cat.add(whisker([-0.05, 0.11, 0.58], [-0.32, 0.13, 0.52]));
-  cat.add(whisker([-0.05, 0.09, 0.58], [-0.34, 0.06, 0.48]));
-  cat.add(whisker([-0.05, 0.07, 0.58], [-0.32, -0.01, 0.45]));
-  cat.add(whisker([ 0.05, 0.11, 0.58], [ 0.32, 0.13, 0.52]));
-  cat.add(whisker([ 0.05, 0.09, 0.58], [ 0.34, 0.06, 0.48]));
-  cat.add(whisker([ 0.05, 0.07, 0.58], [ 0.32, -0.01, 0.45]));
+  cat.add(whisker([-0.07, 0.255, 0.40], [-0.32, 0.28, 0.30]));
+  cat.add(whisker([-0.07, 0.235, 0.40], [-0.34, 0.22, 0.27]));
+  cat.add(whisker([-0.07, 0.215, 0.40], [-0.32, 0.16, 0.24]));
+  cat.add(whisker([ 0.07, 0.255, 0.40], [ 0.32, 0.28, 0.30]));
+  cat.add(whisker([ 0.07, 0.235, 0.40], [ 0.34, 0.22, 0.27]));
+  cat.add(whisker([ 0.07, 0.215, 0.40], [ 0.32, 0.16, 0.24]));
 
-  // 4 little legs
-  const legGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.16, 14);
-  [[-0.16, -0.32, 0.18], [ 0.16, -0.32, 0.18],
-   [-0.16, -0.32, -0.30], [ 0.16, -0.32, -0.30]].forEach(p => {
-    const leg = new THREE.Mesh(legGeo, fur);
-    leg.position.set(...p);
-    cat.add(leg);
-  });
+  // front paws — sitting cat, visible in front of body
+  const pawGeo = new THREE.SphereGeometry(0.08, 18, 14);
+  const pawL = new THREE.Mesh(pawGeo, fur);
+  pawL.scale.set(1.0, 0.55, 1.3);
+  pawL.position.set(-0.13, -0.32, 0.20);
+  cat.add(pawL);
+  const pawR = new THREE.Mesh(pawGeo, fur);
+  pawR.scale.set(1.0, 0.55, 1.3);
+  pawR.position.set( 0.13, -0.32, 0.20);
+  cat.add(pawR);
 
-  // curled tail — a Bezier tube curving up and over
+  // tail — curled around the right side of the body
   const tailCurve = new THREE.CatmullRomCurve3([
-    new THREE.Vector3( 0.00, -0.05, -0.42),
-    new THREE.Vector3( 0.10,  0.05, -0.55),
-    new THREE.Vector3( 0.25,  0.25, -0.55),
-    new THREE.Vector3( 0.40,  0.40, -0.42),
-    new THREE.Vector3( 0.42,  0.55, -0.22),
-    new THREE.Vector3( 0.30,  0.60, -0.05),
+    new THREE.Vector3( 0.00, -0.25, -0.18),
+    new THREE.Vector3( 0.28, -0.18, -0.10),
+    new THREE.Vector3( 0.42, -0.05,  0.05),
+    new THREE.Vector3( 0.45,  0.10,  0.22),
+    new THREE.Vector3( 0.36,  0.20,  0.36),
+    new THREE.Vector3( 0.20,  0.20,  0.42),
   ]);
   const tail = new THREE.Mesh(
-    new THREE.TubeGeometry(tailCurve, 32, 0.06, 12, false), fur);
+    new THREE.TubeGeometry(tailCurve, 36, 0.058, 14, false), fur);
   cat.add(tail);
-  // tail tip — slightly darker for cuteness
-  const tailTip = new THREE.Mesh(new THREE.SphereGeometry(0.065, 14, 10), stripe);
-  tailTip.position.set(0.30, 0.60, -0.05);
+  const tailTip = new THREE.Mesh(new THREE.SphereGeometry(0.062, 14, 10), stripe);
+  tailTip.position.set(0.20, 0.20, 0.42);
   cat.add(tailTip);
 
   scene.add(cat);
@@ -1525,36 +1533,37 @@ lazyInit('m3', () => {
   grass.position.y = -0.40;
   scene.add(grass);
 
-  // ── camera frustum factory: tiny body + lens + 4 frustum lines ──
+  // ── camera factory: body + lens + solid FOV cone aimed at the subject ──
+  // Cone apex sits at the lens; base widens toward the cat. Geometry
+  // built so the cat side is local -Z, matching three.js' lookAt convention.
   function makeCam() {
     const g = new THREE.Group();
+    // Camera body — small dark box BEHIND the lens (positive Z = away from cat)
     const body = new THREE.Mesh(
-      new THREE.BoxGeometry(0.13, 0.10, 0.07),
-      new THREE.MeshStandardMaterial({ color: 0x2a2c30, roughness: 0.4 }));
+      new THREE.BoxGeometry(0.12, 0.09, 0.06),
+      new THREE.MeshStandardMaterial({ color: 0x2a2c30, roughness: 0.5 }));
+    body.position.z = 0.03;
     g.add(body);
+    // Lens — small disk on the front face
     const lens = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.04, 0.05, 0.05, 12),
-      new THREE.MeshStandardMaterial({ color: 0x4a4d52, roughness: 0.5 }));
+      new THREE.CylinderGeometry(0.030, 0.030, 0.012, 16),
+      new THREE.MeshStandardMaterial({ color: 0x6a6e76, roughness: 0.25, metalness: 0.4 }));
     lens.rotation.x = Math.PI / 2;
-    lens.position.z = -0.05;
+    lens.position.z = 0.0;
     g.add(lens);
-    // frustum: 4 edges from lens apex + far-plane rectangle
-    const apex = [0, 0, -0.04];
-    const a = [ 0.09,  0.06, -0.22];
-    const b = [-0.09,  0.06, -0.22];
-    const c = [-0.09, -0.06, -0.22];
-    const d = [ 0.09, -0.06, -0.22];
-    const pts = [
-      apex, a, apex, b, apex, c, apex, d,
-      a, b, b, c, c, d, d, a,
-    ].flat();
-    const lineGeo = new THREE.BufferGeometry();
-    lineGeo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
-    const lineMat = new THREE.LineBasicMaterial({
-      color: 0xc5573b, transparent: true, opacity: 0.55 });
-    const lines = new THREE.LineSegments(lineGeo, lineMat);
-    g.add(lines);
-    g.userData.lines = lines;
+    // Field-of-view cone — apex at lens, base toward the cat.
+    // ConeGeometry default: apex +Y, base -Y. Rotate X by +π/2 → apex goes to +Z,
+    // base goes to -Z. Then shift -0.11 in Z so apex sits at the camera, base at z=-0.22.
+    const fov = new THREE.Mesh(
+      new THREE.ConeGeometry(0.085, 0.20, 16),
+      new THREE.MeshStandardMaterial({
+        color: 0xc5573b, transparent: true, opacity: 0.28,
+        side: THREE.DoubleSide, depthWrite: false,
+      }));
+    fov.rotation.x = Math.PI / 2;
+    fov.position.z = -0.11;
+    g.add(fov);
+    g.userData.fov = fov;
     return g;
   }
 
@@ -1604,18 +1613,18 @@ lazyInit('m3', () => {
 
   // ── animate "active" camera + render the thumbnail of its view ──
   const FLASH_COLOR = 0xffe69d;
-  const REST_COLOR = 0xc5573b;
+  const REST_COLOR  = 0xc5573b;
   let active = 0, lastFlash = 0;
   function step(now) {
     if (now - lastFlash > 1100) {
-      cams[active].userData.lines.material.color.setHex(REST_COLOR);
-      cams[active].userData.lines.material.opacity = 0.55;
+      cams[active].userData.fov.material.color.setHex(REST_COLOR);
+      cams[active].userData.fov.material.opacity = 0.28;
       active = (active + 1) % cams.length;
-      cams[active].userData.lines.material.color.setHex(FLASH_COLOR);
-      cams[active].userData.lines.material.opacity = 1.0;
+      cams[active].userData.fov.material.color.setHex(FLASH_COLOR);
+      cams[active].userData.fov.material.opacity = 0.65;
       lastFlash = now;
     }
-    // position the thumb camera at the active camera, looking at the bunny
+    // position the thumbnail camera at the active camera, looking at the cat
     thumbCam.position.copy(cams[active].position);
     thumbCam.lookAt(0, 0, 0);
   }
