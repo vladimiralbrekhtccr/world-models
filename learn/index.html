@@ -177,31 +177,21 @@
     font-size:13px;font-style:italic;}
 
   /* ─── EVERY section uses the same 2-col split — text width is constant. ──
-   * widgetcol is position:FIXED so the figure never moves with the scroll.
-   * The right grid column is still allocated (520px) so text width is
-   * consistent; the fixed widget visually overlays that column.
-   * JS adds .active to whichever section's widgetcol matches the in-view
-   * section, fading non-active ones out. */
+   * widgetcol is position:STICKY so each figure stays pinned to the top of
+   * the viewport while you read its module's text. It scrolls away naturally
+   * once you leave the section, and the next module's figure takes over —
+   * no fade, no swap effect, the figure is just present in its own module. */
   main section{display:grid;grid-template-columns:minmax(0,1fr) 520px;
     gap:44px;align-items:start;margin-bottom:80px;}
   main section.intro{display:block;}                  /* intro full-width */
   main section .textcol{min-width:0;}
-  main section .widgetcol{
-    position:fixed;top:80px;
-    right:max(32px, calc((100vw - 1500px) / 2 + 32px));
-    width:520px;max-height:calc(100vh - 100px);overflow-y:auto;
-    opacity:0;pointer-events:none;
-    transition:opacity .22s ease;
-    z-index:5;scrollbar-width:thin;}
-  main section .widgetcol.active{opacity:1;pointer-events:auto;}
+  main section .widgetcol{position:sticky;top:80px;align-self:start;}
   main section .widgetcol .widget{margin:0 0 18px;}
-  main section .widgetcol:empty{display:none;}
+  main section .widgetcol:empty{visibility:hidden;}
   .split-layout{}                                     /* legacy no-op class */
   @media (max-width:1100px){
     main section{grid-template-columns:1fr;}
-    main section .widgetcol{
-      position:static;width:auto;max-height:none;overflow:visible;
-      opacity:1;pointer-events:auto;}
+    main section .widgetcol{position:static;}
   }
 
   /* hoverable demo trigger inline in text */
@@ -990,47 +980,25 @@ injectCheckboxes(); paintProgress();
   };
 })();
 
-/* ─── nav: active-section highlight + active-widget swap + save lastModule ─── */
+/* ─── nav: active-section highlight + save lastModule (no figure-swap) ─── */
 (() => {
   const links = document.querySelectorAll('nav#toc a');
-  const sections = [...document.querySelectorAll('main section[id]')];
-  const widgetcols = new Map();
-  sections.forEach(s => {
-    const w = s.querySelector('.widgetcol');
-    if (w && w.children.length > 0) widgetcols.set(s.id, w);
-  });
-  const linkMap = new Map();
+  const map = new Map();
   links.forEach(a => {
     const id = a.getAttribute('href').slice(1);
-    linkMap.set(id, a);
+    const sec = document.getElementById(id);
+    if (sec) map.set(sec, a);
   });
-
-  function activate(id) {
-    // toc highlight
-    links.forEach(a => a.classList.remove('active'));
-    linkMap.get(id)?.classList.add('active');
-    // figure swap — only this module's widgetcol is visible
-    widgetcols.forEach(w => w.classList.remove('active'));
-    widgetcols.get(id)?.classList.add('active');
-    setLast(id);
-  }
-
   const obs = new IntersectionObserver(entries => {
-    // pick the entry whose top is most past the viewport-top trigger band
-    const visible = entries.filter(e => e.isIntersecting);
-    if (!visible.length) return;
-    // choose the one closest to the top of the viewport
-    visible.sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-    activate(visible[0].target.id);
-  }, { rootMargin: '-15% 0px -55% 0px' });
-  sections.forEach(s => obs.observe(s));
-
-  // first paint: activate the section currently nearest the top
-  const initial = sections.find(s => {
-    const r = s.getBoundingClientRect();
-    return r.bottom > innerHeight * 0.15;
-  }) || sections[0];
-  if (initial) activate(initial.id);
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        links.forEach(a => a.classList.remove('active'));
+        map.get(e.target)?.classList.add('active');
+        setLast(e.target.id);
+      }
+    });
+  }, { rootMargin: '-30% 0px -55% 0px' });
+  map.forEach((_, sec) => obs.observe(sec));
 })();
 
 /* ─── lazy-init helper: only spin up a widget when it scrolls into view ─── */
