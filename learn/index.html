@@ -641,7 +641,7 @@
         <span class="thumb-label">📷 active camera view&nbsp;→</span>
         <canvas id="m3-thumb" width="180" height="120"></canvas>
       </div>
-      <div class="hint">24 cameras in three orbital rings around a bunny. Drag to orbit the whole scene.</div>
+      <div class="hint">24 cameras in three orbital rings around a cat. Drag to orbit the whole scene.</div>
     </div>
   </div>
 </section>
@@ -1382,57 +1382,140 @@ lazyInit('m3', () => {
   const fill = new THREE.DirectionalLight(0xffe1aa, 0.35);
   fill.position.set(-3, 2, -3); scene.add(fill);
 
-  // ── central subject: a stylised bunny built from primitives ──
-  const fur     = new THREE.MeshStandardMaterial({ color: 0xead4b3, roughness: 0.78 });
+  // ── central subject: a very cute ginger cat built from primitives ──
+  const fur      = new THREE.MeshStandardMaterial({ color: 0xe8a560, roughness: 0.85 });
+  const stripe   = new THREE.MeshStandardMaterial({ color: 0xc97c30, roughness: 0.95 });
   const innerEar = new THREE.MeshStandardMaterial({ color: 0xf5b8b0, roughness: 0.85 });
-  const eyeMat  = new THREE.MeshStandardMaterial({ color: 0x1a1a1f, roughness: 0.35 });
-  const noseMat = new THREE.MeshStandardMaterial({ color: 0xe8888a, roughness: 0.5 });
-  const tailMat = new THREE.MeshStandardMaterial({ color: 0xfdfaf2, roughness: 0.95 });
+  const eyeWhite = new THREE.MeshStandardMaterial({ color: 0xfdf6e3, roughness: 0.4 });
+  const eyeMat   = new THREE.MeshStandardMaterial({ color: 0x2a3e1a, roughness: 0.3, metalness: 0.1 });
+  const pupil    = new THREE.MeshStandardMaterial({ color: 0x080808, roughness: 0.2 });
+  const noseMat  = new THREE.MeshStandardMaterial({ color: 0xe890a0, roughness: 0.5 });
 
-  const bunny = new THREE.Group();
-  // body — elongated sphere
-  const body = new THREE.Mesh(new THREE.SphereGeometry(0.32, 28, 20), fur);
-  body.scale.set(0.85, 0.78, 1.05);
-  body.position.set(0, -0.10, -0.05);
-  bunny.add(body);
-  // head
-  const head = new THREE.Mesh(new THREE.SphereGeometry(0.22, 28, 20), fur);
-  head.position.set(0, 0.18, 0.32);
-  bunny.add(head);
-  // ears (outer + inner)
-  const earGeo = new THREE.CapsuleGeometry(0.055, 0.30, 6, 12);
-  const earInnerGeo = new THREE.CapsuleGeometry(0.030, 0.24, 6, 10);
+  const cat = new THREE.Group();
+
+  // body — slightly elongated, low-slung
+  const body = new THREE.Mesh(new THREE.SphereGeometry(0.34, 28, 20), fur);
+  body.scale.set(0.95, 0.72, 1.20);
+  body.position.set(0, -0.10, -0.10);
+  cat.add(body);
+
+  // 3 subtle stripes on body (very thin rings)
+  for (let i = 0; i < 3; i++) {
+    const z = -0.30 + i * 0.18;
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(0.30, 0.018, 8, 28),
+      stripe);
+    ring.rotation.y = Math.PI / 2;
+    ring.position.set(0, -0.10, z);
+    ring.scale.set(0.95, 0.72, 1);
+    cat.add(ring);
+  }
+
+  // head — round, slightly squashed
+  const head = new THREE.Mesh(new THREE.SphereGeometry(0.26, 28, 20), fur);
+  head.scale.set(1.08, 0.95, 0.98);
+  head.position.set(0, 0.20, 0.34);
+  cat.add(head);
+
+  // chubby cheeks
+  const cheekL = new THREE.Mesh(new THREE.SphereGeometry(0.10, 18, 14), fur);
+  cheekL.position.set(-0.16, 0.10, 0.46); cat.add(cheekL);
+  const cheekR = new THREE.Mesh(new THREE.SphereGeometry(0.10, 18, 14), fur);
+  cheekR.position.set( 0.16, 0.10, 0.46); cat.add(cheekR);
+
+  // triangular ears — outer + pink inner
   function makeEar(x, tilt) {
     const g = new THREE.Group();
-    const outer = new THREE.Mesh(earGeo, fur);
+    const outer = new THREE.Mesh(new THREE.ConeGeometry(0.11, 0.22, 4), fur);
     g.add(outer);
-    const inner = new THREE.Mesh(earInnerGeo, innerEar);
-    inner.position.z = 0.025;
+    const inner = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.14, 4), innerEar);
+    inner.position.set(0, -0.025, 0.025);
     g.add(inner);
-    g.position.set(x, 0.46, 0.28);
-    g.rotation.set(-0.25, 0, tilt);
+    g.position.set(x, 0.45, 0.30);
+    g.rotation.set(-0.10, 0, tilt);
     return g;
   }
-  bunny.add(makeEar(-0.10, -0.18));
-  bunny.add(makeEar( 0.10,  0.18));
-  // eyes
-  const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.028, 14, 10), eyeMat);
-  eyeL.position.set(-0.085, 0.22, 0.49); bunny.add(eyeL);
-  const eyeR = new THREE.Mesh(new THREE.SphereGeometry(0.028, 14, 10), eyeMat);
-  eyeR.position.set( 0.085, 0.22, 0.49); bunny.add(eyeR);
-  // nose
-  const nose = new THREE.Mesh(new THREE.SphereGeometry(0.025, 14, 10), noseMat);
-  nose.position.set(0, 0.155, 0.535); bunny.add(nose);
-  // tail
-  const tail = new THREE.Mesh(new THREE.SphereGeometry(0.10, 16, 12), tailMat);
-  tail.position.set(0, -0.05, -0.40); bunny.add(tail);
-  // little feet
-  const foot = new THREE.SphereGeometry(0.08, 16, 12);
-  const fl = new THREE.Mesh(foot, fur); fl.position.set(-0.18, -0.32, 0.15);
-  fl.scale.set(1, 0.5, 1.2); bunny.add(fl);
-  const fr = new THREE.Mesh(foot, fur); fr.position.set( 0.18, -0.32, 0.15);
-  fr.scale.set(1, 0.5, 1.2); bunny.add(fr);
-  scene.add(bunny);
+  cat.add(makeEar(-0.14, -0.12));
+  cat.add(makeEar( 0.14,  0.12));
+
+  // big eyes — white sclera + green iris + tiny pupil
+  function makeEye(x) {
+    const g = new THREE.Group();
+    const w = new THREE.Mesh(new THREE.SphereGeometry(0.055, 18, 14), eyeWhite);
+    g.add(w);
+    const iris = new THREE.Mesh(new THREE.SphereGeometry(0.038, 16, 12), eyeMat);
+    iris.position.z = 0.024;
+    g.add(iris);
+    const p = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.011, 0.011, 0.04, 8),
+      pupil);
+    p.rotation.x = Math.PI / 2;
+    p.scale.set(1, 2.0, 1);   // tall slit pupil for cat
+    p.position.z = 0.052;
+    g.add(p);
+    g.position.set(x, 0.22, 0.50);
+    return g;
+  }
+  cat.add(makeEye(-0.10));
+  cat.add(makeEye( 0.10));
+
+  // pink triangular nose
+  const nose = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.04, 3), noseMat);
+  nose.rotation.x = Math.PI;
+  nose.position.set(0, 0.13, 0.58);
+  cat.add(nose);
+
+  // little mouth — two short lines (W shape)
+  const mouthMat = new THREE.LineBasicMaterial({ color: 0x4a2818, transparent: true, opacity: 0.85 });
+  const mouthGeo = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(0,     0.105, 0.58),
+    new THREE.Vector3(-0.03, 0.085, 0.58),
+    new THREE.Vector3(0,     0.105, 0.58),
+    new THREE.Vector3( 0.03, 0.085, 0.58),
+  ]);
+  cat.add(new THREE.LineSegments(mouthGeo, mouthMat));
+
+  // whiskers — 3 each side
+  const whiskerMat = new THREE.LineBasicMaterial({ color: 0x6a5538, transparent: true, opacity: 0.7 });
+  function whisker(a, b) {
+    const g = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(...a), new THREE.Vector3(...b)]);
+    return new THREE.Line(g, whiskerMat);
+  }
+  cat.add(whisker([-0.05, 0.11, 0.58], [-0.32, 0.13, 0.52]));
+  cat.add(whisker([-0.05, 0.09, 0.58], [-0.34, 0.06, 0.48]));
+  cat.add(whisker([-0.05, 0.07, 0.58], [-0.32, -0.01, 0.45]));
+  cat.add(whisker([ 0.05, 0.11, 0.58], [ 0.32, 0.13, 0.52]));
+  cat.add(whisker([ 0.05, 0.09, 0.58], [ 0.34, 0.06, 0.48]));
+  cat.add(whisker([ 0.05, 0.07, 0.58], [ 0.32, -0.01, 0.45]));
+
+  // 4 little legs
+  const legGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.16, 14);
+  [[-0.16, -0.32, 0.18], [ 0.16, -0.32, 0.18],
+   [-0.16, -0.32, -0.30], [ 0.16, -0.32, -0.30]].forEach(p => {
+    const leg = new THREE.Mesh(legGeo, fur);
+    leg.position.set(...p);
+    cat.add(leg);
+  });
+
+  // curled tail — a Bezier tube curving up and over
+  const tailCurve = new THREE.CatmullRomCurve3([
+    new THREE.Vector3( 0.00, -0.05, -0.42),
+    new THREE.Vector3( 0.10,  0.05, -0.55),
+    new THREE.Vector3( 0.25,  0.25, -0.55),
+    new THREE.Vector3( 0.40,  0.40, -0.42),
+    new THREE.Vector3( 0.42,  0.55, -0.22),
+    new THREE.Vector3( 0.30,  0.60, -0.05),
+  ]);
+  const tail = new THREE.Mesh(
+    new THREE.TubeGeometry(tailCurve, 32, 0.06, 12, false), fur);
+  cat.add(tail);
+  // tail tip — slightly darker for cuteness
+  const tailTip = new THREE.Mesh(new THREE.SphereGeometry(0.065, 14, 10), stripe);
+  tailTip.position.set(0.30, 0.60, -0.05);
+  cat.add(tailTip);
+
+  scene.add(cat);
 
   // grass disc beneath
   const grass = new THREE.Mesh(
