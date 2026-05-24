@@ -94,17 +94,53 @@
   th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;
     vertical-align:top;}
   th{background:var(--panel);color:#fff;font-weight:600;}
+  /* progress bar in header */
+  #pbar{flex:0 0 140px;height:6px;background:#23262b;border-radius:3px;
+    overflow:hidden;margin:0 6px;}
+  #pbar > div{height:100%;background:var(--accent);width:0%;
+    transition:width .3s;}
+  #pcount{font-size:12px;color:var(--dim);}
+  /* resume banner */
+  #resume{display:none;background:#152318;border-bottom:1px solid #2c4633;
+    padding:10px 18px;font-size:14px;align-items:center;gap:12px;}
+  #resume.show{display:flex;}
+  #resume b{color:#cfe;}
+  #resume button{background:var(--accent);color:#000;border:0;
+    padding:5px 12px;border-radius:4px;cursor:pointer;
+    font:600 13px ui-monospace,Menlo,Consolas,monospace;}
+  #resume button.alt{background:#23262b;color:var(--fg);}
+  #resume .x{margin-left:auto;cursor:pointer;color:var(--dim);
+    background:none;border:0;font-size:18px;}
+  /* per-module "I got it" checkbox */
+  .checkrow{display:flex;align-items:center;gap:8px;
+    margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);
+    font-size:13px;color:var(--dim);cursor:pointer;}
+  .checkrow input{accent-color:var(--accent);width:16px;height:16px;cursor:pointer;}
+  .checkrow.done{color:var(--accent);}
+  /* placeholder shown until lazy-init kicks in */
+  .lazy-placeholder{display:flex;align-items:center;justify-content:center;
+    width:100%;height:380px;background:#0a0b0d;color:var(--dim);
+    font-size:13px;font-style:italic;}
 </style>
 </head>
 <body>
 
 <header>
   <b>Learn 3DGS</b><span style="color:var(--dim)"> · interactive course</span>
+  <div id="pbar"><div id="pbarfill"></div></div>
+  <span id="pcount">0 / 7</span>
   <span class="links">
     <a href="https://github.com/vladimiralbrekhtccr/world-models/blob/main/LEARN_3DGS.md">text version</a> ·
     <a href="../">all demos</a>
   </span>
 </header>
+
+<div id="resume">
+  <span>👋 <b>Welcome back.</b> You left off at <b id="resume-where">…</b>.</span>
+  <button id="resume-go">Continue</button>
+  <button class="alt" id="resume-reset">Start over</button>
+  <button class="x" id="resume-x" title="dismiss">×</button>
+</div>
 
 <div class="grid">
 <nav id="toc">
@@ -198,6 +234,7 @@
     The animation here is exaggerated for clarity. Same idea: one
     computes, the other reads.</div>
   </div>
+  <!-- m1 is a tiny canvas2d — fine to init eagerly -->
 
   <p>The payoffs of being a spreadsheet:</p>
   <ul>
@@ -258,7 +295,7 @@
   covering. (The fancy word is <b>anisotropy</b>; the boring phrase is
   <b>"ellipsoids, not spheres."</b>)</p>
 
-  <div class="widget">
+  <div class="widget" data-lazy="m2a">
     <div class="title">widget · one Gaussian — manipulate it</div>
     <canvas id="m2a" class="stage"></canvas>
     <div class="controls">
@@ -297,7 +334,7 @@
   principle is identical: the colour stored on each Gaussian is a tiny
   function, not a constant.</p>
 
-  <div class="widget">
+  <div class="widget" data-lazy="m2b">
     <div class="title">widget · flat vs view-dependent colour</div>
     <canvas id="m2b" class="stage" style="height:300px"></canvas>
     <div class="btnrow">
@@ -420,10 +457,10 @@
   no mesh, no texture, no shader — just millions of overlapping
   Gaussians being projected and blended in real time.</p>
 
-  <div class="widget">
+  <div class="widget" data-lazy="m4">
     <div class="title">widget · 2.3M Gaussians, real-time</div>
     <canvas id="m4a" class="stage"></canvas>
-    <div class="hint" id="m4hint">loading ~2.3M gaussians…</div>
+    <div class="hint" id="m4hint">scroll into view to load (~50 MB ksplat — only loads when you reach it)</div>
   </div>
 
   <h3>Viewers and file formats</h3>
@@ -685,7 +722,75 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { SparkRenderer, SplatMesh } from '@sparkjsdev/spark';
 
-/* ─── nav: active-section highlight ─── */
+/* ─── progress tracking via localStorage ─── */
+const PKEY = 'learn3dgs:progress';
+const MODULE_IDS = ['m1','m2','m3','m4','m5','m6','m7'];
+const MODULE_LABELS = {
+  m1:'Module 1 — The big idea',
+  m2:'Module 2 — The Gaussian',
+  m3:'Module 3 — Building a scene',
+  m4:'Module 4 — Rendering',
+  m5:'Module 5 — Splat → mesh',
+  m6:'Module 6 — Beyond optimisation',
+  m7:'Module 7 — The landscape',
+};
+function loadProg(){ try{return JSON.parse(localStorage.getItem(PKEY)||'{}');}catch{return{};} }
+function saveProg(p){ localStorage.setItem(PKEY, JSON.stringify(p)); }
+function setLast(id){ const p=loadProg(); p.lastModule=id; p.t=Date.now(); saveProg(p); }
+function toggleDone(id, on){
+  const p=loadProg(); p.completed=p.completed||[];
+  const s=new Set(p.completed); on?s.add(id):s.delete(id);
+  p.completed=[...s]; saveProg(p); paintProgress();
+}
+function paintProgress(){
+  const p=loadProg(); const n=(p.completed||[]).filter(x=>MODULE_IDS.includes(x)).length;
+  document.getElementById('pbarfill').style.width=`${(n/MODULE_IDS.length)*100}%`;
+  document.getElementById('pcount').textContent=`${n} / ${MODULE_IDS.length}`;
+}
+
+/* inject "✓ I can answer these" checkbox into each answer box */
+function injectCheckboxes(){
+  const p=loadProg(); const done=new Set(p.completed||[]);
+  MODULE_IDS.forEach(id=>{
+    const sec=document.getElementById(id); if(!sec) return;
+    const box=sec.querySelector('.answer'); if(!box) return;
+    const row=document.createElement('label');
+    row.className='checkrow'+(done.has(id)?' done':'');
+    row.innerHTML=`<input type="checkbox" ${done.has(id)?'checked':''}>
+      <span>I can answer these — mark this module done</span>`;
+    row.querySelector('input').addEventListener('change',e=>{
+      toggleDone(id, e.target.checked);
+      row.classList.toggle('done', e.target.checked);
+    });
+    box.appendChild(row);
+  });
+}
+injectCheckboxes(); paintProgress();
+
+/* resume banner */
+(() => {
+  const p=loadProg(); const banner=document.getElementById('resume');
+  if(!p.lastModule || p.lastModule==='intro' || sessionStorage.getItem('learn3dgs:dismiss')) return;
+  document.getElementById('resume-where').textContent = MODULE_LABELS[p.lastModule] || p.lastModule;
+  banner.classList.add('show');
+  document.getElementById('resume-go').onclick = () => {
+    document.getElementById(p.lastModule)?.scrollIntoView({behavior:'smooth'});
+    banner.classList.remove('show');
+  };
+  document.getElementById('resume-reset').onclick = () => {
+    localStorage.removeItem(PKEY); banner.classList.remove('show');
+    document.querySelectorAll('.checkrow input').forEach(c=>{
+      c.checked=false; c.closest('.checkrow').classList.remove('done');
+    });
+    paintProgress();
+  };
+  document.getElementById('resume-x').onclick = () => {
+    banner.classList.remove('show');
+    sessionStorage.setItem('learn3dgs:dismiss','1');
+  };
+})();
+
+/* ─── nav: active-section highlight + save lastModule ─── */
 (() => {
   const links = document.querySelectorAll('nav#toc a');
   const map = new Map();
@@ -699,11 +804,26 @@ import { SparkRenderer, SplatMesh } from '@sparkjsdev/spark';
       if (e.isIntersecting) {
         links.forEach(a => a.classList.remove('active'));
         map.get(e.target)?.classList.add('active');
+        setLast(e.target.id);
       }
     });
   }, { rootMargin: '-30% 0px -55% 0px' });
   map.forEach((_, sec) => obs.observe(sec));
 })();
+
+/* ─── lazy-init helper: only spin up a widget when it scrolls into view ─── */
+function lazyInit(dataKey, initFn){
+  const target = document.querySelector(`[data-lazy="${dataKey}"]`);
+  if (!target) { initFn(); return; }
+  let done = false;
+  const obs = new IntersectionObserver(entries => {
+    if (!done && entries.some(e => e.isIntersecting)) {
+      done = true; obs.disconnect();
+      try { initFn(); } catch (err) { console.error(`init ${dataKey} failed`, err); }
+    }
+  }, { rootMargin: '300px' });
+  obs.observe(target);
+}
 
 /* ─── widget m1 — calculator vs spreadsheet ─── */
 (() => {
@@ -754,8 +874,8 @@ import { SparkRenderer, SplatMesh } from '@sparkjsdev/spark';
   });
 })();
 
-/* ─── widget m2a — Gaussian anatomy ─── */
-(() => {
+/* ─── widget m2a — Gaussian anatomy (LAZY) ─── */
+lazyInit('m2a', () => {
   const canvas = document.getElementById('m2a');
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x0a0b0d);
@@ -817,10 +937,10 @@ import { SparkRenderer, SplatMesh } from '@sparkjsdev/spark';
     requestAnimationFrame(tick);
   }
   tick();
-})();
+});
 
-/* ─── widget m2b — flat vs view-dependent colour ─── */
-(() => {
+/* ─── widget m2b — flat vs view-dependent colour (LAZY) ─── */
+lazyInit('m2b', () => {
   const canvas = document.getElementById('m2b');
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x0a0b0d);
@@ -878,10 +998,11 @@ import { SparkRenderer, SplatMesh } from '@sparkjsdev/spark';
     requestAnimationFrame(tick);
   }
   tick();
-})();
+});
 
-/* ─── widget m4 — real splat (Statue Face) ─── */
-(() => {
+/* ─── widget m4 — real splat (Statue Face) (LAZY — heaviest) ─── */
+lazyInit('m4', () => {
+  document.getElementById('m4hint').textContent = 'loading ~2.3M gaussians…';
   const canvas = document.getElementById('m4a');
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x000000);
@@ -913,7 +1034,7 @@ import { SparkRenderer, SplatMesh } from '@sparkjsdev/spark';
     requestAnimationFrame(tick);
   }
   tick();
-})();
+});
 </script>
 </body>
 </html>
