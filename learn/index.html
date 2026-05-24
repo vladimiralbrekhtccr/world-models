@@ -1370,10 +1370,17 @@ lazyInit('m3', () => {
   const canvas = document.getElementById('m3-canvas');
   const thumbCanvas = document.getElementById('m3-thumb');
   const scene = new THREE.Scene();
-  // Warm medium-dark background — gives the black cat something to silhouette against
-  // without using a CanvasTexture as scene.background (which Three.js treats as
-  // an equirect skybox and can wreck the render).
-  scene.background = new THREE.Color(0x4a3e32);
+  // soft warm gradient background — gives black cat something to silhouette against
+  const bgCanvas = document.createElement('canvas');
+  bgCanvas.width = 4; bgCanvas.height = 256;
+  const bgCtx = bgCanvas.getContext('2d');
+  const bgGrad = bgCtx.createLinearGradient(0, 0, 0, 256);
+  bgGrad.addColorStop(0,   '#2a2522');
+  bgGrad.addColorStop(0.55,'#54493e');
+  bgGrad.addColorStop(1,   '#7a6952');
+  bgCtx.fillStyle = bgGrad;
+  bgCtx.fillRect(0, 0, 4, 256);
+  scene.background = new THREE.CanvasTexture(bgCanvas);
 
   const camera = new THREE.PerspectiveCamera(42, 2, 0.1, 100);
   camera.position.set(3.0, 1.7, 3.0);
@@ -1709,13 +1716,13 @@ lazyInit('m3', () => {
     const b = document.getElementById('m3-playbtn');
     if (b) b.textContent = autoPlay ? '⏸ pause' : '▶ play';
   }
-  // initialise highlight (after cams[] is populated above)
-  try { setActive(0); setPlay(true); }
-  catch (e) { console.warn('m3 init highlight failed', e); }
+  // initialise highlight
+  setActive(0);
+  setPlay(true);
 
-  document.getElementById('m3-playbtn')?.addEventListener('click', () => setPlay(!autoPlay));
-  document.getElementById('m3-prev')?.addEventListener('click', () => { setPlay(false); setActive(active - 1); });
-  document.getElementById('m3-next')?.addEventListener('click', () => { setPlay(false); setActive(active + 1); });
+  document.getElementById('m3-playbtn').addEventListener('click', () => setPlay(!autoPlay));
+  document.getElementById('m3-prev').addEventListener('click', () => { setPlay(false); setActive(active - 1); });
+  document.getElementById('m3-next').addEventListener('click', () => { setPlay(false); setActive(active + 1); });
 
   // click-to-select on the 3D canvas — distinguish click from orbit-drag
   const raycaster = new THREE.Raycaster();
