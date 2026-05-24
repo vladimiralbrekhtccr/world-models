@@ -1383,16 +1383,16 @@ lazyInit('m3', () => {
   fill.position.set(-3, 2, -3); scene.add(fill);
 
   // ── central subject: load the GLB cat ──
+  // Podium top sits at y = -0.40 (cylinder centre -0.43 + half-height 0.03).
   new GLTFLoader().load('cat.glb', (gltf) => {
     const cat = gltf.scene;
-    // Auto-fit: scale so the model's longest dimension is ~1.4 units,
-    // then re-centre + drop it onto the grass.
     const box = new THREE.Box3().setFromObject(cat);
     const size = box.getSize(new THREE.Vector3());
     const ctr  = box.getCenter(new THREE.Vector3());
     const maxDim = Math.max(size.x, size.y, size.z);
-    const s = 1.4 / maxDim;
+    const s = 1.4 / maxDim;        // longest dimension → 1.4 world units
     cat.scale.setScalar(s);
+    // re-centre horizontally + drop so feet sit on the podium top
     cat.position.set(-ctr.x * s, -box.min.y * s - 0.40, -ctr.z * s);
     scene.add(cat);
   }, undefined, (err) => {
@@ -1535,13 +1535,59 @@ lazyInit('m3', () => {
   scene.add(cat);
   };  // close __unused_cat_block_start
 
-  // grass disc beneath
-  const grass = new THREE.Mesh(
-    new THREE.CircleGeometry(1.6, 48),
-    new THREE.MeshStandardMaterial({ color: 0x4a6b48, roughness: 0.95 }));
-  grass.rotation.x = -Math.PI / 2;
-  grass.position.y = -0.40;
-  scene.add(grass);
+  // ── photography-style podium beneath the cat ──
+  // build a radial-gradient texture in canvas2d for the top surface
+  const podiumCanvas = document.createElement('canvas');
+  podiumCanvas.width = 512; podiumCanvas.height = 512;
+  const pctx = podiumCanvas.getContext('2d');
+  const grad = pctx.createRadialGradient(256, 256, 0, 256, 256, 256);
+  grad.addColorStop(0,   '#f7efd9');
+  grad.addColorStop(0.6, '#ebe0c2');
+  grad.addColorStop(0.92,'#c9b890');
+  grad.addColorStop(1,   '#9c8a64');
+  pctx.fillStyle = grad;
+  pctx.beginPath(); pctx.arc(256, 256, 256, 0, Math.PI * 2); pctx.fill();
+  const podiumTex = new THREE.CanvasTexture(podiumCanvas);
+  podiumTex.anisotropy = 8;
+
+  // low cylinder = the podium body (slight height so it has a side edge)
+  const podiumTop = new THREE.Mesh(
+    new THREE.CylinderGeometry(1.55, 1.55, 0.06, 64),
+    [
+      new THREE.MeshStandardMaterial({ color: 0xb9a87f, roughness: 0.85 }),   // side
+      new THREE.MeshStandardMaterial({ map: podiumTex, roughness: 0.7 }),     // top
+      new THREE.MeshStandardMaterial({ color: 0x6f5f44, roughness: 0.9 }),    // bottom
+    ]
+  );
+  podiumTop.position.y = -0.43;
+  scene.add(podiumTop);
+
+  // beveled rim — slightly larger torus laid flat around the top edge
+  const rim = new THREE.Mesh(
+    new THREE.TorusGeometry(1.55, 0.025, 12, 96),
+    new THREE.MeshStandardMaterial({ color: 0xa8966e, roughness: 0.6, metalness: 0.1 }));
+  rim.rotation.x = Math.PI / 2;
+  rim.position.y = -0.40;
+  scene.add(rim);
+
+  // soft contact-shadow disc directly under the cat — a darker, almost
+  // transparent circle that hugs the surface and gives the cat "weight"
+  const shadowCanvas = document.createElement('canvas');
+  shadowCanvas.width = 256; shadowCanvas.height = 256;
+  const sctx = shadowCanvas.getContext('2d');
+  const sg = sctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+  sg.addColorStop(0,   'rgba(0,0,0,0.45)');
+  sg.addColorStop(0.5, 'rgba(0,0,0,0.18)');
+  sg.addColorStop(1,   'rgba(0,0,0,0)');
+  sctx.fillStyle = sg;
+  sctx.fillRect(0, 0, 256, 256);
+  const shadowTex = new THREE.CanvasTexture(shadowCanvas);
+  const contactShadow = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.1, 1.1),
+    new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, depthWrite: false }));
+  contactShadow.rotation.x = -Math.PI / 2;
+  contactShadow.position.y = -0.395;
+  scene.add(contactShadow);
 
   // ── camera factory: body + lens + WIREFRAME frustum aimed at the cat ──
   // NB: three.js Object3D.lookAt uses inverted convention for non-Camera
