@@ -519,8 +519,8 @@
       <div class="figcap"><b>Figure 2.2</b> Four Gaussians side by side — hit "splat" to blend them into one image.</div>
       <canvas id="m2c" class="stage" style="height:280px"></canvas>
       <div class="controls">
-        <div class="ctl"><label>blob size <span id="m2csizev">60</span></label>
-          <input type="range" id="m2csize" min="15" max="120" step="1" value="60"></div>
+        <div class="ctl"><label>blob size <span id="m2csizev">110</span></label>
+          <input type="range" id="m2csize" min="30" max="180" step="1" value="110"></div>
       </div>
       <div class="btnrow">
         <button class="alt" id="m2cindiv">individual</button>
@@ -1241,14 +1241,16 @@ lazyInit('m2a', () => {
 (() => {
   const canvas = document.getElementById('m2c');
   const ctx = canvas.getContext('2d');
+  // tight cluster around the centre so the four blobs INTERSECT — the
+  // whole point of the widget is the overlap region.
   const gaussians = [
-    { x: 0.30, y: 0.32, color: [232, 96,  96]  },   // red
-    { x: 0.70, y: 0.32, color: [232, 200, 88]  },   // yellow
-    { x: 0.30, y: 0.72, color: [96,  192, 232] },   // cyan
-    { x: 0.70, y: 0.72, color: [188, 112, 224] },   // purple
+    { x: 0.40, y: 0.40, color: [240, 96,  96]  },   // red    – upper-left
+    { x: 0.60, y: 0.40, color: [240, 200, 88]  },   // yellow – upper-right
+    { x: 0.40, y: 0.60, color: [96,  200, 240] },   // cyan   – lower-left
+    { x: 0.60, y: 0.60, color: [188, 112, 224] },   // purple – lower-right
   ];
   let mode = 'individual';
-  let radius = 60;
+  let radius = 110;        // big enough by default that all four overlap
 
   function fit() {
     const w = canvas.clientWidth, h = canvas.clientHeight;
@@ -1265,25 +1267,28 @@ lazyInit('m2a', () => {
     ctx.fillStyle = '#0a0b0d';
     ctx.fillRect(0, 0, w, h);
     if (mode === 'individual') {
-      // 4 distinct solid colored discs — you can count them
-      gaussians.forEach(g => {
-        ctx.fillStyle = `rgb(${g.color.join(',')})`;
+      // Semi-transparent solid fill + strong outline so the FOUR distinct
+      // circles are visible *and* you can see exactly where they intersect.
+      gaussians.forEach((g, i) => {
+        ctx.fillStyle = `rgba(${g.color.join(',')}, 0.35)`;
+        ctx.strokeStyle = `rgba(${g.color.join(',')}, 0.95)`;
+        ctx.lineWidth = 2.5;
         ctx.beginPath();
-        ctx.arc(g.x * w, g.y * h, radius * 0.45, 0, Math.PI * 2);
+        ctx.arc(g.x * w, g.y * h, radius * 0.55, 0, Math.PI * 2);
         ctx.fill();
-        ctx.strokeStyle = 'rgba(255,255,255,0.25)';
-        ctx.lineWidth = 1.5;
         ctx.stroke();
       });
-      // labels so it's obvious there are 4 separate things
-      ctx.fillStyle = 'rgba(255,255,255,0.5)';
-      ctx.font = '11px ui-monospace, monospace';
+      // labels
+      ctx.fillStyle = 'rgba(255,255,255,0.6)';
+      ctx.font = '600 11px ui-monospace, monospace';
       ctx.textAlign = 'center';
       gaussians.forEach((g, i) => {
-        ctx.fillText(`#${i+1}`, g.x * w, g.y * h - radius * 0.55);
+        ctx.fillText(`G${i+1}`, g.x * w, g.y * h);
       });
     } else {
-      // Additive Gaussian falloff — the four blobs blend into one image
+      // Splat mode: Gaussian falloff per blob, additive blending — the
+      // colours flow into each other in the overlap region (white-ish at
+      // the very centre where all four meet).
       ctx.globalCompositeOperation = 'lighter';
       gaussians.forEach(g => {
         const cx = g.x * w, cy = g.y * h;
