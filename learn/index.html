@@ -5,14 +5,14 @@
 <title>Learn 3DGS — interactive course</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-  /* Red Blob Games–inspired warm cream palette */
+  /* Light-blue palette (Red Blob structure, blue tones) */
   :root {
-    --bg:#fdfbf3; --paper:#ffffff; --fg:#2b2b2b; --dim:#6f685d;
-    --accent:#c5573b; --accent-soft:#fbe8de;
-    --link:#1e5fa0; --line:#dcd4be;
-    --panel:#f4ecd3; --panel-dark:#1a1c20;
-    --quote-bg:#fcf5d4; --quote-border:#d4b941;
-    --code-bg:#f3ecd0; --good:#6f9e3f;
+    --bg:#f3f7fc; --paper:#ffffff; --fg:#16243d; --dim:#5a6885;
+    --accent:#2e6fc1; --accent-soft:#dfeaf8; --accent-deep:#1d4f96;
+    --link:#1a5cb0; --line:#cdd9ea;
+    --panel:#e7eef8; --panel-dark:#0f1a30;
+    --quote-bg:#e0eef8; --quote-border:#5fa3d6;
+    --code-bg:#e9f0f9; --good:#3d9c6a;
   }
   html,body{margin:0;background:var(--bg);color:var(--fg);
     font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,
@@ -30,16 +30,18 @@
     padding:11px 22px;display:flex;align-items:center;gap:14px;z-index:10;}
   header b{color:#1a1a1a;font-size:16px;}
   header .links{margin-left:auto;font-size:13.5px;color:var(--dim);}
-  .grid{display:grid;grid-template-columns:220px minmax(0,820px);
-    gap:36px;max-width:1120px;margin:0 auto;padding:32px 22px 110px;}
-  nav#toc{position:sticky;top:64px;align-self:start;font-size:14px;
-    border-left:2px solid var(--line);padding-left:16px;}
-  nav#toc a{display:block;color:var(--dim);padding:5px 0;border:0;}
-  nav#toc a:hover{color:var(--accent);}
-  nav#toc a.active{color:var(--accent);border-left:3px solid var(--accent);
-    padding-left:11px;margin-left:-14px;font-weight:600;}
-  nav#toc .sub{font-size:11px;text-transform:uppercase;color:#aaa18d;
-    letter-spacing:.08em;margin:18px 0 8px;}
+  /* single-column container — TOC sidebar removed, replaced by header chips */
+  .grid{display:block;max-width:1500px;margin:0 auto;
+    padding:28px 32px 120px;}
+  nav#toc{display:none;} /* legacy — replaced by #chipnav */
+  #chipnav{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 32px;
+    padding:0 0 18px;border-bottom:1px solid var(--line);}
+  #chipnav a{font-size:13px;padding:5px 11px;background:var(--paper);
+    border:1px solid var(--line);border-radius:14px;color:var(--dim);
+    border-bottom:1px solid var(--line);}
+  #chipnav a:hover{color:var(--accent);border-color:var(--accent);}
+  #chipnav a.active{background:var(--accent);color:#fff;border-color:var(--accent);
+    font-weight:600;}
   main section{margin-bottom:80px;}
   h1{font-size:36px;margin:0 0 8px;color:#1a1a1a;font-weight:600;
     letter-spacing:-.015em;line-height:1.25;}
@@ -170,27 +172,68 @@
     font-size:13px;font-style:italic;}
 
   /* ─── Red Blob-style 2-column: text left, sticky widget right ─── */
-  .split-layout{display:grid;grid-template-columns:1fr 440px;
-    gap:32px;align-items:start;}
+  .split-layout{display:grid;grid-template-columns:minmax(0,1fr) 560px;
+    gap:48px;align-items:start;}
   .split-layout .textcol{min-width:0;}
-  .split-layout .widgetcol{position:sticky;top:74px;align-self:start;
-    max-height:calc(100vh - 90px);overflow-y:auto;
-    /* hide scrollbar for cleaner look */
-    scrollbar-width:thin;scrollbar-color:#bbb transparent;}
+  /* sticky widget pinned to viewport, full available height */
+  .split-layout .widgetcol{position:sticky;top:80px;align-self:start;}
   .split-layout .widgetcol .widget{margin:0 0 18px;}
-  @media (max-width:1080px){
+  @media (max-width:1100px){
     .split-layout{grid-template-columns:1fr;}
-    .split-layout .widgetcol{position:static;max-height:none;overflow:visible;}
+    .split-layout .widgetcol{position:static;}
   }
 
   /* hoverable demo trigger inline in text */
-  .demo{background:rgba(197,87,59,.13);
-    border-bottom:1.5px dashed rgba(197,87,59,.55);
-    padding:0 3px;cursor:pointer;color:#7a3a1a;font-weight:500;
+  .demo{background:rgba(46,111,193,.10);
+    border-bottom:1.5px dashed rgba(46,111,193,.55);
+    padding:0 3px;cursor:pointer;color:var(--accent-deep);font-weight:500;
     border-radius:2px;transition:background .15s;}
-  .demo:hover{background:rgba(197,87,59,.30);color:#5a2a10;}
+  .demo:hover{background:rgba(46,111,193,.22);color:#10325f;}
   .demo::before{content:"↻ ";color:var(--accent);font-weight:700;font-size:11px;
     position:relative;top:-1px;}
+
+  /* click-to-load splat overlay */
+  .load-pad{display:flex;flex-direction:column;align-items:center;
+    justify-content:center;gap:14px;
+    width:100%;height:400px;background:linear-gradient(135deg,#0d1a30,#1a2540);
+    color:#cdd9ea;text-align:center;padding:24px;box-sizing:border-box;}
+  .load-pad .load-btn{background:var(--accent);color:#fff;border:0;
+    padding:11px 22px;border-radius:6px;cursor:pointer;
+    font:600 14px -apple-system,sans-serif;
+    box-shadow:0 2px 12px rgba(46,111,193,.35);}
+  .load-pad .load-btn:hover{background:var(--accent-deep);}
+  .load-pad .load-info{font-size:12.5px;color:#9aafd0;max-width:380px;
+    line-height:1.45;}
+  .load-pad .load-info b{color:#cdd9ea;}
+  .splat-running .load-pad{display:none;}
+  .splat-stage{display:none;width:100%;height:480px;background:#000;}
+  .splat-stage.show{display:block;}
+  .unload-row{display:none;}
+  .unload-row.show{display:flex;}
+
+  /* improved M1 calculator-vs-spreadsheet figure */
+  .m1-stack{display:grid;grid-template-rows:1fr 1fr;gap:1px;background:#2a3550;}
+  .m1-pane{background:#0b1428;padding:16px 18px;}
+  .m1-pane canvas{width:100%;height:auto;display:block;background:#000;
+    border-radius:4px;border:1px solid #1a2540;}
+  .m1-head{display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:10px;}
+  .m1-label{font-size:12px;color:#8da6c8;text-transform:uppercase;
+    letter-spacing:.06em;}
+  .m1-tag{font-size:11px;padding:2px 8px;border-radius:3px;
+    text-transform:uppercase;letter-spacing:.05em;font-weight:600;}
+  .m1-tag.slow{background:#3d2a1a;color:#e8b975;}
+  .m1-tag.fast{background:#1a3d2a;color:#6fe89a;}
+  .m1-meter{height:6px;background:#1a2540;border-radius:3px;
+    overflow:hidden;margin-top:10px;}
+  .m1-bar{height:100%;background:var(--accent);width:0%;
+    transition:width .03s linear;}
+  .m1-bar.done{background:var(--good);transition:background .3s;}
+  .m1-time{font:13px ui-monospace,Menlo,Consolas,monospace;
+    color:#9aafd0;margin-top:8px;display:flex;
+    justify-content:space-between;align-items:center;}
+  .m1-time b{color:var(--accent);}
+  .m1-time .ms{color:#fff;font-size:15px;font-weight:600;}
 </style>
 </head>
 <body>
@@ -213,19 +256,18 @@
 </div>
 
 <div class="grid">
-<nav id="toc">
-  <div class="sub">course</div>
-  <a href="#intro">Intro</a>
-  <a href="#m1">1 — The big idea</a>
-  <a href="#m2">2 — The Gaussian</a>
-  <a href="#m3">3 — Building a scene</a>
-  <a href="#m4">4 — Rendering</a>
-  <a href="#m5">5 — Splat → mesh</a>
-  <a href="#m6">6 — Beyond optimisation</a>
-  <a href="#m7">7 — The landscape</a>
-</nav>
 
 <main>
+<div id="chipnav">
+  <a href="#intro">Intro</a>
+  <a href="#m1">1 · Big idea</a>
+  <a href="#m2">2 · The Gaussian</a>
+  <a href="#m3">3 · Building a scene</a>
+  <a href="#m4">4 · Rendering</a>
+  <a href="#m5">5 · Splat → mesh</a>
+  <a href="#m6">6 · Beyond optimisation</a>
+  <a href="#m7">7 · Landscape</a>
+</div>
 
 <section id="intro">
   <h1>Learn 3DGS — an interactive course</h1>
@@ -320,21 +362,29 @@
 
   <div class="widgetcol">
     <div class="widget">
-      <div class="figcap"><b>Figure 1.1</b> Calculator vs spreadsheet. Hit "render both" or click the orange link in the text.</div>
-      <div class="split">
-        <div>
-          <div class="label">NeRF — computes each pixel</div>
-          <canvas id="m1a" width="280" height="170"></canvas>
-          <div class="timing" id="m1at">ready</div>
+      <div class="figcap"><b>Figure 1.1</b> NeRF vs 3DGS rendering the same scene</div>
+      <div class="m1-stack">
+        <div class="m1-pane">
+          <div class="m1-head">
+            <span class="m1-label">NeRF · computes each pixel</span>
+            <span class="m1-tag slow">calculator</span>
+          </div>
+          <canvas id="m1a" width="520" height="200"></canvas>
+          <div class="m1-meter"><div class="m1-bar" id="m1abar"></div></div>
+          <div class="m1-time"><span id="m1ainfo">ready</span><span class="ms" id="m1ams"></span></div>
         </div>
-        <div>
-          <div class="label">3DGS — reads stored data</div>
-          <canvas id="m1b" width="280" height="170"></canvas>
-          <div class="timing" id="m1bt">ready</div>
+        <div class="m1-pane">
+          <div class="m1-head">
+            <span class="m1-label">3DGS · reads from list</span>
+            <span class="m1-tag fast">spreadsheet</span>
+          </div>
+          <canvas id="m1b" width="520" height="200"></canvas>
+          <div class="m1-meter"><div class="m1-bar done" id="m1bbar"></div></div>
+          <div class="m1-time"><span id="m1binfo">ready</span><span class="ms" id="m1bms"></span></div>
         </div>
       </div>
       <div class="btnrow">
-        <button id="m1render">render both</button>
+        <button id="m1render">▶ render both</button>
         <button class="alt" id="m1reset">reset</button>
       </div>
     </div>
@@ -547,10 +597,17 @@
   no mesh, no texture, no shader — just millions of overlapping
   Gaussians being projected and blended in real time.</p>
 
-  <div class="widget" data-lazy="m4">
-    <div class="title">widget · 2.3M Gaussians, real-time</div>
-    <canvas id="m4a" class="stage"></canvas>
-    <div class="hint" id="m4hint">scroll into view to load (~50 MB ksplat — only loads when you reach it)</div>
+  <div class="widget" id="m4-widget" data-splat-id="m4">
+    <div class="figcap"><b>Figure 4.1</b> 2.3M Gaussians of WorldMirror's Statue Face scene</div>
+    <div class="load-pad">
+      <div>📡 <b>Statue Face splat</b> · 53 MB ksplat · 2.3M Gaussians</div>
+      <button class="load-btn" data-load="m4">▶ Load scene</button>
+      <div class="load-info">Loads ~53 MB into GPU memory. Click <b>Unload</b> when done. Auto-frees when you scroll far away.</div>
+    </div>
+    <canvas class="splat-stage"></canvas>
+    <div class="btnrow unload-row">
+      <button class="alt" data-unload="m4">⏏ Unload (free GPU memory)</button>
+    </div>
   </div>
 
   <h3>Viewers and file formats</h3>
@@ -620,11 +677,21 @@
   Poisson mesh we extracted from it, and an overlay. Useful for seeing
   exactly what mesh extraction throws away.</p>
 
-  <div class="widget">
-    <div class="title">widget · garden: splat vs mesh (live demo embedded)</div>
-    <iframe class="embed" src="../garden/" loading="lazy"></iframe>
-    <div class="hint">use the dropdown in the top-right to switch
-    representations. Mesh is 25 MB glb; splat is 134 MB.</div>
+  <div class="widget" id="m5-widget" data-splat-id="m5">
+    <div class="figcap"><b>Figure 5.1</b> Mip-NeRF 360 garden — same scene, two representations</div>
+    <div class="load-pad">
+      <div>🌳 <b>Garden scene</b> · splat 134 MB · mesh 25 MB</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+        <button class="load-btn" data-load="m5-splat">▶ Load splat (134 MB)</button>
+        <button class="load-btn" data-load="m5-mesh">▶ Load mesh (25 MB)</button>
+      </div>
+      <div class="load-info">Pick one. <b>Splat</b> is sharper; <b>mesh</b> is much smaller and works in any 3D tool.
+        Side-by-side toggle on the full demo page: <a href="../garden/" style="color:#a4c8f0">../garden/</a></div>
+    </div>
+    <canvas class="splat-stage"></canvas>
+    <div class="btnrow unload-row">
+      <button class="alt" data-unload="m5">⏏ Unload (free GPU memory)</button>
+    </div>
   </div>
 
   <p>The recipe (see <a href="https://github.com/vladimiralbrekhtccr/garden-mesh-viewer">garden-mesh-viewer</a>
@@ -687,11 +754,17 @@
     for stage-by-stage detail.</li>
   </ul>
 
-  <div class="widget">
-    <div class="title">widget · Lyra chapel — generated from one anime panorama</div>
-    <iframe class="embed" src="../lyra/" loading="lazy"></iframe>
-    <div class="hint">the whole chapel was invented by a diffusion model
-    from a single 2D panorama. Diffusion imagines, gsplat polishes.</div>
+  <div class="widget" id="m6-widget" data-splat-id="m6">
+    <div class="figcap"><b>Figure 6.1</b> Lyra chapel — entirely generated from one anime panorama</div>
+    <div class="load-pad">
+      <div>⛪ <b>Lyra chapel</b> · ~24 MB ksplat · 1.5M Gaussians</div>
+      <button class="load-btn" data-load="m6">▶ Load scene</button>
+      <div class="load-info">The whole chapel was hallucinated by a diffusion model from one 2D panorama; gsplat then polished it into a clean splat.</div>
+    </div>
+    <canvas class="splat-stage"></canvas>
+    <div class="btnrow unload-row">
+      <button class="alt" data-unload="m6">⏏ Unload (free GPU memory)</button>
+    </div>
   </div>
 
   <h3>The trade-off, on one slide</h3>
@@ -810,6 +883,7 @@
 <script type="module">
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { SparkRenderer, SplatMesh } from '@sparkjsdev/spark';
 
 /* ─── progress tracking via localStorage ─── */
@@ -882,7 +956,7 @@ injectCheckboxes(); paintProgress();
 
 /* ─── nav: active-section highlight + save lastModule ─── */
 (() => {
-  const links = document.querySelectorAll('nav#toc a');
+  const links = document.querySelectorAll('#chipnav a');
   const map = new Map();
   links.forEach(a => {
     const id = a.getAttribute('href').slice(1);
@@ -935,53 +1009,89 @@ document.querySelectorAll('.demo').forEach(el => {
   el.addEventListener('click', e => { e.preventDefault(); fire(); });
 });
 
-/* ─── widget m1 — calculator vs spreadsheet ─── */
+/* ─── widget m1 — calculator vs spreadsheet (redesigned) ─── */
 (() => {
   const cA = document.getElementById('m1a'),
         cB = document.getElementById('m1b'),
-        tA = document.getElementById('m1at'),
-        tB = document.getElementById('m1bt');
+        infoA = document.getElementById('m1ainfo'),
+        infoB = document.getElementById('m1binfo'),
+        msA = document.getElementById('m1ams'),
+        msB = document.getElementById('m1bms'),
+        barA = document.getElementById('m1abar'),
+        barB = document.getElementById('m1bbar');
   const W = cA.width, H = cA.height;
-  const off = document.createElement('canvas'); off.width=W; off.height=H;
+  // pre-render a recognisable little scene on an offscreen canvas
+  const off = document.createElement('canvas'); off.width = W; off.height = H;
   const o = off.getContext('2d');
+  // sky gradient
   const g = o.createLinearGradient(0, 0, 0, H);
-  g.addColorStop(0, '#1a3a5e'); g.addColorStop(0.55, '#e8b975'); g.addColorStop(1, '#274d2a');
-  o.fillStyle = g; o.fillRect(0,0,W,H);
-  o.fillStyle = '#fff7d0'; o.beginPath(); o.arc(W*0.78, H*0.32, 18, 0, Math.PI*2); o.fill();
-  o.fillStyle = '#1d3a1f'; o.beginPath(); o.arc(W*0.22, H*0.62, 24, 0, Math.PI*2); o.fill();
-  o.fillStyle = '#3d2916'; o.fillRect(W*0.21, H*0.65, 6, 30);
+  g.addColorStop(0, '#1c3656'); g.addColorStop(0.5, '#85b4d4'); g.addColorStop(1, '#a4c596');
+  o.fillStyle = g; o.fillRect(0, 0, W, H);
+  // sun
+  o.fillStyle = '#fff5b8'; o.beginPath(); o.arc(W*0.82, H*0.24, 26, 0, Math.PI*2); o.fill();
+  // ground
+  o.fillStyle = '#3a6845'; o.fillRect(0, H*0.72, W, H*0.28);
+  // house body
+  o.fillStyle = '#d0a482'; o.fillRect(W*0.32, H*0.46, W*0.30, H*0.36);
+  // roof
+  o.fillStyle = '#8a4032'; o.beginPath();
+  o.moveTo(W*0.29, H*0.50); o.lineTo(W*0.47, H*0.24); o.lineTo(W*0.65, H*0.50);
+  o.closePath(); o.fill();
+  // door
+  o.fillStyle = '#5a3a26'; o.fillRect(W*0.42, H*0.66, W*0.07, H*0.16);
+  // window
+  o.fillStyle = '#a4cee0'; o.fillRect(W*0.50, H*0.55, W*0.08, H*0.07);
+  o.strokeStyle = '#1c3656'; o.lineWidth = 1.5;
+  o.beginPath(); o.moveTo(W*0.54, H*0.55); o.lineTo(W*0.54, H*0.62); o.stroke();
+  o.beginPath(); o.moveTo(W*0.50, H*0.585); o.lineTo(W*0.58, H*0.585); o.stroke();
+  // tree
+  o.fillStyle = '#3a5a26'; o.beginPath(); o.arc(W*0.86, H*0.62, 24, 0, Math.PI*2); o.fill();
+  o.fillStyle = '#5a3a26'; o.fillRect(W*0.853, H*0.65, 6, 32);
 
-  function clear(c) { c.getContext('2d').clearRect(0,0,W,H); }
-  clear(cA); clear(cB);
+  function clear(c){ c.getContext('2d').clearRect(0,0,W,H); }
+  function reset(){
+    clear(cA); clear(cB);
+    barA.style.width='0%'; barB.style.width='0%';
+    infoA.textContent='ready'; infoB.textContent='ready';
+    msA.textContent=''; msB.textContent='';
+  }
+  reset();
+
   let timer = null;
-  function render() {
+  function render(){
     if (timer) clearInterval(timer);
     clear(cA); clear(cB);
-    tA.textContent = 'computing pixel by pixel…';
-    tB.textContent = 'reading & blending…';
+    barA.style.width='0%'; barB.style.width='0%';
+    // 3DGS side: instant
     const t0 = performance.now();
     cB.getContext('2d').drawImage(off, 0, 0);
-    tB.textContent = `done in ${(performance.now() - t0).toFixed(1)} ms (just read)`;
+    const dtB = performance.now() - t0;
+    barB.style.width='100%';
+    infoB.textContent=`read ${W*H} pixels from list`;
+    msB.textContent=`${dtB.toFixed(1)} ms`;
+
+    // NeRF side: row-by-row reveal
     const ctxA = cA.getContext('2d');
-    let row = 0;
-    const rowsPerTick = 4;
-    const tickMs = 30;
+    let row = 0; const rowsPerTick = 3; const tickMs = 28;
     const startA = performance.now();
     timer = setInterval(() => {
       const end = Math.min(H, row + rowsPerTick);
       ctxA.drawImage(off, 0, row, W, end-row, 0, row, W, end-row);
       row = end;
+      const pct = (row/H)*100;
+      barA.style.width = `${pct}%`;
+      infoA.textContent = `computing pixel ${row*W}/${W*H} (${pct.toFixed(0)}%)`;
       if (row >= H) {
         clearInterval(timer); timer = null;
-        tA.textContent = `done in ${Math.round(performance.now()-startA)} ms (computed each row)`;
+        const dtA = performance.now() - startA;
+        infoA.textContent = 'computed every pixel';
+        msA.textContent = `${Math.round(dtA)} ms`;
       }
     }, tickMs);
   }
   document.getElementById('m1render').addEventListener('click', render);
   document.getElementById('m1reset').addEventListener('click', () => {
-    if (timer) { clearInterval(timer); timer = null; }
-    clear(cA); clear(cB);
-    tA.textContent = 'ready'; tB.textContent = 'ready';
+    if (timer) { clearInterval(timer); timer = null; } reset();
   });
   window.LEARN.m1 = { render };
 })();
@@ -1125,7 +1235,7 @@ lazyInit('m2b', () => {
   tick();
 });
 
-/* ─── widget m4 — real splat (Statue Face) (LAZY — heaviest) ─── */
+/* ─── DEAD: M4 is now handled by the splat manager below ───
 lazyInit('m4', () => {
   document.getElementById('m4hint').textContent = 'loading ~2.3M gaussians…';
   const canvas = document.getElementById('m4a');
@@ -1141,10 +1251,7 @@ lazyInit('m4', () => {
   const splat = new SplatMesh({ url: '../hyworld/statue_face.ksplat' });
   splat.rotation.set(Math.PI, 0, 0);
   scene.add(splat);
-  setTimeout(() => {
-    document.getElementById('m4hint').textContent =
-      'drag to orbit · 2.3M gaussians, projected and blended in real time';
-  }, 4000);
+  setTimeout(() => {}, 4000);
   const orbit = new OrbitControls(camera, canvas);
   orbit.enableDamping = true;
   orbit.autoRotate = true; orbit.autoRotateSpeed = 0.7;
@@ -1160,6 +1267,142 @@ lazyInit('m4', () => {
   }
   tick();
 });
+─── END DEAD M4 IIFE ─── */
+
+/* ───────────── SPLAT MANAGER — click to load, dispose to free ─────────────
+ * Single source of truth for all heavy 3D scenes (Statue, Garden, Lyra).
+ * No auto-load on scroll; user must click. Auto-unloads when scrolled far away.
+ * Uses Spark 2.0 for splats, GLTFLoader for mesh.
+ */
+const SPLAT_DEFS = {
+  m4:        { url: '../hyworld/statue_face.ksplat', type:'spark', rotation:[Math.PI,0,0], camera:[0,0,-2.4] },
+  'm5-splat':{ url: '../garden/garden.splat',        type:'spark', rotation:[Math.PI,0,0], camera:[3,2,3]    },
+  'm5-mesh': { url: '../garden/mesh.glb',            type:'mesh',  rotation:[Math.PI,0,0], camera:[3,2,3]    },
+  m6:        { url: '../lyra/scene.ksplat',          type:'spark', rotation:[Math.PI,0,0], camera:[1.2,0.6,1.2] },
+};
+const LOAD_GROUP = { 'm5-splat':'m5', 'm5-mesh':'m5' };  // map load-key → widget-id
+const active = {};
+const padOrig = {};
+
+function loadSplat(loadKey) {
+  const def = SPLAT_DEFS[loadKey];
+  if (!def) { console.warn('no def for', loadKey); return; }
+  const group = LOAD_GROUP[loadKey] || loadKey;
+  if (active[group]) unloadSplat(group);
+
+  const widget = document.getElementById(`${group}-widget`);
+  if (!widget) return;
+  const canvas = widget.querySelector('.splat-stage');
+  const loadPad = widget.querySelector('.load-pad');
+  const unloadRow = widget.querySelector('.unload-row');
+
+  if (padOrig[group] === undefined) padOrig[group] = loadPad.innerHTML;
+  loadPad.innerHTML = `<div style="color:#9aafd0;font-size:14px">⏳ loading ${def.url.split('/').pop()}…</div>`;
+
+  // defer so the loading message paints
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x000000);
+    const camera = new THREE.PerspectiveCamera(55, 2, 0.01, 1000);
+    camera.position.set(...def.camera);
+    camera.lookAt(0, 0, 0);
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: false });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+
+    let asset = null;
+    if (def.type === 'spark') {
+      const spark = new SparkRenderer({ renderer });
+      scene.add(spark);
+      asset = new SplatMesh({ url: def.url });
+      asset.rotation.set(...def.rotation);
+      scene.add(asset);
+    } else {
+      // GLB mesh
+      scene.add(new THREE.AmbientLight(0xffffff, 1.5));
+      const sun = new THREE.DirectionalLight(0xffffff, 0.5);
+      sun.position.set(2, 4, 1); scene.add(sun);
+      new GLTFLoader().load(def.url, g => {
+        g.scene.traverse(o => {
+          if (o.isMesh) o.material = new THREE.MeshStandardMaterial({
+            vertexColors: true, side: THREE.DoubleSide, roughness: 1, metalness: 0,
+          });
+        });
+        g.scene.rotation.set(...def.rotation);
+        scene.add(g.scene);
+        asset = g.scene;
+        active[group].asset = asset;
+      });
+    }
+
+    const orbit = new OrbitControls(camera, canvas);
+    orbit.enableDamping = true;
+    orbit.autoRotate = true;
+    orbit.autoRotateSpeed = 0.6;
+
+    let raf = null;
+    function tick() {
+      const w = canvas.clientWidth, h = canvas.clientHeight;
+      if (canvas.width !== w || canvas.height !== h) {
+        renderer.setSize(w, h, false);
+        camera.aspect = w/h; camera.updateProjectionMatrix();
+      }
+      orbit.update();
+      renderer.render(scene, camera);
+      raf = requestAnimationFrame(tick);
+    }
+    tick();
+
+    canvas.classList.add('show');
+    unloadRow.classList.add('show');
+    widget.classList.add('splat-running');
+
+    active[group] = { renderer, scene, asset, orbit, raf, canvas, widget };
+  }));
+}
+
+function unloadSplat(group) {
+  const obj = active[group];
+  if (!obj) return;
+  cancelAnimationFrame(obj.raf);
+  try { obj.orbit.dispose(); } catch {}
+  obj.scene.traverse(child => {
+    if (child.geometry) child.geometry.dispose();
+    if (child.material) {
+      const mats = Array.isArray(child.material) ? child.material : [child.material];
+      mats.forEach(m => {
+        ['map','normalMap','specularMap','envMap','roughnessMap'].forEach(k => {
+          if (m[k]) try { m[k].dispose(); } catch {}
+        });
+        try { m.dispose(); } catch {}
+      });
+    }
+    if (child.dispose && child !== obj.scene) try { child.dispose(); } catch {}
+  });
+  try { obj.renderer.dispose(); obj.renderer.forceContextLoss(); } catch {}
+
+  obj.canvas.classList.remove('show');
+  obj.widget.querySelector('.unload-row').classList.remove('show');
+  obj.widget.classList.remove('splat-running');
+  obj.widget.querySelector('.load-pad').innerHTML = padOrig[group];
+  delete active[group];
+}
+
+// Button wiring (event delegation)
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-load], [data-unload]');
+  if (!t) return;
+  if (t.dataset.load)   loadSplat(t.dataset.load);
+  if (t.dataset.unload) unloadSplat(t.dataset.unload);
+});
+
+// Auto-unload when widget is far out of viewport
+const farObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    const id = e.target.dataset.splatId;
+    if (!e.isIntersecting && id && active[id]) unloadSplat(id);
+  });
+}, { rootMargin: '600px 0px 600px 0px' });
+document.querySelectorAll('[data-splat-id]').forEach(el => farObs.observe(el));
 </script>
 </body>
 </html>
