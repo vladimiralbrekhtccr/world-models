@@ -5,14 +5,14 @@
 <title>Learn 3DGS — interactive course</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-  /* Light-blue palette (Red Blob structure, blue tones) */
+  /* Warm cream palette — easier on the eyes (Red Blob style) */
   :root {
-    --bg:#f3f7fc; --paper:#ffffff; --fg:#16243d; --dim:#5a6885;
-    --accent:#2e6fc1; --accent-soft:#dfeaf8; --accent-deep:#1d4f96;
-    --link:#1a5cb0; --line:#cdd9ea;
-    --panel:#e7eef8; --panel-dark:#0f1a30;
-    --quote-bg:#e0eef8; --quote-border:#5fa3d6;
-    --code-bg:#e9f0f9; --good:#3d9c6a;
+    --bg:#fdfbf3; --paper:#ffffff; --fg:#2b2b2b; --dim:#6f685d;
+    --accent:#c5573b; --accent-soft:#fbe8de; --accent-deep:#8a3520;
+    --link:#1e5fa0; --line:#dcd4be;
+    --panel:#f4ecd3; --panel-dark:#1a1c20;
+    --quote-bg:#fcf5d4; --quote-border:#d4b941;
+    --code-bg:#f3ecd0; --good:#6f9e3f;
   }
   html,body{margin:0;background:var(--bg);color:var(--fg);
     font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,
@@ -30,18 +30,23 @@
     padding:11px 22px;display:flex;align-items:center;gap:14px;z-index:10;}
   header b{color:#1a1a1a;font-size:16px;}
   header .links{margin-left:auto;font-size:13.5px;color:var(--dim);}
-  /* single-column container — TOC sidebar removed, replaced by header chips */
-  .grid{display:block;max-width:1500px;margin:0 auto;
+  /* 3-col layout: TOC | text | (sticky figure or empty) */
+  .grid{display:grid;grid-template-columns:200px minmax(0,1fr);
+    gap:36px;max-width:1500px;margin:0 auto;
     padding:28px 32px 120px;}
-  nav#toc{display:none;} /* legacy — replaced by #chipnav */
-  #chipnav{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 32px;
-    padding:0 0 18px;border-bottom:1px solid var(--line);}
-  #chipnav a{font-size:13px;padding:5px 11px;background:var(--paper);
-    border:1px solid var(--line);border-radius:14px;color:var(--dim);
-    border-bottom:1px solid var(--line);}
-  #chipnav a:hover{color:var(--accent);border-color:var(--accent);}
-  #chipnav a.active{background:var(--accent);color:#fff;border-color:var(--accent);
-    font-weight:600;}
+  nav#toc{display:block;position:sticky;top:80px;align-self:start;
+    font-size:14px;border-left:2px solid var(--line);padding-left:16px;}
+  nav#toc a{display:block;color:var(--dim);padding:5px 0;border:0;}
+  nav#toc a:hover{color:var(--accent);}
+  nav#toc a.active{color:var(--accent);border-left:3px solid var(--accent);
+    padding-left:11px;margin-left:-14px;font-weight:600;}
+  nav#toc .sub{font-size:11px;text-transform:uppercase;color:#9aaac3;
+    letter-spacing:.08em;margin:8px 0 8px;}
+  #chipnav{display:none;} /* superseded by left TOC */
+  @media (max-width:1000px){
+    .grid{grid-template-columns:1fr;}
+    nav#toc{display:none;}
+  }
   main section{margin-bottom:80px;}
   h1{font-size:36px;margin:0 0 8px;color:#1a1a1a;font-weight:600;
     letter-spacing:-.015em;line-height:1.25;}
@@ -171,24 +176,29 @@
     width:100%;height:380px;background:#0a0b0d;color:#888;
     font-size:13px;font-style:italic;}
 
-  /* ─── Red Blob-style 2-column: text left, sticky widget right ─── */
-  .split-layout{display:grid;grid-template-columns:minmax(0,1fr) 560px;
-    gap:48px;align-items:start;}
-  .split-layout .textcol{min-width:0;}
-  /* sticky widget pinned to viewport, full available height */
-  .split-layout .widgetcol{position:sticky;top:80px;align-self:start;}
-  .split-layout .widgetcol .widget{margin:0 0 18px;}
+  /* ─── EVERY section uses the same 2-col split — text width is constant ─── */
+  /* For text-only sections the widgetcol stays empty (or holds a callout). */
+  main section{display:grid;grid-template-columns:minmax(0,1fr) 520px;
+    gap:44px;align-items:start;margin-bottom:80px;}
+  main section.intro{display:block;}  /* intro is full-width text */
+  main section .textcol{min-width:0;}
+  main section .widgetcol{position:sticky;top:80px;align-self:start;
+    z-index:1;}
+  main section .widgetcol .widget{margin:0 0 18px;}
+  main section .widgetcol:empty{min-height:1px;}
+  /* legacy split-layout class still works (M1/M2 already use it) */
+  .split-layout{display:contents;}
   @media (max-width:1100px){
-    .split-layout{grid-template-columns:1fr;}
-    .split-layout .widgetcol{position:static;}
+    main section{grid-template-columns:1fr;}
+    main section .widgetcol{position:static;}
   }
 
   /* hoverable demo trigger inline in text */
-  .demo{background:rgba(46,111,193,.10);
-    border-bottom:1.5px dashed rgba(46,111,193,.55);
-    padding:0 3px;cursor:pointer;color:var(--accent-deep);font-weight:500;
+  .demo{background:rgba(197,87,59,.13);
+    border-bottom:1.5px dashed rgba(197,87,59,.55);
+    padding:0 3px;cursor:pointer;color:#7a3a1a;font-weight:500;
     border-radius:2px;transition:background .15s;}
-  .demo:hover{background:rgba(46,111,193,.22);color:#10325f;}
+  .demo:hover{background:rgba(197,87,59,.30);color:#5a2a10;}
   .demo::before{content:"↻ ";color:var(--accent);font-weight:700;font-size:11px;
     position:relative;top:-1px;}
 
@@ -257,19 +267,21 @@
 
 <div class="grid">
 
-<main>
-<div id="chipnav">
+<nav id="toc">
+  <div class="sub">course</div>
   <a href="#intro">Intro</a>
-  <a href="#m1">1 · Big idea</a>
-  <a href="#m2">2 · The Gaussian</a>
-  <a href="#m3">3 · Building a scene</a>
-  <a href="#m4">4 · Rendering</a>
-  <a href="#m5">5 · Splat → mesh</a>
-  <a href="#m6">6 · Beyond optimisation</a>
-  <a href="#m7">7 · Landscape</a>
-</div>
+  <a href="#m1">1 — Big idea</a>
+  <a href="#m2">2 — The Gaussian</a>
+  <a href="#m3">3 — Building a scene</a>
+  <a href="#m4">4 — Rendering</a>
+  <a href="#m5">5 — Splat → mesh</a>
+  <a href="#m6">6 — Beyond optimisation</a>
+  <a href="#m7">7 — The landscape</a>
+</nav>
 
-<section id="intro">
+<main>
+
+<section id="intro" class="intro">
   <h1>Learn 3DGS — an interactive course</h1>
   <p class="lede">3D Gaussian Splatting, taught with widgets you can poke
   rather than walls of text. Built so that by the end you can explain it
@@ -501,6 +513,7 @@
 </section>
 
 <section id="m3">
+  <div class="textcol">
   <h2>3 — Building a scene</h2>
   <p class="lede">From a folder of photos to millions of fitted Gaussians,
   via "differentiable rasterization" (a renderer that runs backwards).</p>
@@ -568,10 +581,12 @@
       <li>Compare `splatfacto` vs `splatfacto-big` on the same capture
       and report gaussian count / sharpness / file size.</li>
     </ul></div>
+  </div>
+  <div class="widgetcol"></div>
 </section>
 
 <section id="m4">
-  <h2>4 — Rendering in the browser</h2>
+  <div class="textcol">  <h2>4 — Rendering in the browser</h2>
   <p class="lede">Project, sort, blend. Three steps, no neural network,
   GPU-friendly — which is why it runs at 60 FPS in a tab.</p>
 
@@ -592,23 +607,10 @@
   time the camera moves (the depth order changes). Modern viewers do this
   fast enough on a GPU.</p>
 
-  <h3>The scene below is 2.3 million of the blob from module 2</h3>
-  <p>This is the WorldMirror "Statue Face" scene. Drag to orbit. There's
-  no mesh, no texture, no shader — just millions of overlapping
-  Gaussians being projected and blended in real time.</p>
-
-  <div class="widget" id="m4-widget" data-splat-id="m4">
-    <div class="figcap"><b>Figure 4.1</b> 2.3M Gaussians of WorldMirror's Statue Face scene</div>
-    <div class="load-pad">
-      <div>📡 <b>Statue Face splat</b> · 53 MB ksplat · 2.3M Gaussians</div>
-      <button class="load-btn" data-load="m4">▶ Load scene</button>
-      <div class="load-info">Loads ~53 MB into GPU memory. Click <b>Unload</b> when done. Auto-frees when you scroll far away.</div>
-    </div>
-    <canvas class="splat-stage"></canvas>
-    <div class="btnrow unload-row">
-      <button class="alt" data-unload="m4">⏏ Unload (free GPU memory)</button>
-    </div>
-  </div>
+  <h3>The scene on the right is 2.3 million of the blob from module 2</h3>
+  <p>This is the WorldMirror "Statue Face" scene. Click load, then drag
+  to orbit. There's no mesh, no texture, no shader — just millions of
+  overlapping Gaussians being projected and blended in real time.</p>
 
   <h3>Viewers and file formats</h3>
   <table>
@@ -642,9 +644,25 @@
       <li>Benchmark the same scene as `.ply` vs `.ksplat` — load time,
       file size, visible difference.</li>
     </ul></div>
+  </div>
+  <div class="widgetcol">
+    <div class="widget" id="m4-widget" data-splat-id="m4">
+      <div class="figcap"><b>Figure 4.1</b> 2.3M Gaussians of WorldMirror's Statue Face scene</div>
+      <div class="load-pad">
+        <div>📡 <b>Statue Face splat</b> · 53 MB ksplat · 2.3M Gaussians</div>
+        <button class="load-btn" data-load="m4">▶ Load scene</button>
+        <div class="load-info">Loads ~53 MB into GPU memory. Click <b>Unload</b> when done. Auto-frees when you scroll far away.</div>
+      </div>
+      <canvas class="splat-stage"></canvas>
+      <div class="btnrow unload-row">
+        <button class="alt" data-unload="m4">⏏ Unload (free GPU memory)</button>
+      </div>
+    </div>
+  </div>
 </section>
 
 <section id="m5">
+  <div class="textcol">
   <h2>5 — Splat → mesh</h2>
   <p class="lede">Splats are great to look at, but they aren't surfaces.
   Sometimes you need an actual polygon mesh — and getting one is lossy.</p>
@@ -672,27 +690,9 @@
   things — leaves, hair, grass — that genuinely aren't surfaces. A mesh
   of a garden will always be blobbier than the splat.</p>
 
-  <p>The widget below is the <a href="../garden/">garden</a> demo
-  embedded — the dropdown switches between the original splat, the
-  Poisson mesh we extracted from it, and an overlay. Useful for seeing
-  exactly what mesh extraction throws away.</p>
-
-  <div class="widget" id="m5-widget" data-splat-id="m5">
-    <div class="figcap"><b>Figure 5.1</b> Mip-NeRF 360 garden — same scene, two representations</div>
-    <div class="load-pad">
-      <div>🌳 <b>Garden scene</b> · splat 134 MB · mesh 25 MB</div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
-        <button class="load-btn" data-load="m5-splat">▶ Load splat (134 MB)</button>
-        <button class="load-btn" data-load="m5-mesh">▶ Load mesh (25 MB)</button>
-      </div>
-      <div class="load-info">Pick one. <b>Splat</b> is sharper; <b>mesh</b> is much smaller and works in any 3D tool.
-        Side-by-side toggle on the full demo page: <a href="../garden/" style="color:#a4c8f0">../garden/</a></div>
-    </div>
-    <canvas class="splat-stage"></canvas>
-    <div class="btnrow unload-row">
-      <button class="alt" data-unload="m5">⏏ Unload (free GPU memory)</button>
-    </div>
-  </div>
+  <p>The widget on the right is the <a href="../garden/">garden</a> demo —
+  click Load to compare the original splat or the Poisson mesh we extracted
+  from it. Useful for seeing exactly what mesh extraction throws away.</p>
 
   <p>The recipe (see <a href="https://github.com/vladimiralbrekhtccr/garden-mesh-viewer">garden-mesh-viewer</a>
   repo): parse the splat → drop low-opacity floaters + huge background
@@ -717,9 +717,29 @@
       <li>Try a marching-cubes or SuGaR path and benchmark against our
       Poisson output.</li>
     </ul></div>
+  </div>
+  <div class="widgetcol">
+    <div class="widget" id="m5-widget" data-splat-id="m5">
+      <div class="figcap"><b>Figure 5.1</b> Mip-NeRF 360 garden — same scene, two representations</div>
+      <div class="load-pad">
+        <div>🌳 <b>Garden scene</b> · splat 134 MB · mesh 25 MB</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+          <button class="load-btn" data-load="m5-splat">▶ Load splat (134 MB)</button>
+          <button class="load-btn" data-load="m5-mesh">▶ Load mesh (25 MB)</button>
+        </div>
+        <div class="load-info">Pick one. <b>Splat</b> is sharper; <b>mesh</b> is much smaller and works in any 3D tool.
+          Side-by-side toggle on the full demo: <a href="../garden/" style="color:#a4c8f0">../garden/</a></div>
+      </div>
+      <canvas class="splat-stage"></canvas>
+      <div class="btnrow unload-row">
+        <button class="alt" data-unload="m5">⏏ Unload (free GPU memory)</button>
+      </div>
+    </div>
+  </div>
 </section>
 
 <section id="m6">
+  <div class="textcol">
   <h2>6 — Beyond per-scene optimisation</h2>
   <p class="lede">Two newer families that break the "30 minutes per scene,
   needs many photos" wall: feed-forward (~1 second) and generative
@@ -754,19 +774,6 @@
     for stage-by-stage detail.</li>
   </ul>
 
-  <div class="widget" id="m6-widget" data-splat-id="m6">
-    <div class="figcap"><b>Figure 6.1</b> Lyra chapel — entirely generated from one anime panorama</div>
-    <div class="load-pad">
-      <div>⛪ <b>Lyra chapel</b> · ~24 MB ksplat · 1.5M Gaussians</div>
-      <button class="load-btn" data-load="m6">▶ Load scene</button>
-      <div class="load-info">The whole chapel was hallucinated by a diffusion model from one 2D panorama; gsplat then polished it into a clean splat.</div>
-    </div>
-    <canvas class="splat-stage"></canvas>
-    <div class="btnrow unload-row">
-      <button class="alt" data-unload="m6">⏏ Unload (free GPU memory)</button>
-    </div>
-  </div>
-
   <h3>The trade-off, on one slide</h3>
   <table>
     <tr><th></th><th>Optimisation (classical)</th><th>Feed-forward</th><th>Generative</th></tr>
@@ -793,9 +800,25 @@
       + gaussian count.</li>
       <li>Read `HUNYUANWORLD_PIPELINE.md` and present back the 5 stages.</li>
     </ul></div>
+  </div>
+  <div class="widgetcol">
+    <div class="widget" id="m6-widget" data-splat-id="m6">
+      <div class="figcap"><b>Figure 6.1</b> Lyra chapel — entirely generated from one anime panorama</div>
+      <div class="load-pad">
+        <div>⛪ <b>Lyra chapel</b> · ~24 MB ksplat · 1.5M Gaussians</div>
+        <button class="load-btn" data-load="m6">▶ Load scene</button>
+        <div class="load-info">The whole chapel was hallucinated by a diffusion model from one 2D panorama; gsplat then polished it into a clean splat.</div>
+      </div>
+      <canvas class="splat-stage"></canvas>
+      <div class="btnrow unload-row">
+        <button class="alt" data-unload="m6">⏏ Unload (free GPU memory)</button>
+      </div>
+    </div>
+  </div>
 </section>
 
 <section id="m7">
+  <div class="textcol">
   <h2>7 — The landscape & where we fit</h2>
   <p class="lede">Image / prompt → explorable 3D world. The same target
   World Labs and Marble are chasing. 3DGS is the rendering layer that
@@ -865,6 +888,8 @@
       <li>Mesh extraction (module 5): tune parameters, try new methods.</li>
       <li>Model testing (module 6): run WorldMirror / Lyra on new inputs.</li>
     </ul></div>
+  </div>
+  <div class="widgetcol"></div>
 </section>
 
 </main>
@@ -956,7 +981,7 @@ injectCheckboxes(); paintProgress();
 
 /* ─── nav: active-section highlight + save lastModule ─── */
 (() => {
-  const links = document.querySelectorAll('#chipnav a');
+  const links = document.querySelectorAll('nav#toc a');
   const map = new Map();
   links.forEach(a => {
     const id = a.getAttribute('href').slice(1);
