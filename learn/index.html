@@ -1382,16 +1382,25 @@ lazyInit('m3', () => {
   const fill = new THREE.DirectionalLight(0xffe1aa, 0.35);
   fill.position.set(-3, 2, -3); scene.add(fill);
 
-  // ── central subject: a chibi sitting cat with BIG anime eyes ──
-  const fur      = new THREE.MeshStandardMaterial({ color: 0xeaa765, roughness: 0.85 });
-  const stripe   = new THREE.MeshStandardMaterial({ color: 0xc97c30, roughness: 0.95 });
-  const innerEar = new THREE.MeshStandardMaterial({ color: 0xf5b8b0, roughness: 0.85 });
-  const eyeWhite = new THREE.MeshStandardMaterial({ color: 0xfdfaf0, roughness: 0.4 });
-  const irisMat  = new THREE.MeshStandardMaterial({ color: 0x2e6b3a, roughness: 0.3, metalness: 0.05 });
-  const pupil    = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.2 });
-  const sparkleM = new THREE.MeshBasicMaterial({ color: 0xffffff });
-  const noseMat  = new THREE.MeshStandardMaterial({ color: 0xe890a0, roughness: 0.5 });
+  // ── central subject: load the GLB cat ──
+  new GLTFLoader().load('cat.glb', (gltf) => {
+    const cat = gltf.scene;
+    // Auto-fit: scale so the model's longest dimension is ~0.9 units,
+    // then re-centre + drop it onto the grass.
+    const box = new THREE.Box3().setFromObject(cat);
+    const size = box.getSize(new THREE.Vector3());
+    const ctr  = box.getCenter(new THREE.Vector3());
+    const maxDim = Math.max(size.x, size.y, size.z);
+    const s = 0.9 / maxDim;
+    cat.scale.setScalar(s);
+    cat.position.set(-ctr.x * s, -box.min.y * s - 0.40, -ctr.z * s);
+    scene.add(cat);
+  }, undefined, (err) => {
+    console.error('cat.glb failed to load', err);
+  });
 
+  // (procedural cat removed — replaced by GLB above)
+  const __unused_cat_block_start = () => {
   const cat = new THREE.Group();
 
   // body — sitting upright, small + slightly taller than wide (chibi)
@@ -1524,6 +1533,7 @@ lazyInit('m3', () => {
   cat.add(tailTip);
 
   scene.add(cat);
+  };  // close __unused_cat_block_start
 
   // grass disc beneath
   const grass = new THREE.Mesh(
@@ -1533,37 +1543,39 @@ lazyInit('m3', () => {
   grass.position.y = -0.40;
   scene.add(grass);
 
-  // ── camera factory: body + lens + solid FOV cone aimed at the subject ──
-  // Cone apex sits at the lens; base widens toward the cat. Geometry
-  // built so the cat side is local -Z, matching three.js' lookAt convention.
+  // ── camera factory: body + lens + WIREFRAME frustum aimed at the cat ──
+  // NB: three.js Object3D.lookAt uses inverted convention for non-Camera
+  // objects (local +Z faces target, not -Z). We compensate after lookAt
+  // with rotateY(π) so the geometry below (built in -Z) ends up toward cat.
   function makeCam() {
     const g = new THREE.Group();
-    // Camera body — small dark box BEHIND the lens (positive Z = away from cat)
     const body = new THREE.Mesh(
-      new THREE.BoxGeometry(0.12, 0.09, 0.06),
-      new THREE.MeshStandardMaterial({ color: 0x2a2c30, roughness: 0.5 }));
-    body.position.z = 0.03;
+      new THREE.BoxGeometry(0.13, 0.10, 0.07),
+      new THREE.MeshStandardMaterial({ color: 0x2a2c30, roughness: 0.4 }));
     g.add(body);
-    // Lens — small disk on the front face
     const lens = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.030, 0.030, 0.012, 16),
-      new THREE.MeshStandardMaterial({ color: 0x6a6e76, roughness: 0.25, metalness: 0.4 }));
+      new THREE.CylinderGeometry(0.04, 0.05, 0.05, 12),
+      new THREE.MeshStandardMaterial({ color: 0x4a4d52, roughness: 0.5 }));
     lens.rotation.x = Math.PI / 2;
-    lens.position.z = 0.0;
+    lens.position.z = -0.05;
     g.add(lens);
-    // Field-of-view cone — apex at lens, base toward the cat.
-    // ConeGeometry default: apex +Y, base -Y. Rotate X by +π/2 → apex goes to +Z,
-    // base goes to -Z. Then shift -0.11 in Z so apex sits at the camera, base at z=-0.22.
-    const fov = new THREE.Mesh(
-      new THREE.ConeGeometry(0.085, 0.20, 16),
-      new THREE.MeshStandardMaterial({
-        color: 0xc5573b, transparent: true, opacity: 0.28,
-        side: THREE.DoubleSide, depthWrite: false,
-      }));
-    fov.rotation.x = Math.PI / 2;
-    fov.position.z = -0.11;
-    g.add(fov);
-    g.userData.fov = fov;
+    // wireframe frustum: 4 edges from apex (at body) to far rectangle (toward cat)
+    const apex = [0, 0, -0.04];
+    const a = [ 0.09,  0.06, -0.22];
+    const b = [-0.09,  0.06, -0.22];
+    const c = [-0.09, -0.06, -0.22];
+    const d = [ 0.09, -0.06, -0.22];
+    const pts = [
+      apex, a, apex, b, apex, c, apex, d,
+      a, b, b, c, c, d, d, a,
+    ].flat();
+    const lineGeo = new THREE.BufferGeometry();
+    lineGeo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+    const lineMat = new THREE.LineBasicMaterial({
+      color: 0xc5573b, transparent: true, opacity: 0.65 });
+    const lines = new THREE.LineSegments(lineGeo, lineMat);
+    g.add(lines);
+    g.userData.lines = lines;
     return g;
   }
 
@@ -1580,6 +1592,7 @@ lazyInit('m3', () => {
       const c = makeCam();
       c.position.set(r * Math.cos(angle), y, r * Math.sin(angle));
       c.lookAt(0, 0.0, 0);
+      c.rotateY(Math.PI); // fix: non-Camera lookAt has inverted Z — flip 180°
       cams.push(c);
       scene.add(c);
     }
@@ -1617,11 +1630,11 @@ lazyInit('m3', () => {
   let active = 0, lastFlash = 0;
   function step(now) {
     if (now - lastFlash > 1100) {
-      cams[active].userData.fov.material.color.setHex(REST_COLOR);
-      cams[active].userData.fov.material.opacity = 0.28;
+      cams[active].userData.lines.material.color.setHex(REST_COLOR);
+      cams[active].userData.lines.material.opacity = 0.65;
       active = (active + 1) % cams.length;
-      cams[active].userData.fov.material.color.setHex(FLASH_COLOR);
-      cams[active].userData.fov.material.opacity = 0.65;
+      cams[active].userData.lines.material.color.setHex(FLASH_COLOR);
+      cams[active].userData.lines.material.opacity = 1.0;
       lastFlash = now;
     }
     // position the thumbnail camera at the active camera, looking at the cat
