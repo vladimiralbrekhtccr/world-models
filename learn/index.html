@@ -260,13 +260,16 @@
   .m1-time b{color:var(--accent);}
   .m1-time .ms{color:var(--fg);font-size:14px;font-weight:600;}
 
-  /* M3 active-camera thumbnail strip */
+  /* M3 active-camera thumbnail strip + camera label */
   .thumb-row{display:flex;align-items:center;gap:14px;
     padding:12px 18px;background:#fbf7e4;
     border-top:1px solid var(--line);}
   .thumb-label{font-size:12.5px;color:var(--dim);font-style:italic;}
   #m3-thumb{border:1px solid var(--line);border-radius:4px;
     background:#15171a;display:block;flex-shrink:0;}
+  .m3-camlabel{margin-left:auto;align-self:center;
+    font:12.5px ui-monospace,Menlo,Consolas,monospace;
+    color:var(--accent-deep);font-weight:600;}
 </style>
 </head>
 <body>
@@ -637,11 +640,17 @@
     <div class="widget" data-lazy="m3">
       <div class="figcap"><b>Figure 3.1</b> COLMAP needs many photos of the same subject from positions all around it. As the highlighted camera below cycles through positions, the thumbnail on the right shows exactly what <em>that</em> camera sees — these are the 2D photos COLMAP works from.</div>
       <canvas id="m3-canvas" class="stage" style="height:340px"></canvas>
+      <div class="btnrow">
+        <button id="m3-playbtn">⏸ pause</button>
+        <button class="alt" id="m3-prev">◀ prev</button>
+        <button class="alt" id="m3-next">next ▶</button>
+        <span class="m3-camlabel" id="m3-camlabel">camera 1 / 24</span>
+      </div>
       <div class="thumb-row">
         <span class="thumb-label">📷 active camera view&nbsp;→</span>
         <canvas id="m3-thumb" width="180" height="120"></canvas>
       </div>
-      <div class="hint">24 cameras in three orbital rings around a cat. Drag to orbit the whole scene.</div>
+      <div class="hint">Drag to orbit · click any camera to select it · prev/next steps through them.</div>
     </div>
   </div>
 </section>
@@ -1361,7 +1370,18 @@ lazyInit('m3', () => {
   const canvas = document.getElementById('m3-canvas');
   const thumbCanvas = document.getElementById('m3-thumb');
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x15171a);
+  // soft warm gradient background — gives black cat something to silhouette against
+  const bgCanvas = document.createElement('canvas');
+  bgCanvas.width = 4; bgCanvas.height = 256;
+  const bgCtx = bgCanvas.getContext('2d');
+  const bgGrad = bgCtx.createLinearGradient(0, 0, 0, 256);
+  bgGrad.addColorStop(0,   '#2a2522');
+  bgGrad.addColorStop(0.55,'#54493e');
+  bgGrad.addColorStop(1,   '#7a6952');
+  bgCtx.fillStyle = bgGrad;
+  bgCtx.fillRect(0, 0, 4, 256);
+  scene.background = new THREE.CanvasTexture(bgCanvas);
+
   const camera = new THREE.PerspectiveCamera(42, 2, 0.1, 100);
   camera.position.set(3.0, 1.7, 3.0);
   camera.lookAt(0, 0, 0);
@@ -1375,12 +1395,15 @@ lazyInit('m3', () => {
   thumbRenderer.setSize(180, 120, false);
   const thumbCam = new THREE.PerspectiveCamera(38, 180/120, 0.1, 100);
 
-  // soft three-point lighting
-  scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-  const key = new THREE.DirectionalLight(0xffffff, 1.0);
+  // 3-point lighting: ambient + key (warm) + fill + rim (cool, from behind)
+  // rim is essential here — it carves a bright edge around the dark cat
+  scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+  const key = new THREE.DirectionalLight(0xfff4dc, 1.5);
   key.position.set(3, 5, 3); scene.add(key);
-  const fill = new THREE.DirectionalLight(0xffe1aa, 0.35);
+  const fill = new THREE.DirectionalLight(0xffe1aa, 0.55);
   fill.position.set(-3, 2, -3); scene.add(fill);
+  const rim = new THREE.DirectionalLight(0xeaf2ff, 0.95);
+  rim.position.set(-2, 4, -4); scene.add(rim);
 
   // ── central subject: load the GLB cat ──
   // Podium top sits at y = -0.40 (cylinder centre -0.43 + half-height 0.03).
@@ -1670,20 +1693,61 @@ lazyInit('m3', () => {
   orbit.minDistance = 2.5;
   orbit.maxDistance = 8;
 
-  // ── animate "active" camera + render the thumbnail of its view ──
+  // ── active-camera state + UI (play/pause/prev/next/click-to-select) ──
   const FLASH_COLOR = 0xffe69d;
   const REST_COLOR  = 0xc5573b;
-  let active = 0, lastFlash = 0;
+  let active = 0;
+  let autoPlay = true;
+  const CYCLE_MS = 2500;            // slow auto-advance — was 1100ms
+  let lastFlash = 0;
+
+  function setActive(idx) {
+    cams[active].userData.lines.material.color.setHex(REST_COLOR);
+    cams[active].userData.lines.material.opacity = 0.65;
+    active = (idx + cams.length) % cams.length;
+    cams[active].userData.lines.material.color.setHex(FLASH_COLOR);
+    cams[active].userData.lines.material.opacity = 1.0;
+    const lbl = document.getElementById('m3-camlabel');
+    if (lbl) lbl.textContent = `camera ${active + 1} / ${cams.length}`;
+  }
+  function setPlay(on) {
+    autoPlay = on;
+    lastFlash = performance.now();
+    const b = document.getElementById('m3-playbtn');
+    if (b) b.textContent = autoPlay ? '⏸ pause' : '▶ play';
+  }
+  // initialise highlight
+  setActive(0);
+  setPlay(true);
+
+  document.getElementById('m3-playbtn').addEventListener('click', () => setPlay(!autoPlay));
+  document.getElementById('m3-prev').addEventListener('click', () => { setPlay(false); setActive(active - 1); });
+  document.getElementById('m3-next').addEventListener('click', () => { setPlay(false); setActive(active + 1); });
+
+  // click-to-select on the 3D canvas — distinguish click from orbit-drag
+  const raycaster = new THREE.Raycaster();
+  const mouseVec = new THREE.Vector2();
+  let downX = 0, downY = 0;
+  canvas.addEventListener('pointerdown', (e) => { downX = e.clientX; downY = e.clientY; });
+  canvas.addEventListener('pointerup', (e) => {
+    if (Math.hypot(e.clientX - downX, e.clientY - downY) > 5) return;  // it was a drag
+    const r = canvas.getBoundingClientRect();
+    mouseVec.x =  ((e.clientX - r.left) / r.width)  * 2 - 1;
+    mouseVec.y = -((e.clientY - r.top)  / r.height) * 2 + 1;
+    raycaster.setFromCamera(mouseVec, camera);
+    const hits = raycaster.intersectObjects(cams, true);
+    if (!hits.length) return;
+    let obj = hits[0].object;
+    while (obj && !cams.includes(obj)) obj = obj.parent;
+    if (obj) { setPlay(false); setActive(cams.indexOf(obj)); }
+  });
+
   function step(now) {
-    if (now - lastFlash > 1100) {
-      cams[active].userData.lines.material.color.setHex(REST_COLOR);
-      cams[active].userData.lines.material.opacity = 0.65;
-      active = (active + 1) % cams.length;
-      cams[active].userData.lines.material.color.setHex(FLASH_COLOR);
-      cams[active].userData.lines.material.opacity = 1.0;
+    if (autoPlay && now - lastFlash > CYCLE_MS) {
+      setActive(active + 1);
       lastFlash = now;
     }
-    // position the thumbnail camera at the active camera, looking at the cat
+    // thumbnail camera tracks whichever cam is active
     thumbCam.position.copy(cams[active].position);
     thumbCam.lookAt(0, 0, 0);
   }
