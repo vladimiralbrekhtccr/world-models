@@ -42,23 +42,41 @@ flat and finite; the goal is a continuous, explorable 3D representation.
   the scene is a function, hidden inside network weights.
 
 **The big idea of 3DGS (2023).** Instead of a neural network, represent
-the scene **explicitly** as millions of tiny 3D primitives — *Gaussians*,
-i.e. fuzzy, semi-transparent, coloured ellipsoids. To render, you just
-project each one to the screen and blend them. No neural network runs at
-render time.
+the scene as **a literal list of millions of tiny 3D blobs** —
+*Gaussians*: fuzzy, semi-transparent, coloured ellipsoids. To render,
+you just project each one to the screen and blend them. No neural
+network runs at render time.
+
+> **The key shift, in plain words: NeRF is a *calculator*. 3DGS is a
+> *spreadsheet*.**
+> A calculator doesn't store `2+2=4` anywhere — you ask, it *computes*.
+> A spreadsheet has `4` already sitting in a cell — you *read* it.
+> NeRF computes every pixel by asking a neural network "what's at this
+> point in 3D?" — slow, because computing. 3DGS already has the scene
+> written down as millions of Gaussians — fast, because just reading +
+> a tiny bit of blending.
+>
+> The fancy words for this are *implicit* (calculator — hidden inside a
+> function) and *explicit* (spreadsheet — written down directly). Don't
+> let the words intimidate you: calculator vs spreadsheet is the whole
+> idea.
 
 The payoff:
-- **Real-time** — 100+ FPS rendering, vs NeRF's seconds-to-minutes.
+- **Real-time** — 100+ FPS rendering, vs NeRF's seconds-to-minutes
+  (because you're reading, not computing).
 - **Fast training** — minutes to ~an hour, vs hours/days.
-- **Explicit = practical** — an explicit list of primitives can be
-  streamed, edited, compressed, and rendered on a laptop or in a browser.
-  A neural network can't be "streamed" the same way.
+- **Works in a browser** — a browser can read a "spreadsheet of blobs"
+  and do simple blending. Running a neural-net calculator on every pixel
+  is too heavy.
+- **Tooling** — an explicit list of blobs can be streamed, edited,
+  compressed, and rendered on any laptop. A neural network can't be
+  sliced up and shipped the same way.
 
-> **Sidebar — implicit vs explicit.** NeRF stores the scene *implicitly*
-> as weights of a function `F(x, y, z, θ, φ) → (colour, density)`. 3DGS
-> stores it *explicitly* as a literal array of primitives. Same goal
-> (a renderable radiance field), opposite data structure. Explicit won
-> on speed and tooling; that is why the field pivoted to it in 2023–24.
+This also explains two side-facts you'd otherwise have to memorize:
+- **3DGS files are big** — a spreadsheet with millions of rows is big.
+  (NeRF's network file is small, but you pay for it at render time.)
+- **You usually have one file per scene** — every scene gets its own
+  spreadsheet.
 
 ❓ **You can now answer:**
 - What is "novel view synthesis"?
