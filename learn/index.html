@@ -564,9 +564,11 @@
 
   <h3>Step 1 — recover the cameras (COLMAP / SfM)</h3>
   <p>Before any Gaussians, you must know <em>where each photo was taken</em>.
-  COLMAP detects features in every photo, matches them, and solves for
-  each camera's 3D position and orientation. As a by-product it gives you
-  a sparse 3D point cloud — a few thousand confident 3D points.</p>
+  The figure on the right shows what COLMAP needs: many overlapping shots
+  of the same subject, taken from positions all around it. COLMAP detects
+  features in every photo, matches them, and solves for each camera's
+  3D position and orientation. As a by-product it gives you a sparse
+  3D point cloud — a few thousand confident 3D points.</p>
 
   <h3>Step 2 — initialise the blobs</h3>
   <p>Put one Gaussian at each COLMAP point. Maybe 100k blobs. Random
@@ -623,7 +625,13 @@
       and report gaussian count / sharpness / file size.</li>
     </ul></div>
   </div>
-  <div class="widgetcol"></div>
+  <div class="widgetcol">
+    <div class="widget" data-lazy="m3">
+      <div class="figcap"><b>Figure 3.1</b> COLMAP needs many overlapping photos of the same subject — taken from positions all around it. The highlighted camera is the one currently "taking" a shot.</div>
+      <canvas id="m3-canvas" class="stage"></canvas>
+      <div class="hint">~24 camera positions in three orbital rings around one statue. Drag to orbit the whole scene.</div>
+    </div>
+  </div>
 </section>
 
 <section id="m4">
@@ -1335,6 +1343,146 @@ lazyInit('m2a', () => {
   // first paint after layout settles
   requestAnimationFrame(() => requestAnimationFrame(draw));
 })();
+
+/* ─── widget m3 — COLMAP / SfM: cameras orbiting a subject (LAZY) ─── */
+lazyInit('m3', () => {
+  const canvas = document.getElementById('m3-canvas');
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x15171a);
+  const camera = new THREE.PerspectiveCamera(45, 2, 0.1, 100);
+  camera.position.set(3.2, 1.8, 3.2);
+  camera.lookAt(0, 0, 0);
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+
+  // soft three-point lighting
+  scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+  const key = new THREE.DirectionalLight(0xffffff, 0.95);
+  key.position.set(3, 5, 3); scene.add(key);
+  const fill = new THREE.DirectionalLight(0xffe1aa, 0.35);
+  fill.position.set(-3, 2, -3); scene.add(fill);
+
+  // ── central subject: a tiny bronze "statue" (pedestal + body + head) ──
+  const statueMat = new THREE.MeshStandardMaterial({
+    color: 0x5a8a6c, roughness: 0.55, metalness: 0.35 });
+  const stoneMat = new THREE.MeshStandardMaterial({
+    color: 0xb0a280, roughness: 0.85 });
+
+  const pedestal = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.40, 0.55), stoneMat);
+  pedestal.position.y = -0.55; scene.add(pedestal);
+  const pedTop  = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.06, 0.62), stoneMat);
+  pedTop.position.y = -0.32; scene.add(pedTop);
+  const body    = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.22, 0.55, 18), statueMat);
+  body.position.y = -0.01; scene.add(body);
+  const head    = new THREE.Mesh(new THREE.SphereGeometry(0.13, 24, 16), statueMat);
+  head.position.y = 0.37; scene.add(head);
+
+  // ── camera frustum factory: tiny body + lens + 4 frustum lines ──
+  function makeCam() {
+    const g = new THREE.Group();
+    const body = new THREE.Mesh(
+      new THREE.BoxGeometry(0.13, 0.10, 0.07),
+      new THREE.MeshStandardMaterial({ color: 0x2a2c30, roughness: 0.4 }));
+    g.add(body);
+    const lens = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.04, 0.05, 0.05, 12),
+      new THREE.MeshStandardMaterial({ color: 0x4a4d52, roughness: 0.5 }));
+    lens.rotation.x = Math.PI / 2;
+    lens.position.z = -0.05;
+    g.add(lens);
+    // frustum: 4 edges from lens apex + far-plane rectangle
+    const apex = [0, 0, -0.04];
+    const a = [ 0.09,  0.06, -0.22];
+    const b = [-0.09,  0.06, -0.22];
+    const c = [-0.09, -0.06, -0.22];
+    const d = [ 0.09, -0.06, -0.22];
+    const pts = [
+      apex, a, apex, b, apex, c, apex, d,
+      a, b, b, c, c, d, d, a,
+    ].flat();
+    const lineGeo = new THREE.BufferGeometry();
+    lineGeo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+    const lineMat = new THREE.LineBasicMaterial({
+      color: 0xc5573b, transparent: true, opacity: 0.55 });
+    const lines = new THREE.LineSegments(lineGeo, lineMat);
+    g.add(lines);
+    g.userData.lines = lines;
+    return g;
+  }
+
+  // ── three rings of cameras orbiting the statue ──
+  const cams = [];
+  const rings = [
+    { y:  0.55, r: 1.45, n: 8, offset: 0      },
+    { y:  0.05, r: 1.75, n: 10, offset: Math.PI / 10 },
+    { y: -0.40, r: 1.30, n: 6, offset: Math.PI / 6  },
+  ];
+  rings.forEach(({ y, r, n, offset }) => {
+    for (let i = 0; i < n; i++) {
+      const angle = (i / n) * Math.PI * 2 + offset;
+      const c = makeCam();
+      c.position.set(r * Math.cos(angle), y, r * Math.sin(angle));
+      c.lookAt(0, 0.0, 0);
+      cams.push(c);
+      scene.add(c);
+    }
+  });
+
+  // ── dashed orbit rings ──
+  function makeOrbitRing(r, y) {
+    const pts = [];
+    const seg = 96;
+    for (let i = 0; i <= seg; i++) {
+      const a = (i / seg) * Math.PI * 2;
+      pts.push(new THREE.Vector3(r * Math.cos(a), y, r * Math.sin(a)));
+    }
+    const geo = new THREE.BufferGeometry().setFromPoints(pts);
+    const mat = new THREE.LineDashedMaterial({
+      color: 0xc5573b, dashSize: 0.07, gapSize: 0.07,
+      transparent: true, opacity: 0.28 });
+    const line = new THREE.Line(geo, mat);
+    line.computeLineDistances();
+    return line;
+  }
+  rings.forEach(({ y, r }) => scene.add(makeOrbitRing(r, y)));
+
+  // ── controls + auto-rotation ──
+  const orbit = new OrbitControls(camera, canvas);
+  orbit.enableDamping = true;
+  orbit.autoRotate = true;
+  orbit.autoRotateSpeed = 0.55;
+  orbit.minDistance = 2.5;
+  orbit.maxDistance = 8;
+
+  // ── animate "active" camera flashing through positions (suggests shutter firing) ──
+  const FLASH_COLOR = 0xffe69d;
+  const REST_COLOR = 0xc5573b;
+  let active = 0, lastFlash = 0;
+  function step(now) {
+    if (now - lastFlash > 750) {
+      cams[active].userData.lines.material.color.setHex(REST_COLOR);
+      cams[active].userData.lines.material.opacity = 0.55;
+      active = (active + 1) % cams.length;
+      cams[active].userData.lines.material.color.setHex(FLASH_COLOR);
+      cams[active].userData.lines.material.opacity = 1.0;
+      lastFlash = now;
+    }
+  }
+
+  function tick(now) {
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    if (canvas.width !== w || canvas.height !== h) {
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h; camera.updateProjectionMatrix();
+    }
+    step(now);
+    orbit.update();
+    renderer.render(scene, camera);
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+});
 
 /* ─── widget m2b — flat vs view-dependent colour (LAZY) ─── */
 lazyInit('m2b', () => {
