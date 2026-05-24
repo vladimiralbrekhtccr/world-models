@@ -5,122 +5,192 @@
 <title>Learn 3DGS — interactive course</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
+  /* Red Blob Games–inspired warm cream palette */
   :root {
-    --bg:#0c0d0f; --panel:#15171b; --line:#23262b;
-    --fg:#e6e6e6; --dim:#8a929c; --accent:#6fa; --warn:#fc8;
+    --bg:#fdfbf3; --paper:#ffffff; --fg:#2b2b2b; --dim:#6f685d;
+    --accent:#c5573b; --accent-soft:#fbe8de;
+    --link:#1e5fa0; --line:#dcd4be;
+    --panel:#f4ecd3; --panel-dark:#1a1c20;
+    --quote-bg:#fcf5d4; --quote-border:#d4b941;
+    --code-bg:#f3ecd0; --good:#6f9e3f;
   }
   html,body{margin:0;background:var(--bg);color:var(--fg);
-    font:15px/1.65 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;}
-  a{color:var(--accent);text-decoration:none;}
-  a:hover{text-decoration:underline;}
-  code{background:#1e2024;padding:1px 5px;border-radius:3px;
-    font:12.5px ui-monospace,Menlo,Consolas,monospace;color:#cfe;}
-  header{position:sticky;top:0;background:rgba(12,13,15,.92);
-    backdrop-filter:blur(8px);border-bottom:1px solid var(--line);
-    padding:10px 18px;display:flex;align-items:center;gap:16px;z-index:10;}
-  header b{color:#fff;}
-  header .links{margin-left:auto;font-size:13px;color:var(--dim);}
-  .grid{display:grid;grid-template-columns:230px minmax(0,860px);
-    gap:32px;max-width:1140px;margin:0 auto;padding:24px 18px 100px;}
-  nav#toc{position:sticky;top:60px;align-self:start;font-size:13px;
-    border-left:1px solid var(--line);padding-left:14px;}
-  nav#toc a{display:block;color:var(--dim);padding:4px 0;}
-  nav#toc a.active{color:var(--accent);border-left:2px solid var(--accent);
-    padding-left:8px;margin-left:-10px;}
-  nav#toc .sub{font-size:11px;text-transform:uppercase;color:#555;
-    letter-spacing:.06em;margin:14px 0 6px;}
-  main section{margin-bottom:64px;}
-  h1{font-size:30px;margin:0 0 6px;}
-  h2{font-size:24px;margin:0 0 6px;color:#fff;}
-  h3{font-size:17px;margin:28px 0 6px;color:#fff;}
-  .lede{color:var(--dim);font-size:14px;margin:0 0 22px;}
-  p{margin:10px 0;}
-  .quote{background:#101a15;border-left:3px solid var(--accent);
-    padding:10px 16px;margin:18px 0;border-radius:0 4px 4px 0;}
-  .quote b{color:#cfe;}
+    font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,
+         Helvetica,Arial,sans-serif;}
+  a{color:var(--link);text-decoration:none;
+    border-bottom:1px solid rgba(30,95,160,.25);}
+  a:hover{border-bottom-color:var(--link);}
+  code{background:var(--code-bg);padding:1px 5px;border-radius:3px;
+    font:13.5px ui-monospace,Menlo,Consolas,monospace;color:#5a3700;
+    border:1px solid rgba(0,0,0,.05);}
+  em{color:#3a3a3a;font-style:italic;}
+  b{color:#1a1a1a;}
+  header{position:sticky;top:0;background:rgba(253,251,243,.95);
+    backdrop-filter:blur(6px);border-bottom:1px solid var(--line);
+    padding:11px 22px;display:flex;align-items:center;gap:14px;z-index:10;}
+  header b{color:#1a1a1a;font-size:16px;}
+  header .links{margin-left:auto;font-size:13.5px;color:var(--dim);}
+  .grid{display:grid;grid-template-columns:220px minmax(0,820px);
+    gap:36px;max-width:1120px;margin:0 auto;padding:32px 22px 110px;}
+  nav#toc{position:sticky;top:64px;align-self:start;font-size:14px;
+    border-left:2px solid var(--line);padding-left:16px;}
+  nav#toc a{display:block;color:var(--dim);padding:5px 0;border:0;}
+  nav#toc a:hover{color:var(--accent);}
+  nav#toc a.active{color:var(--accent);border-left:3px solid var(--accent);
+    padding-left:11px;margin-left:-14px;font-weight:600;}
+  nav#toc .sub{font-size:11px;text-transform:uppercase;color:#aaa18d;
+    letter-spacing:.08em;margin:18px 0 8px;}
+  main section{margin-bottom:80px;}
+  h1{font-size:36px;margin:0 0 8px;color:#1a1a1a;font-weight:600;
+    letter-spacing:-.015em;line-height:1.25;}
+  h2{font-size:28px;margin:0 0 8px;color:#1a1a1a;font-weight:600;
+    letter-spacing:-.01em;line-height:1.3;}
+  h3{font-size:19px;margin:34px 0 10px;color:#2a2a2a;font-weight:600;}
+  .lede{color:var(--dim);font-size:16.5px;margin:0 0 26px;
+    font-style:italic;line-height:1.55;}
+  p{margin:14px 0;}
+  ul,ol{padding-left:24px;}
+  li{margin:5px 0;}
+
+  .quote{background:var(--quote-bg);border-left:5px solid var(--quote-border);
+    padding:16px 22px;margin:24px 0;border-radius:0 6px 6px 0;
+    color:#3a2e10;font-size:15.5px;}
+  .quote b{color:#1a1a1a;}
+  .quote i{color:#5a4a20;}
+
   .answer,.delegate{background:var(--panel);border:1px solid var(--line);
-    border-radius:6px;padding:12px 16px;margin:18px 0;font-size:14px;}
-  .answer{border-left:3px solid var(--accent);}
-  .delegate{border-left:3px solid var(--warn);}
-  .answer h4,.delegate h4{margin:0 0 6px;font-size:13px;color:var(--dim);
-    text-transform:uppercase;letter-spacing:.05em;}
-  .answer ul,.delegate ul{margin:6px 0 0;padding-left:20px;}
-  .answer li,.delegate li{margin:3px 0;}
-  .widget{background:#000;border:1px solid var(--line);border-radius:8px;
-    margin:20px 0;overflow:hidden;}
-  .widget .title{background:var(--panel);padding:8px 14px;font-size:12px;
-    color:var(--dim);text-transform:uppercase;letter-spacing:.08em;
-    border-bottom:1px solid var(--line);}
-  .widget .stage{display:block;width:100%;height:380px;background:#000;}
-  .widget .controls{padding:12px 14px;display:grid;
-    grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px 18px;
-    background:var(--panel);border-top:1px solid var(--line);}
-  .widget .ctl{display:flex;flex-direction:column;gap:2px;}
-  .widget .ctl label{font-size:12px;color:var(--dim);
-    display:flex;justify-content:space-between;}
+    border-radius:8px;padding:16px 22px;margin:24px 0;font-size:15px;}
+  .answer{border-left:5px solid var(--accent);}
+  .delegate{border-left:5px solid var(--good);}
+  .answer h4,.delegate h4{margin:0 0 8px;font-size:12px;color:var(--dim);
+    text-transform:uppercase;letter-spacing:.06em;font-weight:700;}
+  .answer ul,.delegate ul{margin:6px 0 0;padding-left:22px;}
+  .answer li,.delegate li{margin:4px 0;}
+
+  /* widgets keep a dark "viewport" inside a light page — like a screen */
+  .widget{background:var(--panel-dark);border:1px solid var(--line);
+    border-radius:10px;margin:26px 0;overflow:hidden;
+    box-shadow:0 2px 8px rgba(0,0,0,.06);}
+  .widget .figcap{padding:11px 18px;font-size:14px;color:#e8e8e8;
+    background:#23262b;border-bottom:1px solid #2a2d31;}
+  .widget .figcap b{color:var(--accent);text-transform:uppercase;
+    letter-spacing:.08em;font-size:11.5px;margin-right:10px;}
+  .widget .stage{display:block;width:100%;height:400px;background:#000;}
+  .widget .controls{padding:14px 18px;display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+    gap:10px 20px;background:#1a1c20;border-top:1px solid #2a2d31;}
+  .widget .ctl{display:flex;flex-direction:column;gap:3px;}
+  .widget .ctl label{font-size:12px;color:#aaa;display:flex;
+    justify-content:space-between;}
   .widget .ctl input[type=range]{width:100%;accent-color:var(--accent);}
-  .widget .btnrow{padding:10px 14px;background:var(--panel);
-    border-top:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;}
-  .widget button{background:var(--accent);color:#000;border:0;
-    padding:6px 14px;border-radius:4px;cursor:pointer;
-    font:600 13px ui-monospace,Menlo,Consolas,monospace;}
-  .widget button.alt{background:#2a2e35;color:var(--fg);}
-  .widget .readout{padding:10px 14px;border-top:1px solid var(--line);
-    background:#0d0e10;font:12px ui-monospace,Menlo,Consolas,monospace;
-    color:var(--dim);white-space:pre;}
+  .widget .btnrow{padding:12px 18px;background:#1a1c20;
+    border-top:1px solid #2a2d31;display:flex;gap:10px;flex-wrap:wrap;}
+  .widget button{background:var(--accent);color:#fff;border:0;
+    padding:7px 14px;border-radius:4px;cursor:pointer;
+    font:600 13px -apple-system,sans-serif;}
+  .widget button.alt{background:#3a3d44;color:#e8e8e8;}
+  .widget .readout{padding:12px 18px;border-top:1px solid #2a2d31;
+    background:#0d0e10;font:12.5px ui-monospace,Menlo,Consolas,monospace;
+    color:#aaa;white-space:pre;}
   .widget .readout b{color:var(--accent);}
-  .widget .hint{padding:8px 14px;background:var(--panel);
-    font-size:12px;color:var(--dim);border-top:1px solid var(--line);}
-  iframe.embed{width:100%;height:520px;border:0;display:block;background:#000;}
+  .widget .hint{padding:11px 18px;background:#1a1c20;
+    font-size:12.5px;color:#999;border-top:1px solid #2a2d31;}
+
+  iframe.embed{width:100%;height:540px;border:0;display:block;
+    background:#000;border-radius:0 0 10px 10px;}
+
   .gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-    gap:14px;margin:16px 0;}
-  .gallery a{background:var(--panel);border:1px solid var(--line);
-    border-radius:6px;padding:12px 14px;display:block;color:var(--fg);}
-  .gallery a:hover{border-color:var(--accent);text-decoration:none;}
-  .gallery a b{display:block;color:#fff;margin-bottom:4px;}
-  .gallery a span{font-size:12px;color:var(--dim);}
-  .split{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);}
-  .split > div{background:#000;padding:14px;}
-  .split canvas{width:100%;height:160px;display:block;background:#0a0b0d;border-radius:4px;}
-  .split .label{font-size:12px;color:var(--dim);margin-bottom:6px;
+    gap:14px;margin:18px 0;}
+  .gallery a{background:var(--paper);border:1px solid var(--line);
+    border-radius:8px;padding:14px 18px;display:block;color:var(--fg);
+    border-bottom:1px solid var(--line);box-shadow:0 1px 2px rgba(0,0,0,.03);}
+  .gallery a:hover{border-color:var(--accent);
+    box-shadow:0 3px 10px rgba(197,87,59,.12);}
+  .gallery a b{display:block;color:var(--link);margin-bottom:6px;font-size:15.5px;}
+  .gallery a span{font-size:13.5px;color:var(--dim);line-height:1.45;}
+
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:#2a2d31;}
+  .split > div{background:#15171b;padding:16px;}
+  .split canvas{width:100%;height:170px;display:block;background:#0a0b0d;
+    border-radius:4px;}
+  .split .label{font-size:12px;color:#aaa;margin-bottom:8px;
     text-transform:uppercase;letter-spacing:.06em;}
-  .split .timing{font:12px ui-monospace,monospace;color:var(--accent);margin-top:6px;}
+  .split .timing{font:12.5px ui-monospace,Menlo,Consolas,monospace;
+    color:var(--accent);margin-top:8px;}
+
   @media (max-width:760px){
     .grid{grid-template-columns:1fr;}
-    nav#toc{position:static;}
+    nav#toc{position:static;border-left:0;border-top:1px solid var(--line);
+      padding-left:0;padding-top:16px;}
     .split{grid-template-columns:1fr;}
+    h1{font-size:30px;} h2{font-size:24px;}
   }
-  table{border-collapse:collapse;margin:16px 0;width:100%;font-size:14px;}
-  th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;
+
+  table{border-collapse:separate;border-spacing:0;margin:18px 0;width:100%;
+    font-size:14.5px;background:var(--paper);border:1px solid var(--line);
+    border-radius:6px;overflow:hidden;}
+  th,td{border-bottom:1px solid var(--line);padding:9px 14px;text-align:left;
     vertical-align:top;}
-  th{background:var(--panel);color:#fff;font-weight:600;}
+  tr:last-child td{border-bottom:0;}
+  th{background:var(--panel);color:#1a1a1a;font-weight:600;font-size:13px;
+    text-transform:uppercase;letter-spacing:.04em;}
+
   /* progress bar in header */
-  #pbar{flex:0 0 140px;height:6px;background:#23262b;border-radius:3px;
+  #pbar{flex:0 0 120px;height:6px;background:var(--line);border-radius:3px;
     overflow:hidden;margin:0 6px;}
   #pbar > div{height:100%;background:var(--accent);width:0%;
     transition:width .3s;}
-  #pcount{font-size:12px;color:var(--dim);}
+  #pcount{font-size:12.5px;color:var(--dim);}
+
   /* resume banner */
-  #resume{display:none;background:#152318;border-bottom:1px solid #2c4633;
-    padding:10px 18px;font-size:14px;align-items:center;gap:12px;}
+  #resume{display:none;background:var(--accent-soft);
+    border-bottom:1px solid var(--accent);
+    padding:12px 22px;font-size:14.5px;align-items:center;gap:12px;
+    color:#3a2010;}
   #resume.show{display:flex;}
-  #resume b{color:#cfe;}
-  #resume button{background:var(--accent);color:#000;border:0;
-    padding:5px 12px;border-radius:4px;cursor:pointer;
-    font:600 13px ui-monospace,Menlo,Consolas,monospace;}
-  #resume button.alt{background:#23262b;color:var(--fg);}
+  #resume b{color:#1a1a1a;}
+  #resume button{background:var(--accent);color:#fff;border:0;
+    padding:6px 14px;border-radius:4px;cursor:pointer;
+    font:600 13px -apple-system,sans-serif;}
+  #resume button.alt{background:#fff;color:var(--fg);
+    border:1px solid var(--line);}
   #resume .x{margin-left:auto;cursor:pointer;color:var(--dim);
-    background:none;border:0;font-size:18px;}
+    background:none;border:0;font-size:22px;line-height:1;padding:0 6px;}
+
   /* per-module "I got it" checkbox */
-  .checkrow{display:flex;align-items:center;gap:8px;
-    margin-top:10px;padding-top:10px;border-top:1px dashed var(--line);
-    font-size:13px;color:var(--dim);cursor:pointer;}
-  .checkrow input{accent-color:var(--accent);width:16px;height:16px;cursor:pointer;}
-  .checkrow.done{color:var(--accent);}
-  /* placeholder shown until lazy-init kicks in */
+  .checkrow{display:flex;align-items:center;gap:10px;
+    margin-top:14px;padding-top:14px;
+    border-top:1px dashed rgba(197,87,59,.4);
+    font-size:14px;color:#7a5b1c;cursor:pointer;}
+  .checkrow input{accent-color:var(--accent);width:18px;height:18px;cursor:pointer;}
+  .checkrow.done{color:var(--accent);font-weight:600;}
+
   .lazy-placeholder{display:flex;align-items:center;justify-content:center;
-    width:100%;height:380px;background:#0a0b0d;color:var(--dim);
+    width:100%;height:380px;background:#0a0b0d;color:#888;
     font-size:13px;font-style:italic;}
+
+  /* ─── Red Blob-style 2-column: text left, sticky widget right ─── */
+  .split-layout{display:grid;grid-template-columns:1fr 440px;
+    gap:32px;align-items:start;}
+  .split-layout .textcol{min-width:0;}
+  .split-layout .widgetcol{position:sticky;top:74px;align-self:start;
+    max-height:calc(100vh - 90px);overflow-y:auto;
+    /* hide scrollbar for cleaner look */
+    scrollbar-width:thin;scrollbar-color:#bbb transparent;}
+  .split-layout .widgetcol .widget{margin:0 0 18px;}
+  @media (max-width:1080px){
+    .split-layout{grid-template-columns:1fr;}
+    .split-layout .widgetcol{position:static;max-height:none;overflow:visible;}
+  }
+
+  /* hoverable demo trigger inline in text */
+  .demo{background:rgba(197,87,59,.13);
+    border-bottom:1.5px dashed rgba(197,87,59,.55);
+    padding:0 3px;cursor:pointer;color:#7a3a1a;font-weight:500;
+    border-radius:2px;transition:background .15s;}
+  .demo:hover{background:rgba(197,87,59,.30);color:#5a2a10;}
+  .demo::before{content:"↻ ";color:var(--accent);font-weight:700;font-size:11px;
+    position:relative;top:-1px;}
 </style>
 </head>
 <body>
@@ -176,14 +246,15 @@
   way to build a 3DGS scene; you'll meet them in the modules below.</p>
 </section>
 
-<section id="m1">
+<section id="m1" class="split-layout">
+  <div class="textcol">
   <h2>1 — The big idea</h2>
   <p class="lede">A 3D scene you can fly through, built from millions of
   fuzzy coloured blobs.</p>
 
-  <p>You have some photos of a place. You want to render it from camera
-  angles you never photographed — fly through it, orbit it, walk in. That
-  problem is called <b>novel view synthesis</b>.</p>
+  <p>You've got some photos of a place. You'd like to render it from
+  angles you never actually photographed — fly through it, orbit it,
+  walk in. That problem has a name: <b>novel view synthesis</b>.</p>
 
   <p>Before 3D Gaussian Splatting, two main answers existed:</p>
   <ul>
@@ -198,8 +269,8 @@
 
   <p>3DGS (2023) flipped the architecture. Instead of one neural network
   that you query, the scene is just <b>a literal list of millions of
-  fuzzy 3D blobs</b>. To render you project them to the screen and blend.
-  No neural network runs at render time.</p>
+  fuzzy 3D blobs</b>. To render, you project them to the screen and
+  blend them. No neural network runs at render time.</p>
 
   <div class="quote"><b>The key shift, in one line: NeRF is a calculator,
   3DGS is a spreadsheet.</b><br>
@@ -208,33 +279,13 @@
   NeRF computes every pixel by asking a network "what's at this point?".
   3DGS already has the answer written down as millions of blobs.</div>
 
-  <p>Run the widget below to feel the difference. Both panels paint the
-  same picture, but the left one <em>computes</em> each pixel (NeRF
-  style) and the right one <em>reads</em> them all at once (3DGS style).</p>
-
-  <div class="widget">
-    <div class="title">widget · calculator vs spreadsheet — click "render"</div>
-    <div class="split">
-      <div>
-        <div class="label">NeRF — computes each pixel</div>
-        <canvas id="m1a" width="280" height="170"></canvas>
-        <div class="timing" id="m1at">ready</div>
-      </div>
-      <div>
-        <div class="label">3DGS — reads stored data</div>
-        <canvas id="m1b" width="280" height="170"></canvas>
-        <div class="timing" id="m1bt">ready</div>
-      </div>
-    </div>
-    <div class="btnrow">
-      <button id="m1render">render both</button>
-      <button class="alt" id="m1reset">reset</button>
-    </div>
-    <div class="hint">In real life NeRF takes seconds, 3DGS milliseconds.
-    The animation here is exaggerated for clarity. Same idea: one
-    computes, the other reads.</div>
-  </div>
-  <!-- m1 is a tiny canvas2d — fine to init eagerly -->
+  <p><span class="demo" data-act="m1:render">Click here to render both
+  panels</span> on the right and watch the difference. The left panel
+  paints pixel-by-pixel (the "calculator" computing each answer); the
+  right panel just displays the picture instantly (the "spreadsheet"
+  reading stored data). In real life NeRF takes seconds and 3DGS
+  milliseconds — the animation here is slowed down to make the idea
+  visible.</p>
 
   <p>The payoffs of being a spreadsheet:</p>
   <ul>
@@ -246,9 +297,9 @@
   </ul>
   <p>And two facts that fall out for free:</p>
   <ul>
-    <li><b>3DGS files are big</b> — a spreadsheet of millions of rows is
-    big. (NeRF's network file is small, but you pay for it on every
-    render.)</li>
+    <li><b>3DGS files are big</b> — a spreadsheet of millions of rows
+    is big. NeRF's network file is small, but you pay for it on every
+    render.</li>
     <li><b>One file per scene.</b> Every scene gets its own spreadsheet.</li>
   </ul>
 
@@ -265,17 +316,41 @@
       <li>Read the original 3DGS paper (Kerbl 2023) and produce a
       one-paragraph plain-English summary.</li>
     </ul></div>
+  </div>
+
+  <div class="widgetcol">
+    <div class="widget">
+      <div class="figcap"><b>Figure 1.1</b> Calculator vs spreadsheet. Hit "render both" or click the orange link in the text.</div>
+      <div class="split">
+        <div>
+          <div class="label">NeRF — computes each pixel</div>
+          <canvas id="m1a" width="280" height="170"></canvas>
+          <div class="timing" id="m1at">ready</div>
+        </div>
+        <div>
+          <div class="label">3DGS — reads stored data</div>
+          <canvas id="m1b" width="280" height="170"></canvas>
+          <div class="timing" id="m1bt">ready</div>
+        </div>
+      </div>
+      <div class="btnrow">
+        <button id="m1render">render both</button>
+        <button class="alt" id="m1reset">reset</button>
+      </div>
+    </div>
+  </div>
 </section>
 
-<section id="m2">
+<section id="m2" class="split-layout">
+  <div class="textcol">
   <h2>2 — The Gaussian</h2>
   <p class="lede">The atom of a 3DGS scene. Position, shape, opacity,
   colour — about seventeen numbers, and that's it.</p>
 
   <p>A <b>3D Gaussian</b> is one fuzzy, semi-transparent, coloured
   ellipsoid. Picture a soft glowing blob that's solid in the middle and
-  fades smoothly to nothing at the edge. A scene is millions of these,
-  overlapping.</p>
+  fades smoothly to nothing at the edge. The blob on the right is one of
+  them; a real scene is millions, overlapping.</p>
 
   <p>Each blob stores a few numbers:</p>
   <table>
@@ -287,35 +362,28 @@
     <tr><td>colour (spherical harmonics)</td><td>3–48</td><td>flat colour, or colour that changes with viewing angle</td></tr>
   </table>
 
-  <p>Open the widget below. The numbers in the readout panel are
-  <em>literally</em> what one row of a `.ply` file stores for one
-  Gaussian. Squash <b>scale Z</b> to near zero and you get a flat disc —
-  the "splat" that tiles a wall. That's the key trick: each Gaussian
-  stretches independently along three axes to fit whatever shape it's
-  covering. (The fancy word is <b>anisotropy</b>; the boring phrase is
-  <b>"ellipsoids, not spheres."</b>)</p>
+  <p>The numbers in the readout panel are <em>literally</em> what one row
+  of a <code>.ply</code> file stores for one Gaussian. The orange-tagged
+  phrases below drive the blob — hover or click them and watch it
+  morph.</p>
 
-  <div class="widget" data-lazy="m2a">
-    <div class="title">widget · one Gaussian — manipulate it</div>
-    <canvas id="m2a" class="stage"></canvas>
-    <div class="controls">
-      <div class="ctl"><label>scale X <span id="vsx">1.00</span></label>
-        <input type="range" id="sx" min="0.05" max="2" step="0.01" value="1"></div>
-      <div class="ctl"><label>scale Y <span id="vsy">1.00</span></label>
-        <input type="range" id="sy" min="0.05" max="2" step="0.01" value="0.6"></div>
-      <div class="ctl"><label>scale Z <span id="vsz">1.00</span></label>
-        <input type="range" id="sz" min="0.05" max="2" step="0.01" value="1.4"></div>
-      <div class="ctl"><label>rotation (yaw°) <span id="vrot">25</span></label>
-        <input type="range" id="rot" min="0" max="360" step="1" value="25"></div>
-      <div class="ctl"><label>opacity <span id="vop">0.85</span></label>
-        <input type="range" id="op" min="0.05" max="1" step="0.01" value="0.85"></div>
-      <div class="ctl"><label>colour</label>
-        <input type="color" id="col" value="#6fae8d"></div>
-    </div>
-    <div class="readout" id="readout2"></div>
-    <div class="hint">drag to orbit · this is the data a `.ply` row
-    stores for one Gaussian</div>
-  </div>
+  <p><span class="demo" data-act="m2:flat">Squash it flat</span> and you
+  get a "splat" — the disc that tiles a wall.
+  <span class="demo" data-act="m2:tall">Stretch it tall</span> and you've
+  got the long thin shape that fits a twig or a strand of hair.
+  <span class="demo" data-act="m2:fat">Fatten it round</span> and it
+  becomes a sphere — wasteful for most surfaces, which is why round
+  Gaussians are rare.</p>
+
+  <p>This stretching-along-three-axes trick is called <b>anisotropy</b>
+  (boring name: "ellipsoids, not spheres"). It's the reason a few
+  million Gaussians can cover a whole scene — if they were stuck as
+  round spheres, you'd need far more.</p>
+
+  <p>Try <span class="demo" data-act="m2:fade">fading the opacity</span>
+  too. Notice the blob doesn't have a hard edge — it dissolves smoothly.
+  <em>That</em> softness is why blobs blend into a continuous image
+  instead of looking like a heap of pebbles.</p>
 
   <h3>Colour can change with viewing angle</h3>
   <p>A matte wall looks the same colour from every angle. A glossy apple
@@ -324,26 +392,16 @@
   function of viewing direction, encoded as <b>spherical harmonics
   (SH)</b> coefficients:</p>
   <ul>
-    <li><b>SH degree 0</b> = 3 numbers = one flat colour.</li>
-    <li><b>SH degree 3</b> = 48 numbers = colour shifts with angle
-    (captures highlights, sheen).</li>
+    <li><b>SH degree 0</b> = 3 numbers = one flat colour
+    (<span class="demo" data-act="m2b:flat">show flat mode →</span>).</li>
+    <li><b>SH degree 3</b> = 48 numbers = colour shifts with angle —
+    captures highlights and sheen
+    (<span class="demo" data-act="m2b:view">show view-dependent mode →</span>).</li>
   </ul>
-  <p>The widget below shows the same blob two ways. In <b>flat</b> mode
-  the colour never changes as you orbit. In <b>view-dependent</b> mode it
-  shifts (exaggerated for teaching). Real SH is more subtle, but the
-  principle is identical: the colour stored on each Gaussian is a tiny
-  function, not a constant.</p>
-
-  <div class="widget" data-lazy="m2b">
-    <div class="title">widget · flat vs view-dependent colour</div>
-    <canvas id="m2b" class="stage" style="height:300px"></canvas>
-    <div class="btnrow">
-      <button id="m2bflat">flat colour (SH-0)</button>
-      <button class="alt" id="m2bview">view-dependent (SH-3 idea)</button>
-    </div>
-    <div class="hint">drag to orbit and watch the colour. Splatfacto
-    outputs SH-3; our Lyra and WorldMirror outputs are SH-0 (flat).</div>
-  </div>
+  <p>Real SH is more subtle than the exaggerated rainbow you'll see on
+  the right, but the principle is identical: the colour stored on each
+  Gaussian is a tiny <em>function</em>, not a constant. Splatfacto
+  outputs SH-3; our Lyra and WorldMirror outputs are SH-0 (flat).</p>
 
   <div class="answer"><h4>❓ You can now answer</h4>
     <ul>
@@ -351,13 +409,45 @@
       <li>What does the bell curve do for us at the edge of a blob?</li>
       <li>What is anisotropy and why does it make 3DGS efficient?</li>
       <li>What's the difference between SH degree 0 and degree 3?</li>
-      <li>Why do our pipelines export with different `shDeg` values?</li>
+      <li>Why do our pipelines export with different <code>shDeg</code> values?</li>
     </ul></div>
   <div class="delegate"><h4>👥 Tasks you could delegate</h4>
     <ul>
-      <li>Open one of our `.ply` files in a hex/text viewer and confirm
+      <li>Open one of our <code>.ply</code> files in a hex/text viewer and confirm
       the properties listed match the table above.</li>
     </ul></div>
+  </div>
+
+  <div class="widgetcol">
+    <div class="widget" data-lazy="m2a">
+      <div class="figcap"><b>Figure 2.1</b> One Gaussian — drag the sliders, or hover the orange phrases on the left.</div>
+      <canvas id="m2a" class="stage"></canvas>
+      <div class="controls">
+        <div class="ctl"><label>scale X <span id="vsx">1.00</span></label>
+          <input type="range" id="sx" min="0.05" max="2" step="0.01" value="1"></div>
+        <div class="ctl"><label>scale Y <span id="vsy">1.00</span></label>
+          <input type="range" id="sy" min="0.05" max="2" step="0.01" value="0.6"></div>
+        <div class="ctl"><label>scale Z <span id="vsz">1.00</span></label>
+          <input type="range" id="sz" min="0.05" max="2" step="0.01" value="1.4"></div>
+        <div class="ctl"><label>rotation (yaw°) <span id="vrot">25</span></label>
+          <input type="range" id="rot" min="0" max="360" step="1" value="25"></div>
+        <div class="ctl"><label>opacity <span id="vop">0.85</span></label>
+          <input type="range" id="op" min="0.05" max="1" step="0.01" value="0.85"></div>
+        <div class="ctl"><label>colour</label>
+          <input type="color" id="col" value="#6fae8d"></div>
+      </div>
+      <div class="readout" id="readout2"></div>
+    </div>
+
+    <div class="widget" data-lazy="m2b">
+      <div class="figcap"><b>Figure 2.2</b> Flat vs view-dependent colour. Drag to orbit; toggle with the buttons or the orange links on the left.</div>
+      <canvas id="m2b" class="stage" style="height:260px"></canvas>
+      <div class="btnrow">
+        <button id="m2bflat">flat colour (SH-0)</button>
+        <button class="alt" id="m2bview">view-dependent (SH-3 idea)</button>
+      </div>
+    </div>
+  </div>
 </section>
 
 <section id="m3">
@@ -825,6 +915,26 @@ function lazyInit(dataKey, initFn){
   obs.observe(target);
 }
 
+/* widget registry so .demo spans in text can drive widgets */
+window.LEARN = window.LEARN || {};
+
+/* ─── .demo hover/click → trigger named action ─── */
+const ACTIONS = {
+  'm1:render':  () => window.LEARN.m1?.render?.(),
+  'm2:flat':    () => window.LEARN.m2a?.setState({ sx:1.6, sy:1.6, sz:0.08, rot:25, op:0.85 }),
+  'm2:tall':    () => window.LEARN.m2a?.setState({ sx:0.15, sy:0.15, sz:1.9, rot:0,  op:0.9  }),
+  'm2:fat':     () => window.LEARN.m2a?.setState({ sx:1.2, sy:1.2, sz:1.2, rot:0,  op:0.85 }),
+  'm2:fade':    () => window.LEARN.m2a?.setState({ sx:1.0, sy:0.6, sz:1.4, rot:25, op:0.18 }),
+  'm2b:flat':   () => window.LEARN.m2b?.setMode?.('flat'),
+  'm2b:view':   () => window.LEARN.m2b?.setMode?.('view'),
+};
+document.querySelectorAll('.demo').forEach(el => {
+  const act = el.dataset.act;
+  const fire = () => { try { ACTIONS[act]?.(); } catch(e) { console.warn(act, e); } };
+  el.addEventListener('mouseenter', fire);
+  el.addEventListener('click', e => { e.preventDefault(); fire(); });
+});
+
 /* ─── widget m1 — calculator vs spreadsheet ─── */
 (() => {
   const cA = document.getElementById('m1a'),
@@ -844,7 +954,7 @@ function lazyInit(dataKey, initFn){
   function clear(c) { c.getContext('2d').clearRect(0,0,W,H); }
   clear(cA); clear(cB);
   let timer = null;
-  document.getElementById('m1render').addEventListener('click', () => {
+  function render() {
     if (timer) clearInterval(timer);
     clear(cA); clear(cB);
     tA.textContent = 'computing pixel by pixel…';
@@ -866,12 +976,14 @@ function lazyInit(dataKey, initFn){
         tA.textContent = `done in ${Math.round(performance.now()-startA)} ms (computed each row)`;
       }
     }, tickMs);
-  });
+  }
+  document.getElementById('m1render').addEventListener('click', render);
   document.getElementById('m1reset').addEventListener('click', () => {
     if (timer) { clearInterval(timer); timer = null; }
     clear(cA); clear(cB);
     tA.textContent = 'ready'; tB.textContent = 'ready';
   });
+  window.LEARN.m1 = { render };
 })();
 
 /* ─── widget m2a — Gaussian anatomy (LAZY) ─── */
@@ -926,6 +1038,18 @@ lazyInit('m2a', () => {
   }
   Object.values(el).forEach(e => e.addEventListener('input', update));
   update();
+  /* expose setState so .demo triggers can morph the blob */
+  window.LEARN.m2a = {
+    setState(t) {
+      if (t.sx !== undefined) el.sx.value = t.sx;
+      if (t.sy !== undefined) el.sy.value = t.sy;
+      if (t.sz !== undefined) el.sz.value = t.sz;
+      if (t.rot !== undefined) el.rot.value = t.rot;
+      if (t.op !== undefined) el.op.value = t.op;
+      if (t.col !== undefined) el.col.value = t.col;
+      update();
+    }
+  };
   function tick() {
     const w = canvas.clientWidth, h = canvas.clientHeight;
     if (canvas.width !== w || canvas.height !== h) {
@@ -985,6 +1109,7 @@ lazyInit('m2b', () => {
   }
   document.getElementById('m2bflat').addEventListener('click', () => setMode('flat'));
   document.getElementById('m2bview').addEventListener('click', () => setMode('view'));
+  window.LEARN.m2b = { setMode };
 
   function tick() {
     const w = canvas.clientWidth, h = canvas.clientHeight;
