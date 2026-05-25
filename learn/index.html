@@ -356,13 +356,14 @@
   NeRF computes every pixel by asking a network "what's at this point?".
   3DGS already has the answer written down as millions of blobs.</div>
 
-  <p><span class="demo" data-act="m1:render">Click here to render both
-  panels</span> on the right and watch the difference. The left panel
-  paints pixel-by-pixel (the "calculator" computing each answer); the
-  right panel just displays the picture instantly (the "spreadsheet"
-  reading stored data). In real life NeRF takes seconds and 3DGS
-  milliseconds — the animation here is slowed down to make the idea
-  visible.</p>
+  <p>Look at the figure on the right. <b>Both panels show the same
+  little landscape scene.</b> The left panel paints it pixel-by-pixel
+  from the top down (NeRF — "computing pixel 47,320 / 104,000 ...") and
+  is still only half finished. The right panel shows the same scene
+  fully rendered, with a tiny spreadsheet of Gaussian primitives
+  (G1–G4: <code>x, y, z, colour, scale, opacity</code>) sitting behind
+  it — that's the data, already there, just being read. In real life
+  NeRF takes seconds and 3DGS milliseconds.</p>
 
   <p>The payoffs of being a spreadsheet:</p>
   <ul>
@@ -397,31 +398,10 @@
 
   <div class="widgetcol">
     <div class="widget">
-      <div class="figcap"><b>Figure 1.1</b> NeRF vs 3DGS rendering the same scene</div>
-      <div class="m1-stack">
-        <div class="m1-pane">
-          <div class="m1-head">
-            <span class="m1-label">NeRF · computes each pixel</span>
-            <span class="m1-tag slow">calculator</span>
-          </div>
-          <canvas id="m1a" width="520" height="200"></canvas>
-          <div class="m1-meter"><div class="m1-bar" id="m1abar"></div></div>
-          <div class="m1-time"><span id="m1ainfo">ready</span><span class="ms" id="m1ams"></span></div>
-        </div>
-        <div class="m1-pane">
-          <div class="m1-head">
-            <span class="m1-label">3DGS · reads from list</span>
-            <span class="m1-tag fast">spreadsheet</span>
-          </div>
-          <canvas id="m1b" width="520" height="200"></canvas>
-          <div class="m1-meter"><div class="m1-bar done" id="m1bbar"></div></div>
-          <div class="m1-time"><span id="m1binfo">ready</span><span class="ms" id="m1bms"></span></div>
-        </div>
-      </div>
-      <div class="btnrow">
-        <button id="m1render">▶ render both</button>
-        <button class="alt" id="m1reset">reset</button>
-      </div>
+      <div class="figcap"><b>Figure 1.1</b> Same scene, two ways to draw it.</div>
+      <img src="fig-1.1.png"
+           alt="Side-by-side comparison: NeRF (like a calculator) paints a small landscape scene pixel-by-pixel, slowly; 3DGS (like a spreadsheet) renders the same scene instantly by reading a list of Gaussian primitives."
+           style="display:block;width:100%;height:auto;">
     </div>
   </div>
 </section>
@@ -1080,7 +1060,7 @@ window.LEARN = window.LEARN || {};
 
 /* ─── .demo hover/click → trigger named action ─── */
 const ACTIONS = {
-  'm1:render':  () => window.LEARN.m1?.render?.(),
+  /* m1:render removed — Figure 1.1 is now a static image */
   'm2:flat':    () => window.LEARN.m2a?.setState({ sx:1.6, sy:1.6, sz:0.08, rot:25, op:0.85 }),
   'm2:tall':    () => window.LEARN.m2a?.setState({ sx:0.15, sy:0.15, sz:1.9, rot:0,  op:0.9  }),
   'm2:fat':     () => window.LEARN.m2a?.setState({ sx:1.2, sy:1.2, sz:1.2, rot:0,  op:0.85 }),
@@ -1095,8 +1075,9 @@ document.querySelectorAll('.demo').forEach(el => {
   el.addEventListener('click', e => { e.preventDefault(); fire(); });
 });
 
-/* ─── widget m1 — calculator vs spreadsheet (redesigned) ─── */
-(() => {
+/* ─── widget m1 REMOVED — Figure 1.1 is now a static <img>. The old
+       canvas2d house-painting animation lived here. */
+const __m1_dead = () => {
   const cA = document.getElementById('m1a'),
         cB = document.getElementById('m1b'),
         infoA = document.getElementById('m1ainfo'),
