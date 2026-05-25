@@ -1361,7 +1361,10 @@ lazyInit('m3', () => {
   const canvas = document.getElementById('m3-canvas');
   const thumbCanvas = document.getElementById('m3-thumb');
   const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x15171a);
+  // warm medium-brown so the black cat silhouettes properly instead of
+  // disappearing into the near-black we had before. SOLID Color — NOT a
+  // CanvasTexture (Three.js treats non-cube textures as equirect skybox).
+  scene.background = new THREE.Color(0x5a4a3e);
   const camera = new THREE.PerspectiveCamera(42, 2, 0.1, 100);
   camera.position.set(3.0, 1.7, 3.0);
   camera.lookAt(0, 0, 0);
@@ -1535,13 +1538,61 @@ lazyInit('m3', () => {
   scene.add(cat);
   };  // close __unused_cat_block_start
 
-  // wooden platform beneath the cat — simple cylinder, one material, no extras.
-  // Slight height (0.08) so it has a real side edge instead of being a flat disc.
-  const platform = new THREE.Mesh(
-    new THREE.CylinderGeometry(1.6, 1.6, 0.08, 64),
-    new THREE.MeshStandardMaterial({ color: 0xb09175, roughness: 0.75 }));
-  platform.position.y = -0.44;
-  scene.add(platform);
+  // ── photography-style podium beneath the cat ──
+  // top surface: radial-gradient canvas texture, soft cream centre → tan edge
+  const podiumCanvas = document.createElement('canvas');
+  podiumCanvas.width = 512; podiumCanvas.height = 512;
+  const pctx = podiumCanvas.getContext('2d');
+  const grad = pctx.createRadialGradient(256, 256, 0, 256, 256, 256);
+  grad.addColorStop(0,    '#f7efd9');
+  grad.addColorStop(0.6,  '#ebe0c2');
+  grad.addColorStop(0.92, '#c9b890');
+  grad.addColorStop(1,    '#9c8a64');
+  pctx.fillStyle = grad;
+  pctx.beginPath(); pctx.arc(256, 256, 256, 0, Math.PI * 2); pctx.fill();
+  const podiumTex = new THREE.CanvasTexture(podiumCanvas);
+  podiumTex.colorSpace = THREE.SRGBColorSpace;
+  podiumTex.anisotropy = 4;
+
+  // Cylinder with a 3-material array: [side, top, bottom]
+  const podium = new THREE.Mesh(
+    new THREE.CylinderGeometry(1.55, 1.55, 0.06, 64),
+    [
+      new THREE.MeshStandardMaterial({ color: 0xb9a87f, roughness: 0.85 }),    // side
+      new THREE.MeshStandardMaterial({ map: podiumTex, roughness: 0.7 }),      // top
+      new THREE.MeshStandardMaterial({ color: 0x6f5f44, roughness: 0.9 }),     // bottom
+    ]
+  );
+  podium.position.y = -0.43;
+  scene.add(podium);
+
+  // beveled rim — thin torus laid flat on the top edge
+  const rim = new THREE.Mesh(
+    new THREE.TorusGeometry(1.55, 0.025, 12, 96),
+    new THREE.MeshStandardMaterial({ color: 0xa8966e, roughness: 0.6, metalness: 0.1 }));
+  rim.rotation.x = Math.PI / 2;
+  rim.position.y = -0.40;
+  scene.add(rim);
+
+  // soft contact-shadow disc directly under the cat — radial-gradient
+  // canvas texture used as alpha for a flat plane
+  const shadowCanvas = document.createElement('canvas');
+  shadowCanvas.width = 256; shadowCanvas.height = 256;
+  const sctx = shadowCanvas.getContext('2d');
+  const sg = sctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+  sg.addColorStop(0,   'rgba(0,0,0,0.50)');
+  sg.addColorStop(0.5, 'rgba(0,0,0,0.18)');
+  sg.addColorStop(1,   'rgba(0,0,0,0)');
+  sctx.fillStyle = sg;
+  sctx.fillRect(0, 0, 256, 256);
+  const shadowTex = new THREE.CanvasTexture(shadowCanvas);
+  const contactShadow = new THREE.Mesh(
+    new THREE.PlaneGeometry(1.1, 1.1),
+    new THREE.MeshBasicMaterial({
+      map: shadowTex, transparent: true, depthWrite: false }));
+  contactShadow.rotation.x = -Math.PI / 2;
+  contactShadow.position.y = -0.395;
+  scene.add(contactShadow);
 
   // ── camera factory: body + lens + WIREFRAME frustum aimed at the cat ──
   // NB: three.js Object3D.lookAt uses inverted convention for non-Camera
