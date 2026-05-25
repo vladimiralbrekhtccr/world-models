@@ -1075,93 +1075,9 @@ document.querySelectorAll('.demo').forEach(el => {
   el.addEventListener('click', e => { e.preventDefault(); fire(); });
 });
 
-/* ─── widget m1 REMOVED — Figure 1.1 is now a static <img>. The old
-       canvas2d house-painting animation lived here. */
-const __m1_dead = () => {
-  const cA = document.getElementById('m1a'),
-        cB = document.getElementById('m1b'),
-        infoA = document.getElementById('m1ainfo'),
-        infoB = document.getElementById('m1binfo'),
-        msA = document.getElementById('m1ams'),
-        msB = document.getElementById('m1bms'),
-        barA = document.getElementById('m1abar'),
-        barB = document.getElementById('m1bbar');
-  const W = cA.width, H = cA.height;
-  // pre-render a recognisable little scene on an offscreen canvas
-  const off = document.createElement('canvas'); off.width = W; off.height = H;
-  const o = off.getContext('2d');
-  // sky gradient
-  const g = o.createLinearGradient(0, 0, 0, H);
-  g.addColorStop(0, '#1c3656'); g.addColorStop(0.5, '#85b4d4'); g.addColorStop(1, '#a4c596');
-  o.fillStyle = g; o.fillRect(0, 0, W, H);
-  // sun
-  o.fillStyle = '#fff5b8'; o.beginPath(); o.arc(W*0.82, H*0.24, 26, 0, Math.PI*2); o.fill();
-  // ground
-  o.fillStyle = '#3a6845'; o.fillRect(0, H*0.72, W, H*0.28);
-  // house body
-  o.fillStyle = '#d0a482'; o.fillRect(W*0.32, H*0.46, W*0.30, H*0.36);
-  // roof
-  o.fillStyle = '#8a4032'; o.beginPath();
-  o.moveTo(W*0.29, H*0.50); o.lineTo(W*0.47, H*0.24); o.lineTo(W*0.65, H*0.50);
-  o.closePath(); o.fill();
-  // door
-  o.fillStyle = '#5a3a26'; o.fillRect(W*0.42, H*0.66, W*0.07, H*0.16);
-  // window
-  o.fillStyle = '#a4cee0'; o.fillRect(W*0.50, H*0.55, W*0.08, H*0.07);
-  o.strokeStyle = '#1c3656'; o.lineWidth = 1.5;
-  o.beginPath(); o.moveTo(W*0.54, H*0.55); o.lineTo(W*0.54, H*0.62); o.stroke();
-  o.beginPath(); o.moveTo(W*0.50, H*0.585); o.lineTo(W*0.58, H*0.585); o.stroke();
-  // tree
-  o.fillStyle = '#3a5a26'; o.beginPath(); o.arc(W*0.86, H*0.62, 24, 0, Math.PI*2); o.fill();
-  o.fillStyle = '#5a3a26'; o.fillRect(W*0.853, H*0.65, 6, 32);
-
-  function clear(c){ c.getContext('2d').clearRect(0,0,W,H); }
-  function reset(){
-    clear(cA); clear(cB);
-    barA.style.width='0%'; barB.style.width='0%';
-    infoA.textContent='ready'; infoB.textContent='ready';
-    msA.textContent=''; msB.textContent='';
-  }
-  reset();
-
-  let timer = null;
-  function render(){
-    if (timer) clearInterval(timer);
-    clear(cA); clear(cB);
-    barA.style.width='0%'; barB.style.width='0%';
-    // 3DGS side: instant
-    const t0 = performance.now();
-    cB.getContext('2d').drawImage(off, 0, 0);
-    const dtB = performance.now() - t0;
-    barB.style.width='100%';
-    infoB.textContent=`read ${W*H} pixels from list`;
-    msB.textContent=`${dtB.toFixed(1)} ms`;
-
-    // NeRF side: row-by-row reveal
-    const ctxA = cA.getContext('2d');
-    let row = 0; const rowsPerTick = 3; const tickMs = 28;
-    const startA = performance.now();
-    timer = setInterval(() => {
-      const end = Math.min(H, row + rowsPerTick);
-      ctxA.drawImage(off, 0, row, W, end-row, 0, row, W, end-row);
-      row = end;
-      const pct = (row/H)*100;
-      barA.style.width = `${pct}%`;
-      infoA.textContent = `computing pixel ${row*W}/${W*H} (${pct.toFixed(0)}%)`;
-      if (row >= H) {
-        clearInterval(timer); timer = null;
-        const dtA = performance.now() - startA;
-        infoA.textContent = 'computed every pixel';
-        msA.textContent = `${Math.round(dtA)} ms`;
-      }
-    }, tickMs);
-  }
-  document.getElementById('m1render').addEventListener('click', render);
-  document.getElementById('m1reset').addEventListener('click', () => {
-    if (timer) { clearInterval(timer); timer = null; } reset();
-  });
-  window.LEARN.m1 = { render };
-})();
+/* widget m1 REMOVED — Figure 1.1 is now a static <img>.
+   (Old canvas2d house-painting animation deleted; see git history if you
+    ever want it back: commit before 0ea98fd has the full implementation.) */
 
 /* ─── widget m2a — Gaussian anatomy (LAZY) ─── */
 lazyInit('m2a', () => {
