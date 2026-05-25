@@ -1535,13 +1535,13 @@ lazyInit('m3', () => {
   scene.add(cat);
   };  // close __unused_cat_block_start
 
-  // grass disc beneath
-  const grass = new THREE.Mesh(
-    new THREE.CircleGeometry(1.6, 48),
-    new THREE.MeshStandardMaterial({ color: 0x4a6b48, roughness: 0.95 }));
-  grass.rotation.x = -Math.PI / 2;
-  grass.position.y = -0.40;
-  scene.add(grass);
+  // wooden platform beneath the cat — simple cylinder, one material, no extras.
+  // Slight height (0.08) so it has a real side edge instead of being a flat disc.
+  const platform = new THREE.Mesh(
+    new THREE.CylinderGeometry(1.6, 1.6, 0.08, 64),
+    new THREE.MeshStandardMaterial({ color: 0xb09175, roughness: 0.75 }));
+  platform.position.y = -0.44;
+  scene.add(platform);
 
   // ── camera factory: body + lens + WIREFRAME frustum aimed at the cat ──
   // NB: three.js Object3D.lookAt uses inverted convention for non-Camera
