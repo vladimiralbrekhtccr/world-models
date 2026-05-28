@@ -5,14 +5,14 @@
 <title>Learn 3DGS — interactive course</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-  /* Warm-dark theme — coffee/leather feel; high contrast for reading */
+  /* Light theme — white background, warm-orange accent */
   :root {
-    --bg:#0e0c09; --paper:#1f1a14; --fg:#e8ddc8; --dim:#9c9080;
-    --accent:#e07a50; --accent-soft:#2a1812; --accent-deep:#f5a07a;
-    --link:#88b8e0; --line:#2e2820;
-    --panel:#15110d; --panel-dark:#0a0805;
-    --quote-bg:#2a2218; --quote-border:#d4a050;
-    --code-bg:#2a2218; --good:#8fc870;
+    --bg:#ffffff; --paper:#ffffff; --fg:#1a1a1a; --dim:#6a6258;
+    --accent:#c5573b; --accent-soft:#fbe8de; --accent-deep:#8a3520;
+    --link:#1e5fa0; --line:#e4dccc;
+    --panel:#f6f1e0; --panel-dark:#1a1c20;
+    --quote-bg:#fcf5d4; --quote-border:#d4b941;
+    --code-bg:#f3ecd0; --good:#6f9e3f;
   }
   html,body{margin:0;background:var(--bg);color:var(--fg);
     font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,
@@ -21,11 +21,11 @@
     border-bottom:1px solid rgba(30,95,160,.25);}
   a:hover{border-bottom-color:var(--link);}
   code{background:var(--code-bg);padding:1px 5px;border-radius:3px;
-    font:13.5px ui-monospace,Menlo,Consolas,monospace;color:#f0c890;
-    border:1px solid rgba(255,255,255,.04);}
-  em{color:#d8d0bc;font-style:italic;}
-  b{color:#fdf7e4;}
-  header{position:sticky;top:0;background:rgba(14,12,9,.92);
+    font:13.5px ui-monospace,Menlo,Consolas,monospace;color:#5a3700;
+    border:1px solid rgba(0,0,0,.04);}
+  em{color:#3a3a3a;font-style:italic;}
+  b{color:#1a1a1a;}
+  header{position:sticky;top:0;background:rgba(255,255,255,.95);
     backdrop-filter:blur(6px);border-bottom:1px solid var(--line);
     padding:11px 22px;display:flex;align-items:center;gap:14px;z-index:10;}
   header b{color:var(--fg);font-size:16px;}
@@ -61,9 +61,9 @@
 
   .quote{background:var(--quote-bg);border-left:5px solid var(--quote-border);
     padding:16px 22px;margin:24px 0;border-radius:0 6px 6px 0;
-    color:#e8dcb8;font-size:15.5px;}
-  .quote b{color:#fdf7e4;}
-  .quote i{color:#d4a050;}
+    color:#3a2e10;font-size:15.5px;}
+  .quote b{color:#1a1a1a;}
+  .quote i{color:#5a4a20;}
 
   .answer,.delegate{background:var(--panel);border:1px solid var(--line);
     border-radius:8px;padding:16px 22px;margin:24px 0;font-size:15px;}
@@ -74,18 +74,19 @@
   .answer ul,.delegate ul{margin:6px 0 0;padding-left:22px;}
   .answer li,.delegate li{margin:4px 0;}
 
-  /* widgets — dark frame, soft elevation, italic caption */
+  /* widgets — light frame, soft elevation, italic caption */
   .widget{background:var(--paper);border:1px solid var(--line);
     border-radius:10px;margin:26px 0;overflow:hidden;
-    box-shadow:0 1px 2px rgba(0,0,0,.4),
-               0 10px 28px rgba(0,0,0,.5);}
+    box-shadow:0 1px 2px rgba(60,40,10,.04),
+               0 10px 28px rgba(60,40,10,.06);}
   .widget .figcap{padding:14px 20px 12px;font-size:13.5px;
     color:var(--fg);background:transparent;font-style:italic;
     border-bottom:1px solid var(--line);line-height:1.4;}
   .widget .figcap b{color:var(--accent);text-transform:none;
     letter-spacing:0;font-size:12.5px;font-weight:700;font-style:normal;
     margin-right:10px;}
-  .widget .stage{display:block;width:100%;height:400px;background:#0a0805;}
+  /* canvas viewport stays dark — splats + 3D scenes render best on it */
+  .widget .stage{display:block;width:100%;height:400px;background:#15171a;}
   .widget .controls{padding:14px 20px;display:grid;
     grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
     gap:10px 22px;background:var(--panel);border-top:1px solid var(--line);}
@@ -97,10 +98,10 @@
   .widget .ctl input[type=range]{width:100%;accent-color:var(--accent);}
   .widget .btnrow{padding:12px 20px;background:var(--panel);
     border-top:1px solid var(--line);display:flex;gap:10px;flex-wrap:wrap;}
-  .widget button{background:var(--accent);color:#1a1208;border:0;
+  .widget button{background:var(--accent);color:#fff;border:0;
     padding:7px 14px;border-radius:5px;cursor:pointer;
     font:600 13px -apple-system,sans-serif;
-    box-shadow:0 1px 2px rgba(0,0,0,.4);}
+    box-shadow:0 1px 2px rgba(0,0,0,.08);}
   .widget button:hover{background:var(--accent-deep);}
   .widget button.alt{background:var(--paper);color:var(--fg);
     border:1px solid var(--line);box-shadow:none;}
@@ -163,13 +164,13 @@
   #resume{display:none;background:var(--accent-soft);
     border-bottom:1px solid var(--accent);
     padding:12px 22px;font-size:14.5px;align-items:center;gap:12px;
-    color:var(--fg);}
+    color:#3a2010;}
   #resume.show{display:flex;}
-  #resume b{color:#fdf7e4;}
-  #resume button{background:var(--accent);color:#1a1208;border:0;
+  #resume b{color:#1a1a1a;}
+  #resume button{background:var(--accent);color:#fff;border:0;
     padding:6px 14px;border-radius:4px;cursor:pointer;
     font:600 13px -apple-system,sans-serif;}
-  #resume button.alt{background:var(--paper);color:var(--fg);
+  #resume button.alt{background:#fff;color:var(--fg);
     border:1px solid var(--line);}
   #resume .x{margin-left:auto;cursor:pointer;color:var(--dim);
     background:none;border:0;font-size:22px;line-height:1;padding:0 6px;}
@@ -177,10 +178,10 @@
   /* per-module "I got it" checkbox */
   .checkrow{display:flex;align-items:center;gap:10px;
     margin-top:14px;padding-top:14px;
-    border-top:1px dashed rgba(224,122,80,.4);
-    font-size:14px;color:#d4a050;cursor:pointer;}
+    border-top:1px dashed rgba(197,87,59,.4);
+    font-size:14px;color:#7a5b1c;cursor:pointer;}
   .checkrow input{accent-color:var(--accent);width:18px;height:18px;cursor:pointer;}
-  .checkrow.done{color:var(--accent-deep);font-weight:600;}
+  .checkrow.done{color:var(--accent);font-weight:600;}
 
   .lazy-placeholder{display:flex;align-items:center;justify-content:center;
     width:100%;height:380px;background:#0a0b0d;color:#888;
@@ -205,24 +206,24 @@
   }
 
   /* hoverable demo trigger inline in text */
-  .demo{background:rgba(224,122,80,.13);
-    border-bottom:1.5px dashed rgba(224,122,80,.55);
-    padding:0 3px;cursor:pointer;color:var(--accent-deep);font-weight:500;
+  .demo{background:rgba(197,87,59,.13);
+    border-bottom:1.5px dashed rgba(197,87,59,.55);
+    padding:0 3px;cursor:pointer;color:#7a3a1a;font-weight:500;
     border-radius:2px;transition:background .15s;}
-  .demo:hover{background:rgba(224,122,80,.30);color:#fdd0b0;}
+  .demo:hover{background:rgba(197,87,59,.30);color:#5a2a10;}
   .demo::before{content:"↻ ";color:var(--accent);font-weight:700;font-size:11px;
     position:relative;top:-1px;}
 
-  /* click-to-load splat overlay — soft dark warm pad, accent button */
+  /* click-to-load splat overlay — soft cream pad, accent button */
   .load-pad{display:flex;flex-direction:column;align-items:center;
     justify-content:center;gap:16px;
-    width:100%;height:400px;background:linear-gradient(135deg,#0e0c09,#221c14);
+    width:100%;height:400px;background:linear-gradient(135deg,#fdfbf3,#f6f1e0);
     color:var(--fg);text-align:center;padding:24px;box-sizing:border-box;
     border-top:1px solid var(--line);}
-  .load-pad .load-btn{background:var(--accent);color:#1a1208;border:0;
+  .load-pad .load-btn{background:var(--accent);color:#fff;border:0;
     padding:11px 24px;border-radius:6px;cursor:pointer;
     font:600 14px -apple-system,sans-serif;
-    box-shadow:0 2px 12px rgba(224,122,80,.40);}
+    box-shadow:0 2px 12px rgba(197,87,59,.30);}
   .load-pad .load-btn:hover{background:var(--accent-deep);}
   .load-pad .load-info{font-size:12.5px;color:var(--dim);max-width:400px;
     line-height:1.5;}
@@ -265,7 +266,7 @@
     border-top:1px solid var(--line);}
   .thumb-label{font-size:12.5px;color:var(--dim);font-style:italic;}
   #m3-thumb{border:1px solid var(--line);border-radius:4px;
-    background:#0a0805;display:block;flex-shrink:0;}
+    background:#15171a;display:block;flex-shrink:0;}
 </style>
 </head>
 <body>
