@@ -6,13 +6,18 @@ the experiment-specific `README.md`.
 
 ## Execution environment — IMPORTANT
 - **Do NOT use SLURM / sbatch / srun.** The user holds an interactive
-  allocation. Just `ssh node001` and run commands there.
-- **Use GPU index 6 only** (as of 2026-05-18). Always set
-  `CUDA_VISIBLE_DEVICES=6` — other GPUs on node001 are in use by other
-  workloads. (The MultiPano `run_*.sh` scripts still hardcode
-  `CUDA_VISIBLE_DEVICES=0` from earlier — update them to 6 before reuse.)
+  allocation. Just `ssh node008` and run commands there.
+- **Use GPU index 0 only** (as of 2026-05-28). Always set
+  `CUDA_VISIBLE_DEVICES=0` — other GPUs on node008 are in use by other
+  workloads. (Older scripts that hardcode `CUDA_VISIBLE_DEVICES=6` from
+  the previous node001 setup must be updated to 0 before reuse.)
+- **All heavy CPU work also runs on `node008`**, NOT on the headnode.
+  Anything CPU-bound — COLMAP mapping/matching, Poisson reconstruction,
+  ffmpeg transcoding, large `find`/`grep`/`tar` — must be prefixed with
+  `ssh node008 "…"` or run from inside an `ssh node008` session. The
+  headnode is shared; long CPU jobs there will be noticed and frowned at.
 - `nvcc` / CUDA toolkit live inside the per-experiment conda envs, not on
-  the login node. Build CUDA extensions from inside `ssh node001`.
+  the login node. Build CUDA extensions from inside `ssh node008`.
 - **Python envs:** `3DGS/` uses a `uv` `.venv`; `MultiPano/` uses conda
   envs on scratch (nerfstudio, lyra2) — see the nerfstudio section below.
 
@@ -42,7 +47,7 @@ conversation, not the filesystem.
 - Panorama viewer (already deployed):
   <https://github.com/vladimiralbrekhtccr/360-panorama-viewer>
 - The user is on macOS, reaches this cluster via `ssh foggen` → `ssh US` →
-  `ssh node001`.
+  `ssh node008`.
 - Project direction: build a World-Labs / Marble-style "image/prompt →
   explorable 3D world". See `READING.md` for the paper list.
 
