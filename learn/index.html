@@ -335,9 +335,11 @@
 
   <p>Before 3D Gaussian Splatting, two main answers existed:</p>
   <ul>
-    <li><b>Textured mesh.</b> Build a polygon model from the photos and
-    paint colours on it. Great for solid objects, terrible for foliage,
-    hair, smoke, glass — anything fuzzy or transparent.</li>
+    <li><b>Photogrammetry → textured mesh.</b> The classic pre-2020
+    workflow: <i>Structure-from-Motion</i> recovers camera poses, then
+    <i>Multi-View Stereo</i> builds a dense polygon model, then textures
+    are baked onto it from the photos. Great for solid objects, terrible
+    for foliage, hair, smoke, glass — anything fuzzy or transparent.</li>
     <li><b>NeRF</b> (2020). Train a neural network that, when you ask
     <em>"what's at point (x,y,z) when looking in this direction?"</em>,
     answers with a colour and a density. Render by asking it millions of
