@@ -375,7 +375,16 @@ confabulate. \note{This is where the unidentifiability thesis of our
 prior work reappears --- as an honest limitation, not the paper's
 thrust.} Our interiors are \emph{plausible and structurally category-
 correct}, not faithful to the specific instance; and the VLM's knowledge
-has gaps for rare or novel objects. \todo{expand.}
+has gaps for rare or novel objects.
+
+Two limitations we observed in practice. First, reconstruction quality
+bounds us: a cluttered input photograph leaves background fragments that
+the matting step does not fully remove, which our fill then treats as
+spurious interior---the method wants clean, single-object images. Second,
+our depth-parameterized schema captures concentric and radial structure
+(rings, layers, cores, and scattered seeds) but not \emph{angular}
+structure such as an orange's wedge segments or an apple's five-point
+seed star; an angular/segment schema primitive is natural future work.
 
 % =====================================================================
 \section{Conclusion}
