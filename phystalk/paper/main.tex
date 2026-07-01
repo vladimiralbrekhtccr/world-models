@@ -36,6 +36,78 @@
 %    - Inside Out: VLM-Authored Structural Interiors for Topology-
 %      Changing Edits of 3D Gaussians
 % =====================================================================
+% =====================================================================
+%  READING LIST  --  papers to read to understand the neighbourhood.
+%  Priority tiers; arXiv IDs given are from our novelty scan.
+%  [verify] = confirm exact title/authors;  [find ID] = ID not yet pinned.
+% ---------------------------------------------------------------------
+%  TIER 1 -- READ FIRST (direct competitors; they define our positioning)
+%   [1] FruitNinja: 3D Object Interior Texture Generation with Gaussian
+%       Splatting.  arXiv:2411.12089 (CVPR'25).  fanguw.github.io/FruitNinja3D
+%       WHY: THE closest work -- interior revealed under slicing. Read to
+%       see exactly what "texture, per-object diffusion, category-blind"
+%       means; this is the method we must visibly beat with STRUCTURE.
+%   [2] GaussianFluent: interior densification for brittle fracture.
+%       arXiv:2601.09265 (ICLR'26) [verify title]
+%       WHY: newest/scariest -- fracture + interior gaussians, but via a
+%       diffusion prior IN THE LOOP. Our train-free axis is the contrast.
+%   [3] PhysTalk: LLM-authored train-free physics on 3DGS.
+%       arXiv:2512.24986 [verify title]
+%       WHY: our "agentic + train-free" precedent; note it is SURFACE-only
+%       (no interior, no topology change) -- the gap we extend into.
+%   [4] TopoGaussian: infer interior topology from visual clues.
+%       arXiv:2503.12343 (ICLR'25) [verify title]
+%       WHY: infers interior for simulation via per-object optimization;
+%       contrast: mechanical/load-bearing, NOT semantic ("this is a melon").
+% ---------------------------------------------------------------------
+%  TIER 2 -- physics-on-splats foundations (how physics on 3DGS works)
+%   [5] PhysGaussian: Physics-Integrated 3D Gaussians for Generative
+%       Dynamics.  arXiv:2311.12198 (CVPR'24).
+%       WHY: the origin -- gaussians AS MPM material points.
+%   [6] PhysSplat: Efficient Physics Simulation via MLLM-Guided GS.
+%       arXiv:2411.12789 [verify]
+%       WHY: MLLM infers MATERIAL params from the image; the adjacent
+%       "VLM sets physics" idea, but no interior authoring.
+%   [7] VR-GS: Physical Dynamics-Aware Interactive GS in VR.
+%       arXiv:2401.16663 (SIGGRAPH'24)
+%       WHY: the hybrid tet-proxy(physics)+gaussians(appearance) design --
+%       our fallback if we ever need physics accuracy.
+%   [8] Fracture-GS (ICLR'26) [find ID]
+%       WHY: fracture on splats; another interior-exposing op to position
+%       against.
+% ---------------------------------------------------------------------
+%  TIER 3 -- agentic / LLM-authored 3D (the "agent writes a program" line)
+%   [9] Articraft: agentic program synthesis of articulated 3D assets.
+%       arXiv:2605.15187 [verify]
+%       WHY: the strongest "LLM-agent writes a program that builds 3D
+%       structure" precedent -- but MESHES, no interior-reveal. Read to
+%       pre-empt the reviewer line "just Articraft for splats".
+%  [10] REALM: MLLM-agent reasoning-segmentation + editing of 3DGS.
+%       arXiv:2510.16410 [verify]
+%       WHY: train-free MLLM-agent edits 3DGS -- but SURFACE only
+%       (remove/replace/restyle), never the interior.
+%  [11] PhysX-3D / PhysForge: VLM-planned physically-grounded 3D assets.
+%       arXiv:2507.12465 [verify]
+%       WHY: "VLM plans, a generator executes" -- distinguish from our
+%       train-free PROCEDURAL authoring (no generator, no training).
+% ---------------------------------------------------------------------
+%  TIER 4 -- representation & our own lineage
+%  [12] 3D Gaussian Splatting for Real-Time Radiance Field Rendering
+%       (Kerbl et al.).  arXiv:2308.04079 (SIGGRAPH'23).
+%       WHY: the representation itself -- read first if new to 3DGS.
+%  [13] OUR PRIOR WORK: "Present but Unidentifiable: Out-of-Frame
+%       Completion in Single-Image 3D Generators" (WACV, submitted).
+%       WHY: the amodal / unidentifiability thesis our Limitations
+%       inherit (unidentifiable interior -> ABSTAIN). The expertise the
+%       whole angle leans on.
+%  [14] Amodal 3D completion (e.g. Amodal3R) [find ID]
+%       WHY: completing hidden/occluded 3D structure -- the general
+%       problem class an object's interior is a special case of.
+% ---------------------------------------------------------------------
+%  INPUT PIPELINE (context, not method):
+%   - TripoSplat (VAST-AI) [find ID] -- the image->3DGS generator that
+%     produces our test objects (~262k gaussians each).
+% =====================================================================
 \documentclass[10pt,twocolumn,letterpaper]{article}
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath,amssymb}
