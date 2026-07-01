@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ryōtenkai — Els Vilars Fortress (Spark demo)</title>
+<style>
+  html,body { margin:0; height:100%; background:#0b0d10; color:#e8eaed;
+              font:13px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace; overflow:hidden; }
+  #c { position:fixed; inset:0; display:block; }
+  #panel { position:fixed; top:10px; left:10px; width:270px; max-height:calc(100vh - 20px);
+           overflow:auto; background:rgba(18,20,24,.86); border:1px solid #2a2f37;
+           border-radius:10px; padding:12px 12px 14px; backdrop-filter:blur(6px); }
+  #panel h1 { font-size:13px; margin:0 0 8px; letter-spacing:.5px; color:#fff; }
+  #panel h2 { font-size:11px; text-transform:uppercase; letter-spacing:.8px; color:#8b94a3;
+              margin:14px 0 6px; border-top:1px solid #232830; padding-top:10px; }
+  .row { display:flex; gap:6px; margin:5px 0; align-items:center; flex-wrap:wrap; }
+  button { background:#222831; color:#e8eaed; border:1px solid #39404b; border-radius:6px;
+           padding:5px 9px; cursor:pointer; font:inherit; }
+  button:hover { background:#2d3640; }
+  button.on { background:#2f6df0; border-color:#2f6df0; color:#fff; }
+  button.warn { border-color:#5a2a2a; }
+  label.sl { display:block; margin:7px 0 2px; color:#aeb6c2; }
+  input[type=range] { width:100%; }
+  .hint { color:#7e8794; font-size:11px; margin-top:4px; }
+  kbd { background:#10141a; border:1px solid #333b46; border-bottom-width:2px; border-radius:4px;
+        padding:0 5px; font-size:11px; }
+  #status { position:fixed; bottom:10px; left:10px; background:rgba(18,20,24,.86);
+            border:1px solid #2a2f37; border-radius:8px; padding:6px 10px; color:#aeb6c2; }
+  #status b { color:#7fd0a0; }
+  #err { position:fixed; bottom:10px; right:10px; max-width:46vw; background:#2a1416;
+         border:1px solid #5a2a2a; color:#ffb4b4; border-radius:8px; padding:6px 10px;
+         display:none; white-space:pre-wrap; }
+  #crosshair { position:fixed; left:50%; top:50%; width:8px; height:8px; margin:-4px 0 0 -4px;
+               border:1px solid rgba(255,255,255,.6); border-radius:50%; display:none; pointer-events:none; }
+</style>
+<script type="importmap">
+{ "imports": {
+  "three":            "https://esm.sh/three@0.180.0",
+  "three/addons/":    "https://esm.sh/three@0.180.0/examples/jsm/",
+  "@sparkjsdev/spark":"https://sparkjs.dev/releases/spark/2.1.0/spark.module.js"
+}}
+</script>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="crosshair"></div>
+
+<div id="panel">
+  <h1>RYŌTENKAI · Fortress demo</h1>
+
+  <h2>Camera</h2>
+  <div class="row">
+    <button id="mOrbit" class="on">Orbit</button>
+    <button id="mWalk">Walk (collision)</button>
+  </div>
+  <div class="row">
+    <button id="vrBtn" style="display:none">🥽 Open in VR</button>
+  </div>
+  <div class="hint" id="camHint">Orbit: drag = rotate · wheel = zoom · right-drag = pan</div>
+
+  <h2>Scene orientation</h2>
+  <div class="row">
+    <button id="rotX">flip X (π)</button>
+    <button id="rotY">yaw Y</button>
+    <button id="upZ">Z-up ↔ Y-up</button>
+  </div>
+
+  <h2>Objects</h2>
+  <div class="row">
+    <button id="addPlushie">+ plushie</button>
+    <button id="dupSel">duplicate</button>
+    <button id="delSel" class="warn">delete</button>
+  </div>
+  <div class="row">
+    <button id="gMove" class="on">move</button>
+    <button id="gRot">rotate</button>
+    <button id="gScale">scale</button>
+  </div>
+  <div class="hint">Click an object to select. Gizmo edits the selected object.</div>
+
+  <h2>Cut tool (SDF)</h2>
+  <div class="row">
+    <button id="addCutBox">+ box cut</button>
+    <button id="addCutSphere">+ sphere cut</button>
+  </div>
+  <div class="row">
+    <button id="cutInvert">invert (keep inside)</button>
+    <button id="delCut" class="warn">remove cut</button>
+  </div>
+  <div class="row">
+    <button id="bakeCrop">✂ bake crop to box</button>
+  </div>
+  <div class="hint">Cutters delete fortress splats inside the volume. Select a cutter to move/scale it.
+    <b>Bake crop</b>: add a <i>box</i> cut, hit <i>invert</i>, size it around what to keep, then bake → I rebuild a smaller scene cropped to that box.</div>
+
+  <h2>Tuning</h2>
+  <label class="sl">walk speed <span id="spdv"></span></label>
+  <input type="range" id="spd" min="0.1" max="20" step="0.1" value="3">
+  <label class="sl">eye height <span id="eyev"></span></label>
+  <input type="range" id="eye" min="0.05" max="5" step="0.05" value="1.6">
+  <label class="sl">render scale (quality↔FPS) <span id="qv"></span></label>
+  <input type="range" id="q" min="0.5" max="2" step="0.05" value="1.25">
+  <label class="sl">detail / LOD (FPS) <span id="lodv"></span></label>
+  <input type="range" id="lod" min="1" max="4" step="0.1" value="1.3">
+  <label class="sl">splat size <span id="psv"></span></label>
+  <input type="range" id="ps" min="1" max="3.5" step="0.05" value="2.6">
+
+  <div class="hint" style="margin-top:12px">
+    Walk: <kbd>W A S D</kbd> move · <kbd>Space</kbd> up · <kbd>Shift</kbd> run ·
+    mouse = look (click canvas to lock) · <kbd>Esc</kbd> release.<br>
+    Gizmo: <kbd>1</kbd> move <kbd>2</kbd> rotate <kbd>3</kbd> scale.
+  </div>
+</div>
+
+<div id="status">loading fortress… <span id="prog"></span></div>
+<div id="err"></div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { TransformControls } from 'three/addons/controls/TransformControls.js';
+import { SparkRenderer, SplatMesh, SplatEdit, SplatEditSdf,
+         SplatEditSdfType, SplatEditRgbaBlendMode, SparkXr } from '@sparkjsdev/spark';
+
+const $ = id => document.getElementById(id);
+const errBox = $('err');
+function showErr(msg){ errBox.style.display='block'; errBox.textContent += msg + '\n'; console.error(msg); }
+window.addEventListener('error', e => showErr('JS error: ' + (e.message||e)));
+window.addEventListener('unhandledrejection', e => showErr('Promise: ' + (e.reason?.message||e.reason)));
+
+// ---- renderer / scene / camera ----------------------------------------
+const canvas = $('c');
+const CAP = new URLSearchParams(location.search).has('cap');   // headless canvas readback only
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:false, preserveDrawingBuffer:CAP });
+let renderScale = 1.25;                      // device pixel ratio — quality↔FPS lever (retina dpr 2 = 4× fragments)
+renderer.setPixelRatio(renderScale);
+renderer.setSize(innerWidth, innerHeight);
+
+const scene  = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.01, 5000);
+camera.position.set(0, 2, 6);
+// player rig: holds the camera. In VR, SparkXr moves THIS group (locomotion); the
+// headset drives the camera within it. In non-VR it stays at identity so orbit/walk
+// (which set camera.position directly) behave exactly as before.
+const rig = new THREE.Group(); scene.add(rig); rig.add(camera);
+
+// overdraw + sort tuning for a heavy 5.9M-splat scene (clamp giant near splats, throttle re-sort)
+const spark = new SparkRenderer({ renderer, maxStdDev: 2.6, maxPixelRadius: 320, minAlpha: 0.005, minSortIntervalMs: 33 });
+scene.add(spark);
+
+const orbit = new OrbitControls(camera, renderer.domElement);
+orbit.enableDamping = true; orbit.dampingFactor = 0.08;
+
+// transform gizmo for selected objects/cutters
+const gizmo = new TransformControls(camera, renderer.domElement);
+gizmo.addEventListener('dragging-changed', e => { orbit.enabled = !e.value; });
+scene.add(gizmo.getHelper ? gizmo.getHelper() : gizmo);
+
+// ---- world root (so we can reorient all splats together) --------------
+const world = new THREE.Group();
+scene.add(world);
+
+const raycaster = new THREE.Raycaster();
+const objects = [];        // movable SplatMesh objects (plushies, dups)
+const cutters = [];        // {edit, sdf, helper}
+let fortress = null;
+let selected = null;
+
+// ---- helpers ----------------------------------------------------------
+function setStatus(t){ $('status').innerHTML = t; }
+
+function select(obj){
+  selected = obj;
+  if (obj){ gizmo.attach(obj); }
+  else gizmo.detach();
+}
+
+// ---- load fortress (.sog) ---------------------------------------------
+const fProgress = $('prog');
+fortress = new SplatMesh({
+  url: 'fortress.sog',
+  lod: true,            // build LoD in a worker → caps per-frame splat count (big FPS win)
+  raycastable: false,   // we use the heightmap for floor + bbox for picking, never splat-raycast
+  editable: true,
+  onProgress: e => { if (e.total) fProgress.textContent = Math.round(100*e.loaded/e.total)+'%'; },
+});
+// Correct orientation for this SOG in Spark is a 180° flip about X (confirmed
+// in-browser). Orientation buttons below let you fine-tune if needed.
+fortress.rotation.set(Math.PI, 0, 0);
+world.add(fortress);
+
+await fortress.initialized;
+
+// world-space AABB of the fortress (recomputed after any reorientation)
+// NB: with lod:true, Spark 2.0.0's getBoundingBox() returns an empty box, so we
+// fall back to the known local (native PLY) AABB of this scene.
+const FORT_LOCAL = new THREE.Box3(
+  new THREE.Vector3(-214.86, -70.99, -179.80),
+  new THREE.Vector3( 241.80,  21.81,  373.09));
+let fbox = new THREE.Box3(), fsize = new THREE.Vector3(), fcenter = new THREE.Vector3(), scnScale = 10;
+function reframe(){
+  world.updateMatrixWorld(true);
+  let lb = fortress.getBoundingBox();        // local splat AABB
+  if (!lb || lb.getSize(new THREE.Vector3()).length() < 1) lb = FORT_LOCAL.clone();
+  fbox = lb.applyMatrix4(fortress.matrixWorld);   // → world AABB (accounts for rotation)
+  fbox.getSize(fsize); fbox.getCenter(fcenter);
+  scnScale = Math.max(fsize.x, fsize.y, fsize.z) || 10;
+  orbit.target.copy(fcenter);
+  const dist = scnScale*0.5;                 // frame on the fortress core, ~30° elevation
+  camera.position.copy(fcenter).add(new THREE.Vector3(0, dist*0.5, dist*0.87));
+  camera.far = scnScale*20; camera.near = scnScale*0.001; camera.updateProjectionMatrix();
+  setStatus(`fortress · bbox ${fsize.x.toFixed(0)}×${fsize.y.toFixed(0)}×${fsize.z.toFixed(0)} · center (${fcenter.x.toFixed(0)},${fcenter.y.toFixed(0)},${fcenter.z.toFixed(0)})`);
+}
+reframe();
+window.__reframe = reframe; window.__world = world; window.__fortress = fortress;
+
+// ---- precomputed floor heightmap (world frame) ------------------------
+// Spark's per-splat raycast is ~1s for 5.9M gaussians and unreliable, so floor
+// collision uses a baked 96×96 heightmap (build_floor.py) → O(1) bilinear lookup.
+let FLOOR = null;
+try { FLOOR = await (await fetch('floor.json')).json(); }
+catch(e){ showErr('floor.json not loaded (walk uses flat floor): ' + e.message); }
+function floorAt(x, z){
+  if (!FLOOR) return fbox.min.y;
+  const { nx, nz, xmin, xmax, zmin, zmax, heights, gfloor } = FLOOR;
+  const u = (x - xmin)/(xmax - xmin) * (nx-1);
+  const w = (z - zmin)/(zmax - zmin) * (nz-1);
+  if (u<0 || u>nx-1 || w<0 || w>nz-1) return gfloor;     // outside site → fallback
+  const i0=Math.floor(u), j0=Math.floor(w), i1=Math.min(i0+1,nx-1), j1=Math.min(j0+1,nz-1);
+  const fu=u-i0, fw=w-j0, h=(i,j)=>heights[j*nx+i];
+  return (h(i0,j0)*(1-fu)+h(i1,j0)*fu)*(1-fw) + (h(i0,j1)*(1-fu)+h(i1,j1)*fu)*fw;
+}
+
+// ---- WebXR / immersive VR (SparkXr) -----------------------------------
+// SparkXr feature-detects, manages the session, and gives thumbstick walk
+// locomotion. The button auto-hides on non-VR browsers (onReady), so flat-screen
+// visitors are unaffected. In VR we scale `world` to human size and snap the rig
+// to the heightmap floor each frame.
+let xrActive = false, VR_M = 1.0;           // VR_M = scaled metres per scene-unit
+let xr = null;
+try {
+  xr = new SparkXr({
+    renderer, mode:'vr', button:false,
+    referenceSpaceType:'local-floor', fixedFoveation:1.0,
+    controllers:{ moveDirection:true, moveSpeed:1.5 },   // left stick = walk (yaw plane), right = turn
+    onReady:(supported)=>{ $('vrBtn').style.display = supported ? 'inline-block' : 'none';
+      if (supported) $('camHint').textContent = 'VR ready → “Open in VR”. Left stick walk · right stick turn.'; },
+    onEnterXr: enterVR, onExitXr: exitVR,
+  });
+  $('vrBtn').onclick = ()=>{ xr.toggleXr().catch(e=>showErr('VR: '+e.message)); };
+} catch(e){ /* no WebXR support → button stays hidden */ }
+
+function enterVR(){
+  xrActive = true;
+  orbit.enabled = false; gizmo.detach();
+  VR_M = 1.6 / Math.max(0.3, eyeHeight);    // make eye-height units ≈ 1.6 m (human scale)
+  world.scale.setScalar(VR_M);
+  const fy = floorAt(fcenter.x, fcenter.z);
+  world.position.set(-fcenter.x*VR_M, -fy*VR_M, -fcenter.z*VR_M);   // drop player at courtyard centre, on floor
+  rig.position.set(0,0,0); rig.rotation.set(0,0,0);
+  $('crosshair').style.display='none';
+}
+function exitVR(){
+  xrActive = false;
+  world.scale.setScalar(1); world.position.set(0,0,0);
+  rig.position.set(0,0,0); rig.rotation.set(0,0,0);
+  setMode('orbit'); reframe();
+}
+
+// scale-aware defaults for walk tuning
+let walkSpeed = scnScale*0.03, eyeHeight = scnScale*0.0045;  // lower → smaller person; tune with slider
+$('spd').max = (scnScale*0.2).toFixed(2);  $('spd').value = walkSpeed.toFixed(2);
+$('eye').max = (scnScale*0.04).toFixed(2); $('eye').min = 0.2; $('eye').step = 0.1; $('eye').value = eyeHeight.toFixed(2);
+$('spdv').textContent = (+walkSpeed).toFixed(2);
+$('eyev').textContent = (+eyeHeight).toFixed(2);
+
+// ---- add a plushie object ---------------------------------------------
+async function addPlushie(at){
+  const m = new SplatMesh({ url:'plushie.ply', raycastable:true, editable:true });
+  m.rotation.set(Math.PI, 0, 0);          // gsplat PLY → flip; tune via gizmo
+  world.add(m);
+  await m.initialized;
+  // scale plushie to a sensible fraction of the scene, drop it near center
+  const pbox = m.getBoundingBox(); const psz = pbox.getSize(new THREE.Vector3());
+  const want = scnScale*0.0025, cur = Math.max(psz.x,psz.y,psz.z)||1;   // small prop; scale up via gizmo
+  m.scale.multiplyScalar(want/cur);
+  m.position.copy(at || fcenter);
+  m.userData.movable = true;
+  m.userData.localBox = pbox.clone();     // cached for fast bbox picking (avoids slow splat raycast)
+  objects.push(m);
+  select(m);
+  setStatus(`added plushie · ${objects.length} object(s)`);
+  return m;
+}
+
+// ---- cut tool (SplatEdit + SplatEditSdf) ------------------------------
+function addCutter(type){
+  const edit = new SplatEdit({ rgbaBlendMode: SplatEditRgbaBlendMode.MULTIPLY });
+  const sdf  = new SplatEditSdf({
+    type: type==='sphere' ? SplatEditSdfType.SPHERE : SplatEditSdfType.BOX,
+    opacity: 0,                  // multiply by 0 → delete splats in the volume
+  });
+  edit.addSdf(sdf);
+  // BOTH box and sphere are sized via the Object3D scale, so the transform
+  // gizmo's scale mode drives the cut volume directly. For the sphere the
+  // shader radius is kept in sync with scale each frame (see syncCutHelpers).
+  sdf.scale.setScalar(type==='sphere' ? scnScale*0.12 : scnScale*0.1);
+  if (type==='sphere') sdf.radius = sdf.scale.x;
+  // place at the world centre, expressed in the fortress's local frame (it's rotated π)
+  fortress.updateMatrixWorld(true);
+  sdf.position.copy(fcenter).applyMatrix4(new THREE.Matrix4().copy(fortress.matrixWorld).invert());
+  // scope the edit to the fortress: attach the edit under the fortress mesh
+  (fortress.edits ||= []).push(edit);
+  fortress.add(edit);            // ancestor must be the SplatMesh, else edit goes global
+  fortress.add(sdf);
+
+  // wireframe helper (unit shape, child of sdf → inherits its scale exactly)
+  const helper = new THREE.Mesh(
+    type==='sphere' ? new THREE.SphereGeometry(1,16,12) : new THREE.BoxGeometry(2,2,2),
+    new THREE.MeshBasicMaterial({ color:0xff4060, wireframe:true, depthTest:false }));
+  helper.userData.cutter = { edit, sdf, type };
+  helper.userData.movable = true;
+  sdf.add(helper);               // box: side = 2·scale ; sphere: radius = scale
+  cutters.push({ edit, sdf, helper, type });
+  select(sdf);                   // move/scale the SDF with the gizmo (helper rides along)
+  setStatus(`added ${type} cutter · ${cutters.length} cut(s)`);
+}
+
+// keep the sphere's shader radius equal to its (gizmo-editable) scale
+function syncCutHelpers(){
+  for (const c of cutters){
+    if (c.type==='sphere') c.sdf.radius = Math.max(1e-4, c.sdf.scale.x);
+  }
+}
+
+// ---- picking ----------------------------------------------------------
+const ndc = new THREE.Vector2();
+canvas.addEventListener('pointerdown', ev=>{
+  if (mode==='walk') return;                 // in walk mode, canvas click = pointer lock
+  if (gizmo.dragging) return;
+  ndc.x = (ev.clientX/innerWidth)*2-1;
+  ndc.y = -(ev.clientY/innerHeight)*2+1;
+  raycaster.setFromCamera(ndc, camera);
+  // NB: avoid SplatMesh.raycast (≈1s for 5.9M splats). Objects → cached bbox test,
+  // cutters → ray vs their (cheap) wireframe helper mesh.
+  const hits = [];
+  const tmpBox = new THREE.Box3(), tmpPt = new THREE.Vector3();
+  for (const o of objects){
+    tmpBox.copy(o.userData.localBox).applyMatrix4(o.matrixWorld);
+    if (raycaster.ray.intersectBox(tmpBox, tmpPt)) hits.push({ o, d: tmpPt.distanceTo(camera.position) });
+  }
+  for (const c of cutters){
+    const hh = raycaster.intersectObject(c.helper, false);
+    if (hh.length) hits.push({ o:c.sdf, d:hh[0].distance });
+  }
+  hits.sort((a,b)=>a.d-b.d);
+  select(hits.length ? hits[0].o : null);
+});
+
+// ---- camera modes -----------------------------------------------------
+let mode = 'orbit';
+const keys = {};
+addEventListener('keydown', e=>{
+  keys[e.code]=true;
+  if (e.code==='Digit1') gizmo.setMode('translate');
+  if (e.code==='Digit2') gizmo.setMode('rotate');
+  if (e.code==='Digit3') gizmo.setMode('scale');
+});
+addEventListener('keyup', e=> keys[e.code]=false);
+
+function setMode(m){
+  mode=m;
+  $('mOrbit').classList.toggle('on', m==='orbit');
+  $('mWalk').classList.toggle('on', m==='walk');
+  orbit.enabled = (m==='orbit');
+  if (m==='walk'){            // stand in the fortress courtyard (scene centre), on the floor
+    yaw = 0; pitch = -0.05;
+    camera.position.set(fcenter.x, floorAt(fcenter.x, fcenter.z) + eyeHeight, fcenter.z);
+  }
+  $('crosshair').style.display = (m==='walk') ? 'block':'none';
+  $('camHint').textContent = m==='walk'
+    ? 'Walk: click canvas to lock mouse · WASD move · Space up · Shift run · floor-collision on'
+    : 'Orbit: drag = rotate · wheel = zoom · right-drag = pan';
+}
+$('mOrbit').onclick=()=>setMode('orbit');
+$('mWalk').onclick =()=>setMode('walk');
+
+// pointer-lock look in walk mode
+let yaw=0, pitch=0;
+canvas.addEventListener('click', ()=>{ if(mode==='walk') canvas.requestPointerLock(); });
+document.addEventListener('mousemove', e=>{
+  if (mode!=='walk' || document.pointerLockElement!==canvas) return;
+  yaw   -= e.movementX*0.0022;
+  pitch -= e.movementY*0.0022;
+  pitch = Math.max(-1.5, Math.min(1.5, pitch));
+});
+
+// walk physics: WASD + heightmap floor collision (O(1) per frame)
+function walkUpdate(dt){
+  const e = new THREE.Euler(pitch, yaw, 0, 'YXZ');
+  camera.quaternion.setFromEuler(e);
+  const fwd = new THREE.Vector3(0,0,-1).applyEuler(new THREE.Euler(0,yaw,0));
+  const right = new THREE.Vector3(1,0,0).applyEuler(new THREE.Euler(0,yaw,0));
+  const sp = walkSpeed * (keys['ShiftLeft']||keys['ShiftRight'] ? 3 : 1);
+  const step = new THREE.Vector3();
+  if (keys['KeyW']) step.add(fwd);
+  if (keys['KeyS']) step.sub(fwd);
+  if (keys['KeyD']) step.add(right);
+  if (keys['KeyA']) step.sub(right);
+  if (step.lengthSq()>0) step.normalize().multiplyScalar(sp*dt);
+  camera.position.add(step);
+
+  // floor collision: O(1) heightmap lookup, smoothly settle to floor + eye height
+  const targetY = floorAt(camera.position.x, camera.position.z) + eyeHeight;
+  camera.position.y += (targetY - camera.position.y) * Math.min(1, dt*10);
+  if (keys['Space']) camera.position.y += sp*dt; // hop/fly up
+}
+
+// ---- UI wiring --------------------------------------------------------
+$('addPlushie').onclick = ()=> addPlushie(new THREE.Vector3(fcenter.x, floorAt(fcenter.x, fcenter.z)+2, fcenter.z));
+$('dupSel').onclick = async ()=>{
+  if (selected instanceof SplatMesh && selected.userData.movable){
+    const m = await addPlushie(selected.position.clone().add(new THREE.Vector3(scnScale*0.1,0,0)));
+    m.scale.copy(selected.scale); m.rotation.copy(selected.rotation);
+  }
+};
+$('delSel').onclick = ()=>{
+  if (!selected) return;
+  if (selected.userData.cutter || selected instanceof SplatEditSdf){
+    const idx = cutters.findIndex(c=>c.sdf===selected);
+    if (idx>=0){ const c=cutters[idx];
+      fortress.edits = (fortress.edits||[]).filter(e=>e!==c.edit);
+      c.edit.parent?.remove(c.edit); c.sdf.parent?.remove(c.sdf);
+      cutters.splice(idx,1);
+    }
+  } else if (selected instanceof SplatMesh && selected.userData.movable){
+    selected.parent?.remove(selected);
+    objects.splice(objects.indexOf(selected),1);
+    selected.dispose?.();        // free GPU buffers (avoid VRAM leak on repeated add/delete)
+  }
+  select(null);
+};
+$('addCutBox').onclick    = ()=> addCutter('box');
+$('addCutSphere').onclick = ()=> addCutter('sphere');
+$('cutInvert').onclick = function(){
+  if (selected instanceof SplatEditSdf){ selected.invert = !selected.invert; this.classList.toggle('on', selected.invert); }
+};
+$('delCut').onclick = ()=> $('delSel').onclick();
+// bake crop: read the selected box cutter's AABB in the fortress LOCAL frame
+// (== raw PLY/native coords) and ping the server so the agent can crop offline.
+$('bakeCrop').onclick = ()=>{
+  const sdf = (selected instanceof SplatEditSdf) ? selected
+            : (cutters.length ? cutters[cutters.length-1].sdf : null);
+  if (!sdf){ setStatus('bake: add a box cut + invert (keep inside) first, then bake'); return; }
+  const p = sdf.position, s = sdf.scale;     // local frame = PLY native frame
+  const b = { x0:p.x-s.x, y0:p.y-s.y, z0:p.z-s.z, x1:p.x+s.x, y1:p.y+s.y, z1:p.z+s.z };
+  const q = Object.entries(b).map(([k,v])=>`${k}=${v.toFixed(2)}`).join('&');
+  fetch('/__crop?'+q).catch(()=>{});         // logged by http.server → agent reads it
+  setStatus(`CROP BOX (paste to agent): ${b.x0.toFixed(1)},${b.y0.toFixed(1)},${b.z0.toFixed(1)} → ${b.x1.toFixed(1)},${b.y1.toFixed(1)},${b.z1.toFixed(1)}`);
+};
+
+$('gMove').onclick  = ()=>{ gizmo.setMode('translate'); setGizmoBtn('gMove'); };
+$('gRot').onclick   = ()=>{ gizmo.setMode('rotate');    setGizmoBtn('gRot'); };
+$('gScale').onclick = ()=>{ gizmo.setMode('scale');     setGizmoBtn('gScale'); };
+function setGizmoBtn(id){ for (const b of ['gMove','gRot','gScale']) $(b).classList.toggle('on', b===id); }
+
+$('rotX').onclick = ()=>{ world.rotation.x += Math.PI;   reframe(); };
+$('rotY').onclick = ()=>{ world.rotation.y += Math.PI/2; reframe(); };
+$('upZ').onclick  = ()=>{ world.rotation.x += Math.PI/2; reframe(); };
+
+$('spd').oninput = function(){ walkSpeed=+this.value; $('spdv').textContent=(+this.value).toFixed(2); };
+$('eye').oninput = function(){ eyeHeight=+this.value; $('eyev').textContent=(+this.value).toFixed(2); };
+// render scale = renderer pixel ratio (biggest FPS lever)
+$('q').oninput = function(){ renderScale=+this.value; $('qv').textContent=renderScale.toFixed(2);
+  renderer.setPixelRatio(renderScale); renderer.setSize(innerWidth, innerHeight); };
+$('qv').textContent='1.25';
+// LOD detail = min on-screen pixel size of LoD splats (higher = fewer splats = faster)
+$('lod').oninput = function(){ spark.lodRenderScale=+this.value; $('lodv').textContent=(+this.value).toFixed(1); };
+spark.lodRenderScale = 1.3; $('lodv').textContent='1.3';
+// splat footprint (std-devs) — controls sharpness vs overdraw
+$('ps').oninput  = function(){ spark.maxStdDev=+this.value; $('psv').textContent=(+this.value).toFixed(2); };
+$('psv').textContent='2.60';
+
+// ---- render loop ------------------------------------------------------
+addEventListener('resize', ()=>{
+  camera.aspect = innerWidth/innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+let last = 0;
+renderer.setAnimationLoop((t)=>{
+  const dt = last ? Math.min(0.05,(t-last)/1000) : 0.016; last=t;
+  if (xrActive){
+    xr.updateControllers(camera);                       // thumbstick locomotion (moves rig)
+    const sx=(rig.position.x - world.position.x)/VR_M;  // rig metres → scene units
+    const sz=(rig.position.z - world.position.z)/VR_M;
+    rig.position.y = floorAt(sx,sz)*VR_M + world.position.y;   // glue to terrain floor
+  } else if (mode==='orbit') orbit.update();
+  else walkUpdate(dt);
+  syncCutHelpers();
+  renderer.render(scene, camera);
+});
+
+setGizmoBtn('gMove');
+window.__grab = ()=> canvas.toDataURL('image/png');   // headless readback (preserveDrawingBuffer)
+window.__cam = ()=> ({ x:+camera.position.x.toFixed(1), y:+camera.position.y.toFixed(1),
+  z:+camera.position.z.toFixed(1), floor:+floorAt(camera.position.x,camera.position.z).toFixed(1),
+  eye:+eyeHeight.toFixed(1), mode });
+window.__selWorld = ()=>{ if(!selected) return null; const v=new THREE.Vector3();
+  selected.getWorldPosition(v); return {x:+v.x.toFixed(1),y:+v.y.toFixed(1),z:+v.z.toFixed(1)}; };
+window.__diag = ()=> ({ objects:objects.length, cutters:cutters.length,
+  edits:(fortress.edits||[]).length, selected: selected ? selected.constructor.name : null });
+window.__ready = true;   // for headless verification
+</script>
+</body>
+</html>

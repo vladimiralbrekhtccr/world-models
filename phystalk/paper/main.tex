@@ -1,0 +1,263 @@
+% =====================================================================
+%  WORKING PAPER SKELETON  —  read-and-iterate draft
+%  Compile: pdflatex main.tex  (plain article class; swap to cvpr.sty later)
+% ---------------------------------------------------------------------
+%  MAIN IDEA (plain words):
+%    When you cut / break / slice open a 3D Gaussian-Splat object, the
+%    inside it shows is FABRICATED — a splat is a hollow shell. Every
+%    existing method invents that interior with a LEARNED / OPTIMIZED
+%    prior: PhysTalk deforms only the surface (no interior at all);
+%    FruitNinja hallucinates interior TEXTURE with per-object diffusion
+%    optimization; GaussianFluent densifies interior gaussians with a
+%    diffusion prior in the loop. All are slow, category-blind, and
+%    per-object.
+%    OUR INSIGHT: a VLM already KNOWS what is inside a watermelon, a
+%    tree log, an onion. That knowledge is a TRAIN-FREE, STRUCTURAL
+%    prior. The agent recognizes the object, reasons about its internal
+%    layout, and WRITES A SHORT PROGRAM that places actual 3D structure
+%    (radial seeds, concentric rings, nested layers) in the gaussians —
+%    which a topology-changing op then reveals. No training, no
+%    per-object optimization, no diffusion in the loop. Instant, cut-
+%    consistent, and — because it is instant — it SCALES interiors from
+%    one object to a whole scene (the enabling piece for explorable,
+%    changeable worlds).
+%    THE BET (single sentence): if our interior does not look OBVIOUSLY
+%    more STRUCTURALLY CORRECT than FruitNinja's texture fill, there is
+%    no paper. Novelty is narrow and lives entirely in
+%    "world-knowledge instead of a learned prior, STRUCTURE not TEXTURE."
+%
+%  TITLE OPTIONS (pick one):
+%    - Structure, Not Texture: Train-Free, World-Knowledge-Grounded
+%      Interiors for Gaussian Splatting
+%    - The Agent Knows What's Inside: Train-Free Interior Authoring for
+%      Gaussian-Splat Objects
+%    - Cut It Open: World-Knowledge Interiors for Editable Gaussian
+%      Splats, Without Training
+%    - Inside Out: VLM-Authored Structural Interiors for Topology-
+%      Changing Edits of 3D Gaussians
+% =====================================================================
+\documentclass[10pt,twocolumn,letterpaper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage[colorlinks=true,allcolors=blue]{hyperref}
+
+\newcommand{\sysname}{\textsc{InsideOut}} % working codename — placeholder
+\newcommand{\todo}[1]{{\color{red}\small[TODO: #1]}}
+\newcommand{\note}[1]{{\color{teal}\small(#1)}}
+
+\title{\vspace{-1em}\bfseries Structure, Not Texture:\\
+Train-Free, World-Knowledge-Grounded Interiors\\ for Gaussian Splatting}
+\author{Anonymous \and \todo{author list}}
+\date{}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+When a 3D Gaussian-Splatting object is cut, broken, or sliced open, what
+does its interior look like? A splat is a hollow shell of surface
+primitives, so every existing answer \emph{fabricates} the inside.
+PhysGaussian and PhysTalk deform only the surface and never expose an
+interior; FruitNinja hallucinates interior \emph{texture} with a
+per-object diffusion optimization; GaussianFluent densifies interior
+gaussians with a diffusion prior in the loop. All of these priors are
+\emph{learned or optimized}, blind to the identity of the specific
+object, and slow. We observe that a vision--language model already
+\emph{knows} what is inside a watermelon, a tree log, or an onion, and
+that this knowledge is a \emph{train-free, structural} prior. We present
+\sysname{}, a framework in which a VLM agent recognizes an object,
+reasons about its internal layout, and \emph{writes a short program}
+that instantiates that structure directly in the gaussians---radial
+seeds, concentric rings, nested layers---which a topology-changing
+operation then reveals. There is no training, no per-object
+optimization, and no diffusion in the loop: interiors are authored in
+seconds and stay consistent under arbitrary cut directions. Because it
+is instant, the method scales editable, physically-changeable interiors
+from single objects to whole scenes---a step toward explorable worlds
+whose objects can be opened, cut, and broken. We demonstrate
+structurally-correct interiors across \todo{N} objects and \todo{M}
+operations, head-to-head against FruitNinja (structure vs.\ texture,
+zero-optimization runtime), GaussianFluent (no diffusion-in-loop), and
+PhysTalk (interior vs.\ none). We are explicit about the failure mode we
+inherit: when an object's interior is genuinely unidentifiable, the
+agent should \emph{abstain} rather than confabulate.
+\end{abstract}
+
+% =====================================================================
+\section{Introduction}
+\label{sec:intro}
+\note{Arc: (1) worlds from media should be changeable, not just
+viewable; (2) changing an object means exposing its inside; (3) splats
+are hollow shells, so the inside is always invented; (4) prior inventions
+are learned/optimized/slow/category-blind; (5) the VLM already knows the
+inside --- use it as a train-free structural prior; (6) contributions.}
+
+\todo{one motivating figure: same watermelon splat cut open ---
+PhysTalk (deflates, no interior) $\mid$ FruitNinja-style texture fill
+(smeared, wrong seed placement, cut-inconsistent) $\mid$ ours (radial
+seeds placed by world knowledge, consistent under any cut).}
+
+\paragraph{Contributions.}
+\begin{itemize}\itemsep0.1em
+  \item We reframe an object's interior as recoverable from a VLM's
+    \emph{world knowledge}, used as a \emph{train-free structural prior}
+    --- in place of the learned, optimized, or diffusion priors of prior
+    work.
+  \item An \emph{agentic, train-free} pipeline: recognize $\rightarrow$
+    reason about internal layout $\rightarrow$ author a program over an
+    interior/physics op-library $\rightarrow$ instantiate structured
+    interior gaussians $\rightarrow$ reveal via a topology-changing
+    operation. No per-object optimization, no diffusion in the loop.
+  \item \emph{Structure, not texture}: explicit 3D internal geometry
+    (seeds, rings, layers) that is \emph{consistent under any cut
+    direction by construction}, unlike per-cross-section inpainting.
+  \item A demonstration across objects and operations with direct
+    head-to-heads against FruitNinja, GaussianFluent, and PhysTalk, and
+    an honest treatment of \emph{unidentifiable} interiors (abstention),
+    connecting to identifiability in single-view 3D generation.
+\end{itemize}
+
+% =====================================================================
+\section{Related Work}
+\label{sec:related}
+\note{Position surgically --- the gap is narrow; each neighbor is one
+axis away. State plainly what each does and does NOT do.}
+
+\paragraph{Physics on Gaussian Splats.} PhysGaussian, PhysSplat, and
+\textbf{PhysTalk} embed 3DGS in a physics simulator (MPM / Genesis) and
+deform the visible surface. PhysTalk is the closest on the
+\emph{agentic, train-free} axis---an LLM writes physics code---but it
+never instantiates or reveals an interior; it transfers particle motion
+back to existing surface gaussians. \todo{cite; confirm no
+topology-change / interior}.
+
+\paragraph{Interior generation for splats.} \textbf{FruitNinja}
+(CVPR'25) first revealed a splat interior under slicing, via
+\emph{per-object} progressive 2D-diffusion inpainting on cross-sections
+plus voxel smoothing. It is not agentic, its prior is category-blind,
+and its result is \emph{texture} with no guarantee that seeds/rings sit
+where they should, nor that different cuts agree. \textbf{GaussianFluent}
+(ICLR'26) densifies interior gaussians for brittle \emph{fracture}, but
+with a \emph{diffusion prior in the loop}, not agentic and not
+identity-grounded. \todo{cite both; this is the head-to-head axis.}
+
+\paragraph{Inferring interior structure.} \textbf{TopoGaussian} infers
+an object's \emph{load-bearing} interior topology by optimizing a
+representation so a simulator explains observed motion---per-object
+optimization, not semantic (``what mechanically works'', not ``this is a
+watermelon''). \todo{cite.}
+
+\paragraph{Agentic program authoring for 3D.} \textbf{Articraft} (2026)
+has an LLM agent write a program against a DSL to build articulated 3D
+\emph{meshes}. It establishes ``agent-writes-a-program-for-3D'' as a
+paradigm---so that framing alone is not our novelty---but it does not
+touch captured splats, interiors, or topology-changing reveals.
+\todo{cite; use to pre-empt ``just Articraft for splats''.}
+
+\paragraph{Editable / language-driven splats.} \todo{REALM (MLLM-agent
+surface editing of 3DGS, no interior), VR-GS (tet-proxy interactive
+physics), etc.}
+
+% =====================================================================
+\section{Method}
+\label{sec:method}
+\note{Reuse the phystalk substrate: load/render, solidify (axis-stab
+interior fill), op-library (shatter/slice/break), agent-authoring core.
+The NEW part is the structured interior authored from a VLM schema.}
+
+\subsection{Overview}
+Given a captured 3DGS object and a natural-language instruction
+(``cut it open'', ``smash it''), a VLM agent produces (i) an
+\emph{interior schema} describing the object's internal structure and
+(ii) a \emph{transform program} over an op-library. The program
+instantiates the structured interior as gaussians and applies a
+topology-changing operation that reveals it. \todo{pipeline figure.}
+
+\subsection{World knowledge as a structural prior}
+The agent recognizes the object and emits a compact \emph{interior
+schema}---a small typed program, e.g.
+\texttt{radial\_seeds(count, size, region)},
+\texttt{concentric\_rings(spacing, colors)},
+\texttt{layers(thicknesses, colors)}, \texttt{solid\_core(color)},
+\texttt{hollow(shell\_thickness)}. \note{The schema is the train-free
+prior: it encodes what the VLM knows, and is category-correct by
+construction rather than by inpainting luck.} \todo{define the schema
+grammar / op-library table.}
+
+\subsection{Instantiating structured interior gaussians}
+We fill the hollow shell with interior gaussians (axis-stabbing
+occupancy test, cf.\ \S\ref{sec:method}) and \emph{place structure}
+according to the schema---seeds as discrete clusters at radial
+positions, rings as concentric shells, layers as nested strata---rather
+than copying surface color inward. \todo{algorithm box; contrast with
+FruitNinja's OpaqueAtom texture fill.}
+
+\subsection{Topology-changing operations}
+\todo{slice / fracture / break / bite / drill from the op-library; the
+reveal; two-sided consistency for fracture.}
+
+% =====================================================================
+\section{Experiments}
+\label{sec:exp}
+\note{Framed as a CAPABILITY DEMONSTRATION, not a benchmark. NO
+ground-truth interior exists (FruitNinja says so) --- we do NOT chase
+faithfulness-to-truth. Success = structure beats texture, train-free.}
+
+\subsection{Success criteria}
+\begin{itemize}\itemsep0.1em
+  \item \textbf{Structural correctness} (primary): do placed elements
+    match category-expected layout (seeds radial, rings concentric,
+    layers nested)? Blind human + VLM-judge \note{randomized order,
+    report both directions --- VLM judges have position bias}, plus a
+    geometric check (discrete 3D seeds at plausible positions vs.\
+    smeared texture).
+  \item \textbf{Cut-consistency}: same object, multiple cuts $\rightarrow$
+    interior stays 3D-consistent (no GT needed).
+  \item \textbf{Zero-optimization runtime}: seconds vs.\ minutes --- the
+    one unarguable number.
+\end{itemize}
+
+\subsection{Dataset}
+\todo{$\sim$30--40 objects via TripoSplat / image$\rightarrow$3DGS,
+weighted to visibly-structured interiors: watermelon (radial seeds),
+tree log (rings), onion/cabbage (layers), pomegranate (arils), orange
+(segments), cake (strata); a few real captured objects; plus
+deliberately \emph{ambiguous} interiors (sealed gadget, random rock) for
+the abstention/failure section. Category-reference cut photos for
+judging --- NOT per-instance GT.}
+
+\subsection{Head-to-heads}
+\todo{vs FruitNinja (structure vs.\ texture + runtime); vs
+GaussianFluent (no diffusion-in-loop, fracture); vs PhysTalk (interior
+vs.\ none). Skipping any $\rightarrow$ reviewer reduces us to that method.}
+
+% =====================================================================
+\section{Limitations}
+\label{sec:limits}
+When an object's interior is genuinely \emph{unidentifiable} from its
+exterior (a sealed device, an arbitrary rock), no prior---VLM or
+otherwise---can recover it; the agent should \emph{abstain} rather than
+confabulate. \note{This is where the unidentifiability thesis of our
+prior work reappears --- as an honest limitation, not the paper's
+thrust.} Our interiors are \emph{plausible and structurally category-
+correct}, not faithful to the specific instance; and the VLM's knowledge
+has gaps for rare or novel objects. \todo{expand.}
+
+% =====================================================================
+\section{Conclusion}
+\label{sec:conc}
+\todo{One instant, train-free agent authors structured interiors from
+world knowledge --- the enabling piece for scaling changeable objects
+from one to a whole explorable world.}
+
+% =====================================================================
+{\small
+\bibliographystyle{plain}
+% \bibliography{refs}   % \todo{add refs.bib: phystalk, fruitninja,
+%   gaussianfluent, topogaussian, articraft, physgaussian, physsplat,
+%   vr-gs, realm, physx-3d}
+}
+\end{document}
