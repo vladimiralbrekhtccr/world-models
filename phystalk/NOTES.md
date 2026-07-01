@@ -85,3 +85,28 @@ amodal/hidden-completion instincts, now aimed at the physical-transformation ang
 - **P3 (06-30):** interior-grounding PROBE — `solidify(structured=True)` gives a radial surface-tinted-shell -> warm-dark-core interior. `interior_v2.png`. HONEST: marginally more material-like (a warmer core on the cut) but STILL A GUESS — a real vase is hollow-walled clay, not a solid warm core. Confirms the wedge: heuristic structure is cosmetic; the real contribution = GROUNDING the interior in actual material/structure, not a radial guess.
 
 **POLISH QUEUE EMPTY.** Prototype + figures (c1-c5, hero, p2_ops, interior_v2) + writeup complete. Awaiting user direction (recommend wedge A: interior-grounding).
+
+## OVERNIGHT PLAN (2026-07-01, autonomous until morning)
+STATE: interior.py = 2-of-3 axis-enclosure gapless fill (117k) + native crisp assemble + arm_from_schema(VLM JSON).
+Schemas: interior_objects/vlm_schemas.json (watermelon/onion/apple). Optimizer: tmp/optimize_cutanywhere.py
+(gsplat differentiable, DINOv2 perceptual vs real cut-photo, multi-cut, anchored to VLM). Env: ttt on node008 GPU0.
+Live demo = WORKING state-toggle viewer /3dgs/dwm/demo (whole/cutA/cutB). NEVER re-add Spark objectModifiers clip (broke loading).
+DO next undone step per wake, VERIFY each by Read-ing the PNG (don't trust loss alone):
+ 1. seed contrast (bump count/size/darkness; dense fill washed seeds out)
+ 2. diffusion SDS prior (find SD/diffusers on cluster) for reference-less objects; keep 3D-coherent (optimise volume over many cuts, NOT per-cut 2D inpaint)
+ 3. generate apple 3DGS (source apple img from Wikimedia -> TripoSplat) + optimise apple & onion
+ 4. re-bake demo splats (whole/cutA/cutB) with improved interiors; deploy PLYs + WORKING viewer only; verify HTTP 200
+ 5. explore quality/objects; LOG every step to research_log/log.json + scp publish.
+
+## METHOD SUMMARY (2026-07-01) — VLM-authored, metric-optimized interiors
+- interior.py: 2-of-3 axis-enclosure GAPLESS solid fill (no oblique-cut voids); density-scaled
+  seeds; native anisotropic/jittered gaussians (look like real splats); arm_from_schema(VLM JSON
+  schema: layers-by-depth + seed/core inclusions) -> interior; export_ply (INRIA/SH0).
+- optimize_interior.py: differentiable (gsplat) optimisation of interior gaussians (surface frozen)
+  vs a perceptual signal over MANY cut planes -> realistic, cut-anywhere interior, no hand-tuning.
+  Signals: DINO-vs-real-cut-photo (optimize_save_wm.py) when a photo exists; CLIP-text (reference-less,
+  optimize_save_clip.py) otherwise. CLIP-text is reliable on structured/coloured interiors
+  (onion rings, watermelon) but can add artifacts on uniform ones (apple) -> SDS is the planned fix.
+- bake_demo3.py: bake whole/cutA/cutB PLYs for the demo. fig1.py: render the explainer figure.
+- Live: kitan-a.com/3dgs/dwm (explainer) + /3dgs/dwm/demo (state-toggle viewer; NEVER the Spark
+  objectModifiers clip — it broke loading).
