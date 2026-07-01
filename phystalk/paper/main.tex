@@ -250,6 +250,20 @@ direction. Nothing is trained: we compose frozen off-the-shelf models
 (TripoSplat, the VLM, and a frozen perceptual/CLIP prior) with procedural
 code.
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{img/summary.png}
+\caption{VLM-authored, metric-optimized interiors on four captured
+objects. Each row: the reconstructed exterior shell (left) and the object
+cut open from two directions (right), revealing the interior our method
+authors and fits---watermelon flesh and seeds, onion concentric rings,
+apple flesh and core, kiwi green flesh with a pale star core and a seed
+ring. The two cut views of each object agree: the interior is a single
+coherent 3D volume, so any cut is consistent (cut-anywhere). Apple is the
+honest hard case (uniform interior).}
+\label{fig:summary}
+\end{figure}
+
 \subsection{World knowledge as a structural prior}
 The VLM reads the object and emits a compact JSON \emph{interior schema}:
 an ordered list of \texttt{layers} by normalized depth-from-surface (each
