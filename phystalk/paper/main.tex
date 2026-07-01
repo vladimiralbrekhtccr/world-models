@@ -236,40 +236,67 @@ physics), etc.}
 % =====================================================================
 \section{Method}
 \label{sec:method}
-\note{Reuse the phystalk substrate: load/render, solidify (axis-stab
-interior fill), op-library (shatter/slice/break), agent-authoring core.
-The NEW part is the structured interior authored from a VLM schema.}
-
 \subsection{Overview}
-Given a captured 3DGS object and a natural-language instruction
-(``cut it open'', ``smash it''), a VLM agent produces (i) an
-\emph{interior schema} describing the object's internal structure and
-(ii) a \emph{transform program} over an op-library. The program
-instantiates the structured interior as gaussians and applies a
-topology-changing operation that reveals it. \todo{pipeline figure.}
+From a single photograph, an off-the-shelf image-to-3DGS model
+(TripoSplat) reconstructs the object's exterior as a Gaussian \emph{shell}
+with a hollow interior. Given the object and an instruction
+(``cut it open''), a vision--language model (VLM) authors an
+\emph{interior schema} describing the object's internal structure. We
+instantiate that schema as a \emph{gapless} volume of interior gaussians,
+then \emph{fit} their appearance by differentiable optimization against a
+perceptual signal, evaluated over many cut directions. A cut, break, or
+slice then reveals a believable interior that is consistent from any
+direction. Nothing is trained: we compose frozen off-the-shelf models
+(TripoSplat, the VLM, and a frozen perceptual/CLIP prior) with procedural
+code.
 
 \subsection{World knowledge as a structural prior}
-The agent recognizes the object and emits a compact \emph{interior
-schema}---a small typed program, e.g.
-\texttt{radial\_seeds(count, size, region)},
-\texttt{concentric\_rings(spacing, colors)},
-\texttt{layers(thicknesses, colors)}, \texttt{solid\_core(color)},
-\texttt{hollow(shell\_thickness)}. \note{The schema is the train-free
-prior: it encodes what the VLM knows, and is category-correct by
-construction rather than by inpainting luck.} \todo{define the schema
-grammar / op-library table.}
+The VLM reads the object and emits a compact JSON \emph{interior schema}:
+an ordered list of \texttt{layers} by normalized depth-from-surface (each
+with an RGB colour), plus discrete \texttt{inclusions}
+(\texttt{seeds}, \texttt{core}, \texttt{pit}) with a count, size, colour,
+and depth region. For a watermelon it writes a pale rind over red flesh
+with a few hundred black seed inclusions; for a kiwi, a brown skin over
+green flesh with a pale central core and a ring of small black seeds.
+This schema is the \emph{train-free prior}: it encodes what the VLM knows
+about the category and is correct by construction, not by inpainting
+luck. Because the VLM is a \emph{vision} model, it can also inspect a
+rendered cut and revise its own schema (a write--render--look--fix loop).
 
-\subsection{Instantiating structured interior gaussians}
-We fill the hollow shell with interior gaussians (axis-stabbing
-occupancy test, cf.\ \S\ref{sec:method}) and \emph{place structure}
-according to the schema---seeds as discrete clusters at radial
-positions, rings as concentric shells, layers as nested strata---rather
-than copying surface color inward. \todo{algorithm box; contrast with
-FruitNinja's OpaqueAtom texture fill.}
+\subsection{Instantiating a gapless structured interior}
+Reconstructed shells are thin and \emph{non-watertight}, so a flood-fill
+solid test leaks (on our objects it recovered near-zero enclosed voxels).
+We instead mark a voxel as interior when the surface encloses it along at
+least two of the three axes---leak-proof, and it fills the concavities
+that a strict three-axis test leaves as oblique-cut voids. Each interior
+voxel becomes one gaussian, jittered off the lattice with anisotropic
+scale and random orientation so the fill reads as native splats rather
+than a voxel grid. We colour by the schema---layers by depth, inclusions
+as discrete clusters (seed count scales with fill density so seeds stay
+visible)---and \emph{never} by copying surface colour inward, the failure
+mode of texture fills.
 
-\subsection{Topology-changing operations}
-\todo{slice / fracture / break / bite / drill from the op-library; the
-reveal; two-sided consistency for fracture.}
+\subsection{Fitting the interior by differentiable optimization}
+The instantiated interior is structurally correct but flat. Since the
+Gaussian rasterizer is differentiable, we \emph{fit} the interior
+gaussians (colour, scale, opacity; surface frozen) by gradient descent
+against a perceptual signal \emph{averaged over many randomly sampled cut
+planes}. When a real cross-section photograph of the category exists we
+use a DINOv2 feature-matching loss to it; otherwise the loss is a CLIP
+image--text similarity to a prompt (``a cross-section of a kiwi\ldots''),
+which needs no reference. A small anchor to the schema colours prevents
+drift. Optimising over \emph{many} cut directions is what forces a
+coherent 3D interior---a structure that only looked right from one angle
+is punished by the others---so cut-anywhere realism is the \emph{result}
+of the objective, not a hope. Crucially the prior guides a single 3D
+volume and never inpaints a 2D cut face, which keeps us distinct from
+per-cut diffusion methods.
+
+\subsection{Revealing the interior}
+Because the interior is authored in 3D before any cut, a cut/break/slice
+is a geometric operation on a fully-specified object: any plane exposes a
+valid, mutually-consistent cross-section, with no per-cut generation and
+no latency.
 
 % =====================================================================
 \section{Experiments}
@@ -288,23 +315,41 @@ faithfulness-to-truth. Success = structure beats texture, train-free.}
     smeared texture).
   \item \textbf{Cut-consistency}: same object, multiple cuts $\rightarrow$
     interior stays 3D-consistent (no GT needed).
-  \item \textbf{Zero-optimization runtime}: seconds vs.\ minutes --- the
-    one unarguable number.
+  \item \textbf{Efficiency (two regimes)}: the instant VLM-schema fill
+    needs \emph{no} optimization (seconds); the metric-fit interior is a
+    short per-object optimization (a few minutes on one GPU) that buys
+    realism---still orthogonal to, and lighter than, inpainting every cut
+    with a diffusion model.
 \end{itemize}
 
 \subsection{Dataset}
-\todo{$\sim$30--40 objects via TripoSplat / image$\rightarrow$3DGS,
-weighted to visibly-structured interiors: watermelon (radial seeds),
-tree log (rings), onion/cabbage (layers), pomegranate (arils), orange
-(segments), cake (strata); a few real captured objects; plus
-deliberately \emph{ambiguous} interiors (sealed gadget, random rock) for
-the abstention/failure section. Category-reference cut photos for
-judging --- NOT per-instance GT.}
+We evaluate on captured objects reconstructed with TripoSplat, weighted
+to visibly-structured interiors. Our current set is \emph{watermelon}
+(red flesh $+$ seeds), \emph{red onion} (concentric scales), \emph{apple}
+(cream flesh $+$ core), and \emph{kiwi} (green flesh $+$ pale star core
+$+$ seed ring); every schema is authored by a real VLM from the
+whole-object photo. We are expanding toward $\sim$30--40 objects spanning
+radial seeds, concentric rings/layers and segmented interiors, plus
+deliberately \emph{ambiguous} interiors (a sealed device, a random rock)
+for the abstention/failure analysis. There is no per-instance ground
+truth; category-reference cut photographs are used only for judging.
 
 \subsection{Head-to-heads}
 \todo{vs FruitNinja (structure vs.\ texture + runtime); vs
 GaussianFluent (no diffusion-in-loop, fracture); vs PhysTalk (interior
 vs.\ none). Skipping any $\rightarrow$ reviewer reduces us to that method.}
+
+\subsection{Results}
+Across the four objects the method produces recognizable cross-sections
+from every cut direction: red flesh with seeds, onion rings, and a kiwi's
+star core and seed ring. The differentiable fit visibly sharpens the flat
+schema fill into realistic, tonally-varied material while preserving the
+authored structure. The reference-less CLIP signal is reliable on
+strongly-structured, strongly-coloured interiors but can introduce colour
+artifacts on \emph{uniform} interiors (apple)---the honest hard case,
+where a diffusion (SDS) prior is the natural remedy. A live, in-browser
+demo lets one cut each object open and orbit the exposed interior.
+\todo{quantitative human/VLM-judge table; runtime numbers; head-to-heads.}
 
 % =====================================================================
 \section{Limitations}
